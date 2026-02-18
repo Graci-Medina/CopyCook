@@ -8,12 +8,11 @@
 </head>
 <body>
     <div class="container">
-        <!-- Sidebar Navigation -->
+<!-- Sidebar Navigation -->
         <aside class="sidebar">
-        <div class="logo">
-            <img src="logo.png" alt="CopyCook Logo">
+            <div class="logo">
+                <img src="logo.png" alt="CopyCook Logo">
             </div>
-            
             <nav class="nav-icons">
                 <a href="#" class="nav-icon active">
                     <img src="home-icon.png" alt="Home">
@@ -32,17 +31,15 @@
                     <span class="notification-badge">10</span>
                 </a>
             </nav>
-            
             <div class="nav-bottom">
                 <a href="#" class="nav-icon" onclick="toggleLogoutPopup(event)">
                     <img src="settings-icon.png" alt="Settings">
                 </a>
             </div>
         </aside>
-
-        <!-- Main Content -->
+<!-- Main Content -->
         <main class="main-content">
-            <!-- Search Bar -->
+<!-- Search Bar -->
             <div class="search-container">
                 <div class="search-bar">
                     <svg class="search-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -58,48 +55,14 @@
                     </svg>
                 </div>
                 <div class="profile-pic">
-                    <img src="2.png" alt="Profile">
+                    <img src="drakepfp.png" alt="Profile">
                 </div>
             </div>
-
-            <!-- Food Grid -->
-            <div class="food-grid">
-                <div class="food-card">
-                    <img src="https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=400" alt="Club Sandwich">
-                </div>
-                <div class="food-card has-save">
-                    <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400" alt="Fresh Vegetables">
-                    <button class="save-btn">Save</button>
-                </div>
-                <div class="food-card">
-                    <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400" alt="Pizza">
-                </div>
-                <div class="food-card">
-                    <img src="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400" alt="Curry and Rice">
-                </div>
-                <div class="food-card">
-                    <img src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400" alt="Grilled Chicken">
-                </div>
-                <div class="food-card">
-                    <img src="https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400" alt="Pasta Bolognese">
-                </div>
-                <div class="food-card">
-                    <img src="https://images.unsplash.com/photo-1464305795204-6f5bbfc7fb81?w=400" alt="Cheesecake">
-                </div>
-                <div class="food-card">
-                    <img src="https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400" alt="Penne Pasta">
-                </div>
-                <div class="food-card">
-                    <img src="https://images.unsplash.com/photo-1470124182917-cc6e71b22ecc?w=400" alt="Panna Cotta">
-                </div>
-                <div class="food-card">
-                    <img src="https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400" alt="Sushi Roll">
-                </div>
-            </div>
+<!-- Food Grid — populated by script.js -->
+            <div class="food-grid" id="foodGrid"></div>
         </main>
     </div>
-
-    <!-- Logout Popup -->
+<!-- Logout Popup -->
     <div id="logoutPopup" class="logout-popup">
         <div class="logout-content">
             <h3>Account Settings</h3>
@@ -107,7 +70,6 @@
             <button class="cancel-btn" onclick="closeLogoutPopup()">Cancel</button>
         </div>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
