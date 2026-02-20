@@ -45,11 +45,10 @@ loginForm.addEventListener('submit', async function(e) {
         // Clear form
         loginForm.reset();
         
-        // Optionally redirect to dashboard
-        setTimeout(() => {
-            // window.location.href = 'dashboard.html';
-            showMessage('You are now logged in!', 'success');
-        }, 1500);
+        // Redirect to home page after login
+setTimeout(() => {
+    window.location.href = 'Home page/home.html';
+}, 1500);
         
     } catch (error) {
         console.error('Authentication error:', error);
