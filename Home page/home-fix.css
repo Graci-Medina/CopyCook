@@ -1,0 +1,172 @@
+/* Home page layout + pinterest feed overrides (safe overrides) */
+
+.container{
+    display:flex;
+    min-height:100vh;
+    background:#f6efe6;
+    font-family: 'Poppins', Arial, sans-serif;
+}
+
+/* sidebar */
+.sidebar{
+    width:90px;
+    border-right:2px solid rgba(225,170,180,0.5);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:14px 10px;
+    gap:18px;
+}
+
+.logo img{
+    width:52px;
+    height:52px;
+    object-fit:contain;
+}
+
+/* nav icons */
+.nav-icons{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    margin-top:6px;
+}
+
+.nav-icon{
+    width:56px;
+    height:56px;
+    border-radius:16px;
+    background: rgba(165,185,160,0.28);
+    border: 1px solid rgba(165,185,160,0.45);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-decoration:none;
+    position:relative;
+}
+
+.nav-icon img{
+    width:26px !important;
+    height:26px !important;
+    object-fit:contain;
+    display:block;
+}
+
+.nav-bottom{
+    margin-top:auto;
+    padding-bottom:10px;
+}
+
+/* badge */
+.notification-badge{
+    position:absolute;
+    right:10px;
+    top:10px;
+    font-size:10px;
+    line-height:1;
+}
+
+/* main */
+.main-content{
+    flex:1;
+    padding:14px 18px;
+    display:flex;
+    flex-direction:column;
+}
+
+/* search row */
+.search-container{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:14px;
+}
+
+.search-bar{
+    flex:1;
+    max-width:880px;
+    background:#a5b9a0;
+    border-radius:14px;
+    padding:10px 12px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+}
+
+.search-bar input{
+    width:100%;
+    border:none;
+    outline:none;
+    background:transparent;
+    color:#1f1f1f;
+    font-size:14px;
+}
+
+.profile-pic img{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    object-fit:cover;
+    border: 2px solid rgba(225,170,180,0.6);
+}
+
+/* ✅ PINTEREST STYLE FEED */
+.food-grid{
+    flex: 1;
+    overflow-y: auto;
+    column-count: 4;
+    column-gap: 16px;
+    padding: 0 6px 10px 6px;
+}
+
+/* cards */
+.food-card{
+    break-inside: avoid;
+    margin-bottom: 16px;
+    border-radius:16px;
+    overflow:hidden;
+    background: rgba(255,255,255,0.75);
+    border: 2px solid rgba(225, 170, 180, 0.28);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    cursor:pointer;
+    transition: transform 0.15s ease;
+}
+
+.food-card:hover{
+    transform: translateY(-2px);
+}
+
+/* ✅ KEY PART: natural height */
+.food-card img{
+    width:100%;
+    height:auto;
+    object-fit:cover;
+    display:block;
+}
+
+.food-info{
+    padding:10px;
+}
+
+/* Save button still works */
+.save-btn{
+    margin:10px;
+    border:none;
+    background:#a5b9a0;
+    border-radius:999px;
+    padding:8px 12px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+/* Responsive columns */
+@media (max-width: 1200px){
+    .food-grid{ column-count: 3; }
+}
+@media (max-width: 768px){
+    .food-grid{ column-count: 2; }
+}
+@media (max-width: 480px){
+    .food-grid{ column-count: 1; }
+}

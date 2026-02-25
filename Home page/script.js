@@ -28,6 +28,9 @@ function toggleLogoutPopup(event) {
     const popup = document.getElementById('logoutPopup');
     popup.classList.toggle('active');
 }
+function openRecipe(idMeal) {
+    window.location.href = `recipe.html?id=${idMeal}`;
+}
 
 function closeLogoutPopup() {
     const popup = document.getElementById('logoutPopup');
