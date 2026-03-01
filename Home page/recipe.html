@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CopyCook - Recipe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #F5EFE7;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 75px;
+            background-color: #f5efe7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            border-right: 2px solid #E8B4B4;
+            flex-shrink: 0;
+        }
+
+        .logo { margin-bottom: 40px; }
+        .logo img { height: 50px; width: auto; cursor: pointer; }
+
+        .nav-icons {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            flex: 1;
+            margin-top: 150px;
+        }
+
+        .nav-icon {
+            position: relative;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .nav-icon:hover { transform: scale(1.1); }
+        .nav-icon img { width: 100%; height: 100%; border-radius: 50%; }
+        .nav-icon.active { box-shadow: 0 0 0 3px #E8B4B4; }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px; right: -5px;
+            background-color: #D4A5A5;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .nav-bottom { margin-top: auto; padding-bottom: 20px; }
+
+        /* ── Main ── */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── Search bar ── */
+        .search-container {
+            display: flex;
+            align-items: center;
+            padding: 20px 30px;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+
+        .search-bar {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background-color: #9FB19F;
+            border-radius: 15px;
+            padding: 15px 20px;
+            gap: 12px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 16px;
+            color: #3A3A3A;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .search-bar input::placeholder { color: #5A5A5A; }
+
+        .profile-pic {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #E8B4B4;
+            cursor: pointer;
+            transition: transform 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .profile-pic:hover { transform: scale(1.05); }
+        .profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* ── Recipe body ── */
+        .recipe-body {
+            flex: 1;
+            overflow: hidden;
+            padding: 0 30px 30px;
+            display: flex;
+            gap: 25px;
+        }
+
+        /* ── Left panel ── */
+        .left-panel {
+            width: 340px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            /* Fixed height, no scroll — image stays put */
+            overflow: hidden;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px;
+            color: #5A5A5A;
+            padding: 0;
+            transition: color 0.2s;
+        }
+
+        .back-btn:hover { color: #D4A5A5; }
+
+        .action-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+            transition: background 0.2s, transform 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .action-btn:hover { background: rgba(212,165,165,0.15); transform: scale(1.1); }
+
+        .save-action-btn {
+            margin-left: auto;
+            background-color: #9FB19F;
+            color: white;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .save-action-btn:hover { background-color: #8AA08A; transform: scale(1.03); }
+        .save-action-btn.saved { background-color: #D4A5A5; }
+
+        .recipe-image-wrap {
+            border-radius: 20px;
+            overflow: hidden;
+            aspect-ratio: 3/4;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        }
+
+        .recipe-image-wrap img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* ── Right panel ── */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .right-panel::-webkit-scrollbar { width: 8px; }
+        .right-panel::-webkit-scrollbar-track { background: #F5EFE7; }
+        .right-panel::-webkit-scrollbar-thumb { background: #D4A5A5; border-radius: 8px; }
+        .right-panel::-webkit-scrollbar-thumb:hover { background: #C49595; }
+
+        .recipe-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2A2A2A;
+            line-height: 1.2;
+        }
+
+        /* Category tag */
+        .category-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: #E8B4B4;
+            color: #5A3A3A;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* Ingredients card */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 22px 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2A2A2A;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ingredient-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ingredient-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 14px;
+        }
+
+        .ingredient-dot {
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background-color: #E8B4B4;
+            flex-shrink: 0;
+        }
+
+        .ingredient-measure {
+            font-weight: 600;
+            color: #3A3A3A;
+            min-width: 80px;
+        }
+
+        .ingredient-name { color: #5A5A5A; }
+
+        /* Instructions */
+        .instructions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .instruction-step {
+            background-color: #F8E8E8;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 13.5px;
+            color: #3A3A3A;
+            line-height: 1.6;
+        }
+
+        /* Loading / error state */
+        .loading-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            font-size: 16px;
+            color: #9FB19F;
+        }
+
+        /* Logout popup */
+        .logout-popup {
+            display: none;
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center; justify-content: center;
+        }
+        .logout-popup.active { display: flex; }
+        .logout-content {
+            background: #FDFBF7;
+            border: 3px solid #E8B4B4;
+            border-radius: 20px;
+            padding: 40px 50px;
+            text-align: center;
+        }
+        .logout-content h3 { color: #3A3A3A; font-size: 24px; margin-bottom: 30px; font-weight: 500; }
+        .logout-btn, .cancel-btn {
+            width: 100%; padding: 15px 30px; border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+            font-family: 'Poppins', sans-serif; margin: 8px 0;
+        }
+        .logout-btn { background-color: #D4A5A5; color: white; }
+        .cancel-btn { background-color: #9FB19F; color: white; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <img src="logo.png" alt="CopyCook Logo" onclick="window.location.href='home.html'">
+        </div>
+        <nav class="nav-icons">
+            <a href="home.html" class="nav-icon active">
+                <img src="home-icon.png" alt="Home">
+            </a>
+            <a href="#" class="nav-icon">
+                <img src="explore-icon.png" alt="Explore">
+            </a>
+            <a href="#" class="nav-icon">
+                <img src="plus-icon.png" alt="Add">
+            </a>
+            <a href="../Saved page/saved.html" class="nav-icon">
+                <img src="save-icon.png" alt="Saved">
+            </a>
+            <a href="#" class="nav-icon">
+                <img src="message.png" alt="Messages">
+                <span class="notification-badge">10</span>
+            </a>
+        </nav>
+        <div class="nav-bottom">
+            <a href="#" class="nav-icon" onclick="toggleLogoutPopup(event)">
+                <img src="settings-icon.png" alt="Settings">
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <div class="search-bar">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <circle cx="11" cy="11" r="7" stroke="#5A5A5A" stroke-width="2"/>
+                    <path d="M16 16L20 20" stroke="#5A5A5A" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <input type="text" placeholder="Search restaurants or dishes">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <rect x="10" y="5" width="4" height="10" rx="2" fill="#D4A5A5"/>
+                    <path d="M7 12C7 14.7614 9.23858 17 12 17C14.7614 17 17 14.7614 17 12" stroke="#D4A5A5" stroke-width="2"/>
+                    <line x1="12" y1="17" x2="12" y2="20" stroke="#D4A5A5" stroke-width="2"/>
+                    <line x1="9" y1="20" x2="15" y2="20" stroke="#D4A5A5" stroke-width="2"/>
+                </svg>
+            </div>
+            <div class="profile-pic" id="profileAvatar">
+                <img src="drakepfp.png" alt="Profile">
+            </div>
+        </div>
+
+        <!-- Recipe Content -->
+        <div class="recipe-body" id="recipeBody">
+            <div class="loading-state" id="loadingState">Loading recipe...</div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Logout Popup -->
+<div id="logoutPopup" class="logout-popup">
+    <div class="logout-content">
+        <h3>Account Settings</h3>
+        <button class="logout-btn" onclick="handleLogout()">Log Out</button>
+        <button class="cancel-btn" onclick="closeLogoutPopup()">Cancel</button>
+    </div>
+</div>
+
+<script>
+const SPOONACULAR_KEY = '8b416bc6bc6a48aaae64933c641d722c';
+
+// ── Avatar ──
+(function loadAvatar() {
+    const el = document.getElementById('profileAvatar');
+    if (!el) return;
+    const initial = localStorage.getItem('userInitial');
+    const color   = localStorage.getItem('userAvatarColor');
+    const name    = localStorage.getItem('userDisplayName');
+    if (initial && color) {
+        el.innerHTML = initial;
+        el.style.backgroundColor = color;
+        el.style.display = 'flex';
+        el.style.alignItems = 'center';
+        el.style.justifyContent = 'center';
+        el.style.color = 'white';
+        el.style.fontSize = '20px';
+        el.style.fontWeight = '700';
+        el.title = name || '';
+    }
+})();
+
+// ── Logout ──
+function toggleLogoutPopup(e) { e.preventDefault(); document.getElementById('logoutPopup').classList.toggle('active'); }
+function closeLogoutPopup() { document.getElementById('logoutPopup').classList.remove('active'); }
+function handleLogout() { localStorage.clear(); sessionStorage.clear(); window.location.href = '../login.html'; }
+document.getElementById('logoutPopup').addEventListener('click', e => { if (e.target === e.currentTarget) closeLogoutPopup(); });
+
+// ── Save button toggle ──
+function toggleSave(btn) {
+    const saved = btn.classList.toggle('saved');
+    btn.textContent = saved ? 'Saved ✓' : 'Save';
+}
+
+// ── Shared layout builder ──
+function buildLayout({ title, image, tag, ingredientRows, stepRows }) {
+    return `
+        <div class="left-panel">
+            <button class="back-btn" onclick="history.back()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 18L9 12L15 6" stroke="#5A5A5A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Back
+            </button>
+            <div class="action-row">
+                <button class="action-btn" title="Like" onclick="this.querySelector('svg path').setAttribute('fill', this.querySelector('svg path').getAttribute('fill') === '#D4A5A5' ? 'none' : '#D4A5A5')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="#D4A5A5" stroke-width="2" fill="none"/>
+                    </svg>
+                </button>
+                <button class="action-btn" title="Comment">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#9FB19F" stroke-width="2" fill="none"/>
+                    </svg>
+                </button>
+                <button class="action-btn" title="Share">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" stroke="#A5B4D4" stroke-width="2" fill="none"/>
+                        <polyline points="16 6 12 2 8 6" stroke="#A5B4D4" stroke-width="2" fill="none"/>
+                        <line x1="12" y1="2" x2="12" y2="15" stroke="#A5B4D4" stroke-width="2"/>
+                    </svg>
+                </button>
+                <button class="save-action-btn" onclick="toggleSave(this)">Save</button>
+            </div>
+            <div class="recipe-image-wrap">
+                <img src="${image}" alt="${title}">
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <h1 class="recipe-title">${title}</h1>
+            ${tag ? `<div><span class="category-tag">📍 ${tag}</span></div>` : ''}
+            <div class="card">
+                <div class="card-title">🍳 Ingredients</div>
+                <div class="ingredient-list">${ingredientRows}</div>
+            </div>
+            <div class="card">
+                <div class="card-title">👨‍🍳 Instructions</div>
+                <div class="instructions-list">${stepRows}</div>
+            </div>
+        </div>
+    `;
+}
+
+// ── MealDB renderer ──
+function renderMealDB(meal) {
+    const ingredients = [];
+    for (let i = 1; i <= 20; i++) {
+        const ing     = meal[`strIngredient${i}`];
+        const measure = meal[`strMeasure${i}`];
+        if (ing && ing.trim()) ingredients.push({ ing: ing.trim(), measure: (measure || '').trim() });
+    }
+
+    const steps = (meal.strInstructions || '')
+        .split(/\r?\n/)
+        .map(s => s.trim())
+        .filter(s => s.length > 10);
+
+    const ingredientRows = ingredients.map(({ ing, measure }) => `
+        <div class="ingredient-row">
+            <span class="ingredient-dot"></span>
+            <span class="ingredient-measure">${measure || 'To taste'}</span>
+            <span class="ingredient-name">${ing}</span>
+        </div>`).join('');
+
+    const stepRows = steps.map(s => `<div class="instruction-step">${s}</div>`).join('');
+
+    const tag = [meal.strArea, meal.strCategory].filter(Boolean).join(' · ');
+
+    document.getElementById('recipeBody').innerHTML = buildLayout({
+        title: meal.strMeal,
+        image: meal.strMealThumb,
+        tag,
+        ingredientRows,
+        stepRows
+    });
+}
+
+// ── Spoonacular renderer ──
+function renderSpoonacular(recipe) {
+    // Ingredients
+    const ingredientRows = (recipe.extendedIngredients || []).map(ing => `
+        <div class="ingredient-row">
+            <span class="ingredient-dot"></span>
+            <span class="ingredient-measure">${ing.measures?.us?.amount ? ing.measures.us.amount + ' ' + ing.measures.us.unitShort : ing.original}</span>
+            <span class="ingredient-name">${ing.nameClean || ing.name}</span>
+        </div>`).join('');
+
+    // Instructions — Spoonacular returns analyzed steps array
+    let steps = [];
+    if (recipe.analyzedInstructions && recipe.analyzedInstructions.length > 0) {
+        steps = recipe.analyzedInstructions[0].steps.map(s => s.step);
+    } else if (recipe.instructions) {
+        // Fallback: plain HTML instructions — strip tags and split
+        steps = recipe.instructions
+            .replace(/<[^>]+>/g, ' ')
+            .split(/\.\s+/)
+            .map(s => s.trim())
+            .filter(s => s.length > 10);
+    }
+
+    const stepRows = steps.map(s => `<div class="instruction-step">${s}</div>`).join('');
+
+    const cuisines = (recipe.cuisines || []).join(', ');
+    const dishTypes = (recipe.dishTypes || []).join(', ');
+    const tag = [cuisines, dishTypes].filter(Boolean).join(' · ');
+
+    // Add servings + time info if available
+    const metaTag = [
+        recipe.servings ? `🍽 ${recipe.servings} servings` : '',
+        recipe.readyInMinutes ? `⏱ ${recipe.readyInMinutes} min` : ''
+    ].filter(Boolean).join('  ·  ');
+
+    document.getElementById('recipeBody').innerHTML = buildLayout({
+        title: recipe.title,
+        image: recipe.image || '',
+        tag: [tag, metaTag].filter(Boolean).join('  |  '),
+        ingredientRows: ingredientRows || '<p style="color:#9FB19F">No ingredient data available.</p>',
+        stepRows: stepRows || '<p style="color:#9FB19F">No instructions available.</p>'
+    });
+}
+
+// ── Route: MealDB or Spoonacular based on URL param ──
+async function loadRecipe() {
+    const params  = new URLSearchParams(window.location.search);
+    const mealId  = params.get('id');
+    const spoonId = params.get('spoon');
+    const body    = document.getElementById('recipeBody');
+
+    if (mealId) {
+        // ── MealDB ──
+        try {
+            const res  = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${mealId}`);
+            const data = await res.json();
+            if (data.meals && data.meals[0]) {
+                renderMealDB(data.meals[0]);
+            } else {
+                body.innerHTML = '<div class="loading-state">Recipe not found.</div>';
+            }
+        } catch {
+            body.innerHTML = '<div class="loading-state">Failed to load recipe.</div>';
+        }
+
+    } else if (spoonId) {
+        // ── Spoonacular ──
+        try {
+            const res  = await fetch(`https://api.spoonacular.com/recipes/${spoonId}/information?apiKey=${SPOONACULAR_KEY}`);
+            const data = await res.json();
+            if (data.id) {
+                renderSpoonacular(data);
+            } else {
+                body.innerHTML = '<div class="loading-state">Recipe not found.</div>';
+            }
+        } catch {
+            body.innerHTML = '<div class="loading-state">Failed to load recipe.</div>';
+        }
+
+    } else {
+        body.innerHTML = '<div class="loading-state">No recipe selected.</div>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadRecipe);
+</script>
+</body>
+</html>

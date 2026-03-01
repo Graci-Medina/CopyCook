@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CopyCook - Saved Recipes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #F5EFE7;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 75px;
+            background-color: #F5EFE7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            border-right: 2px solid #E8B4B4;
+            flex-shrink: 0;
+        }
+
+        .logo { margin-bottom: 40px; }
+        .logo img { height: 50px; width: auto; cursor: pointer; }
+
+        .nav-icons {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            flex: 1;
+            margin-top: 150px;
+        }
+
+        .nav-icon {
+            position: relative;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+        }
+
+        .nav-icon:hover { transform: scale(1.1); }
+        .nav-icon img { width: 100%; height: 100%; border-radius: 50%; }
+        .nav-icon.active { box-shadow: 0 0 0 3px #E8B4B4; }
+
+        .notification-badge {
+            position: absolute;
+            top: -3px; right: -3px;
+            background-color: #D4A5A5;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .nav-bottom { margin-top: auto; padding-bottom: 20px; }
+
+        /* ── Main ── */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: #F5EFE7;
+        }
+
+        /* ── Top bar ── */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            padding: 18px 30px;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+
+        .search-bar {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background-color: #9FB19F;
+            border-radius: 15px;
+            padding: 13px 20px;
+            gap: 12px;
+            transition: background-color 0.3s;
+            cursor: text;
+        }
+
+        .search-bar:hover { background-color: #8AA08A; }
+
+        .search-bar input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 15px;
+            color: #3A3A3A;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .search-bar input::placeholder { color: #5A5A5A; }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid #E8B4B4;
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .profile-avatar:hover { transform: scale(1.05); }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* ── Page body ── */
+        .page-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 30px 30px;
+        }
+
+        .page-body::-webkit-scrollbar { width: 8px; }
+        .page-body::-webkit-scrollbar-track { background: #F5EFE7; }
+        .page-body::-webkit-scrollbar-thumb { background: #D4A5A5; border-radius: 8px; }
+
+        /* ── Profile card ── */
+        .profile-card {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 16px;
+            margin-bottom: 28px;
+            padding: 16px 0 0;
+        }
+
+        .profile-card-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 3px solid #E8B4B4;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .profile-card-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-card-avatar.initials {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .profile-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2A2A2A;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: #5A5A5A;
+        }
+
+        .profile-stats span b {
+            color: #2A2A2A;
+            font-weight: 600;
+        }
+
+        .view-profile-btn {
+            background-color: #9FB19F;
+            color: white;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            transition: background-color 0.2s, transform 0.2s;
+            white-space: nowrap;
+        }
+
+        .view-profile-btn:hover {
+            background-color: #8AA08A;
+            transform: scale(1.03);
+        }
+
+        /* ── Section header ── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2A2A2A;
+        }
+
+        .create-btn {
+            background-color: #9FB19F;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .create-btn:hover {
+            background-color: #8AA08A;
+            transform: scale(1.03);
+        }
+
+        /* ── Filter tabs ── */
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .filter-tab {
+            padding: 9px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .filter-tab.active {
+            background-color: #3A3A3A;
+            color: white;
+        }
+
+        .filter-tab.inactive {
+            background-color: #9FB19F;
+            color: white;
+        }
+
+        .filter-tab.inactive:hover {
+            background-color: #8AA08A;
+        }
+
+        /* ── Folders grid ── */
+        .folders-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .folder-card {
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.25s, box-shadow 0.25s;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .folder-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.14);
+        }
+
+        .folder-thumb {
+            position: relative;
+            aspect-ratio: 4/3;
+            overflow: hidden;
+        }
+
+        .folder-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .folder-card:hover .folder-thumb img {
+            transform: scale(1.05);
+        }
+
+        .lock-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.88);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .lock-badge svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .folder-name {
+            padding: 12px 14px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #2A2A2A;
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 0;
+            gap: 12px;
+            color: #9FB19F;
+            font-size: 15px;
+        }
+
+        .empty-state svg { opacity: 0.4; }
+
+        /* ── Create folder modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: #FDFBF7;
+            border: 3px solid #E8B4B4;
+            border-radius: 24px;
+            padding: 40px 48px;
+            width: 460px;
+            max-width: 90vw;
+            animation: modalIn 0.25s ease-out;
+        }
+
+        @keyframes modalIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to   { transform: translateY(0);     opacity: 1; }
+        }
+
+        .modal h3 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2A2A2A;
+            margin-bottom: 24px;
+        }
+
+        .modal input[type="text"] {
+            width: 100%;
+            background: #E8E8E0;
+            border: 2px solid transparent;
+            padding: 16px 18px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: 'Poppins', sans-serif;
+            color: #3A3A3A;
+            outline: none;
+            margin-bottom: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .modal input[type="text"]:focus { border-color: #9FB19F; }
+
+        .modal-privacy {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 28px;
+        }
+
+        .privacy-btn {
+            flex: 1;
+            padding: 11px;
+            border-radius: 12px;
+            border: 2px solid #E8E8E0;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            background: white;
+            color: #5A5A5A;
+            transition: all 0.2s;
+        }
+
+        .privacy-btn.selected {
+            border-color: #9FB19F;
+            background: #9FB19F;
+            color: white;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel { background: #E8E8E0; color: #5A5A5A; }
+        .btn-cancel:hover { background: #DDD; }
+        .btn-create-confirm { background: #9FB19F; color: white; }
+        .btn-create-confirm:hover { background: #8AA08A; }
+
+        /* ── Logout popup ── */
+        .logout-popup {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        .logout-popup.active { display: flex; }
+        .logout-content {
+            background: #FDFBF7;
+            border: 3px solid #E8B4B4;
+            border-radius: 20px;
+            padding: 40px 50px;
+            text-align: center;
+        }
+        .logout-content h3 { color: #3A3A3A; font-size: 22px; margin-bottom: 24px; font-weight: 500; }
+        .logout-btn, .cancel-btn {
+            width: 100%; padding: 14px 30px; border: none;
+            border-radius: 12px; font-size: 15px; font-weight: 600;
+            cursor: pointer; font-family: 'Poppins', sans-serif; margin: 6px 0;
+            transition: all 0.2s;
+        }
+        .logout-btn { background: #D4A5A5; color: white; }
+        .logout-btn:hover { background: #C49595; }
+        .cancel-btn { background: #9FB19F; color: white; }
+        .cancel-btn:hover { background: #8AA08A; }
+
+        /* ── Responsive ── */
+        @media (max-width: 1100px) {
+            .folders-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .nav-icon { width: 28px; height: 28px; }
+            .folders-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .top-bar { padding: 14px 16px; }
+            .page-body { padding: 0 16px 20px; }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar { width: 50px; padding: 15px 0; }
+            .nav-icon { width: 24px; height: 24px; }
+            .notification-badge { font-size: 8px; padding: 1px 4px; }
+            .folders-grid { gap: 8px; padding: 0 10px 10px 10px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <img src="logo.png" alt="CopyCook" onclick="window.location.href='../Home page/home.html'">
+        </div>
+        <nav class="nav-icons">
+            <a href="../Home page/home.html" class="nav-icon">
+                <img src="home-icon.png" alt="Home">
+            </a>
+            <a href="#" class="nav-icon">
+                <img src="explore-icon.png" alt="Explore">
+            </a>
+            <a href="#" class="nav-icon">
+                <img src="plus-icon.png" alt="Add">
+            </a>
+            <a href="saved.html" class="nav-icon active">
+                <img src="save-icon.png" alt="Saved">
+            </a>
+            <a href="#" class="nav-icon">
+                <img src="message.png" alt="Messages">
+                <span class="notification-badge" id="msgBadge">0</span>
+            </a>
+        </nav>
+        <div class="nav-bottom">
+            <a href="#" class="nav-icon" onclick="toggleLogoutPopup(event)">
+                <img src="settings-icon.png" alt="Settings">
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+
+        <!-- Top bar -->
+        <div class="top-bar">
+            <div class="search-bar" onclick="window.location.href='../Home page/home.html'">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <circle cx="11" cy="11" r="7" stroke="#5A5A5A" stroke-width="2"/>
+                    <path d="M16 16L20 20" stroke="#5A5A5A" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <input type="text" placeholder="Search restaurants or dishes" readonly>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <rect x="10" y="5" width="4" height="10" rx="2" fill="#D4A5A5"/>
+                    <path d="M7 12C7 14.76 9.24 17 12 17C14.76 17 17 14.76 17 12" stroke="#D4A5A5" stroke-width="2"/>
+                    <line x1="12" y1="17" x2="12" y2="20" stroke="#D4A5A5" stroke-width="2"/>
+                    <line x1="9" y1="20" x2="15" y2="20" stroke="#D4A5A5" stroke-width="2"/>
+                </svg>
+            </div>
+            <div class="profile-avatar" id="profileAvatar">
+                <img src="drakepfp.png" alt="Profile">
+            </div>
+        </div>
+
+        <!-- Page body -->
+        <div class="page-body">
+
+            <!-- Profile card (top-right aligned like screenshot) -->
+            <div class="profile-card">
+                <div class="profile-info" style="text-align:right;">
+                    <div class="profile-name" id="profileName">Loading...</div>
+                    <div class="profile-stats">
+                        <span><b id="followerCount">0</b> followers</span>
+                        <span><b id="followingCount">0</b> following</span>
+                    </div>
+                </div>
+                <div class="profile-card-avatar initials" id="profileCardAvatar"></div>
+                <button class="view-profile-btn">View Profile</button>
+            </div>
+
+            <!-- Section header -->
+            <div class="section-header">
+                <h2 class="section-title">Your saved folders</h2>
+                <button class="create-btn" onclick="openCreateModal()">Create</button>
+            </div>
+
+            <!-- Filter tabs -->
+            <div class="filter-tabs">
+                <button class="filter-tab active" id="tabPrivate" onclick="setTab('private')">Private</button>
+                <button class="filter-tab inactive" id="tabPublic" onclick="setTab('public')">Public</button>
+            </div>
+
+            <!-- Folders grid -->
+            <div class="folders-grid" id="foldersGrid"></div>
+
+            <!-- Empty state -->
+            <div class="empty-state" id="emptyState">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2z" stroke="#9FB19F" stroke-width="1.5" fill="none"/>
+                </svg>
+                <p>No folders yet. Hit <b>Create</b> to make your first one!</p>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- Create Folder Modal -->
+<div class="modal-overlay" id="createModal">
+    <div class="modal">
+        <h3>Create a folder</h3>
+        <input type="text" id="folderNameInput" placeholder="Folder name (e.g. Quick Meals)">
+        <div class="modal-privacy">
+            <button class="privacy-btn selected" id="btnPrivate" onclick="selectPrivacy('private')"> Private</button>
+            <button class="privacy-btn" id="btnPublic" onclick="selectPrivacy('public')"> Public</button>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeCreateModal()">Cancel</button>
+            <button class="btn-create-confirm" onclick="createFolder()">Create</button>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Popup -->
+<div id="logoutPopup" class="logout-popup">
+    <div class="logout-content">
+        <h3>Account Settings</h3>
+        <button class="logout-btn" onclick="handleLogout()">Log Out</button>
+        <button class="cancel-btn" onclick="closeLogoutPopup()">Cancel</button>
+    </div>
+</div>
+
+<script>
+// ── Constants ──
+const PLACEHOLDER_IMAGES = [
+    'https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg',
+    'https://www.themealdb.com/images/media/meals/wvpsxx1468256321.jpg',
+    'https://www.themealdb.com/images/media/meals/58oia61564916529.jpg',
+    'https://www.themealdb.com/images/media/meals/wyrqqq1468233628.jpg',
+    'https://www.themealdb.com/images/media/meals/urzj1d1587670726.jpg',
+    'https://www.themealdb.com/images/media/meals/tkxquw1628771028.jpg',
+    'https://www.themealdb.com/images/media/meals/sstssx1487349585.jpg',
+    'https://www.themealdb.com/images/media/meals/1525876468.jpg',
+];
+
+// ── State ──
+let currentTab      = 'private';
+let selectedPrivacy = 'private';
+let folders = JSON.parse(localStorage.getItem('ccFolders') || '[]');
+
+function saveFolders() {
+    localStorage.setItem('ccFolders', JSON.stringify(folders));
+}
+
+// ── Avatar & Profile ──
+function loadProfile() {
+    const initial = localStorage.getItem('userInitial');
+    const color   = localStorage.getItem('userAvatarColor');
+    const name    = localStorage.getItem('userDisplayName') || 'Your Profile';
+
+    // Top-right small avatar
+    const topAvatar = document.getElementById('profileAvatar');
+    if (initial && color) {
+        topAvatar.innerHTML = initial;
+        topAvatar.style.backgroundColor = color;
+        topAvatar.querySelector('img') && (topAvatar.innerHTML = initial);
+    }
+
+    // Profile card avatar
+    const cardAvatar = document.getElementById('profileCardAvatar');
+    if (initial && color) {
+        cardAvatar.textContent = initial;
+        cardAvatar.style.backgroundColor = color;
+    } else {
+        cardAvatar.textContent = '?';
+        cardAvatar.style.backgroundColor = '#D4A5A5';
+    }
+
+    document.getElementById('profileName').textContent = name;
+
+    // Fake follower/following counts (replace with Firestore later)
+    document.getElementById('followerCount').textContent  = localStorage.getItem('ccFollowers')  || '0';
+    document.getElementById('followingCount').textContent = localStorage.getItem('ccFollowing')  || '0';
+}
+
+// ── Render folders ──
+function renderFolders() {
+    const grid  = document.getElementById('foldersGrid');
+    const empty = document.getElementById('emptyState');
+    const filtered = folders.filter(f => f.privacy === currentTab);
+
+    grid.innerHTML = '';
+
+    if (filtered.length === 0) {
+        empty.style.display = 'flex';
+        return;
+    }
+
+    empty.style.display = 'none';
+
+    filtered.forEach((folder, idx) => {
+        const card = document.createElement('div');
+        card.className = 'folder-card';
+        card.onclick = () => openFolder(folder.id);
+
+        const thumb = folder.coverImage || PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
+        const lockIcon = folder.privacy === 'private' ? `
+            <div class="lock-badge">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <rect x="5" y="11" width="14" height="10" rx="2" stroke="#5A5A5A" stroke-width="2" fill="none"/>
+                    <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#5A5A5A" stroke-width="2" fill="none"/>
+                </svg>
+            </div>` : `
+            <div class="lock-badge">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="4" stroke="#9FB19F" stroke-width="2" fill="none"/>
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="#9FB19F" stroke-width="2" fill="none"/>
+                </svg>
+            </div>`;
+
+        const recipeCount = (folder.recipes || []).length;
+        const subtitle = recipeCount === 0 ? 'Empty' : `${recipeCount} recipe${recipeCount !== 1 ? 's' : ''}`;
+
+        card.innerHTML = `
+            <div class="folder-thumb">
+                <img src="${thumb}" alt="${folder.name}" loading="lazy">
+                ${lockIcon}
+            </div>
+            <div class="folder-name">
+                ${folder.name}
+                <div style="font-size:12px;font-weight:400;color:#9A9A9A;margin-top:2px;">${subtitle}</div>
+            </div>
+        `;
+
+        grid.appendChild(card);
+    });
+}
+
+// ── Tab switching ──
+function setTab(tab) {
+    currentTab = tab;
+    document.getElementById('tabPrivate').className = `filter-tab ${tab === 'private' ? 'active' : 'inactive'}`;
+    document.getElementById('tabPublic').className  = `filter-tab ${tab === 'public'  ? 'active' : 'inactive'}`;
+    renderFolders();
+}
+
+// ── Create folder modal ──
+function openCreateModal() {
+    document.getElementById('folderNameInput').value = '';
+    selectPrivacy('private');
+    document.getElementById('createModal').classList.add('active');
+    setTimeout(() => document.getElementById('folderNameInput').focus(), 100);
+}
+
+function closeCreateModal() {
+    document.getElementById('createModal').classList.remove('active');
+}
+
+function selectPrivacy(p) {
+    selectedPrivacy = p;
+    document.getElementById('btnPrivate').className = `privacy-btn ${p === 'private' ? 'selected' : ''}`;
+    document.getElementById('btnPublic').className  = `privacy-btn ${p === 'public'  ? 'selected' : ''}`;
+}
+
+function createFolder() {
+    const name = document.getElementById('folderNameInput').value.trim();
+    if (!name) {
+        document.getElementById('folderNameInput').style.borderColor = '#D4A5A5';
+        setTimeout(() => document.getElementById('folderNameInput').style.borderColor = 'transparent', 1500);
+        return;
+    }
+
+    const newFolder = {
+        id:          Date.now().toString(),
+        name,
+        privacy:     selectedPrivacy,
+        recipes:     [],
+        coverImage:  null,
+        createdAt:   new Date().toISOString()
+    };
+
+    folders.push(newFolder);
+    saveFolders();
+    closeCreateModal();
+
+    // Switch to the matching tab so user sees their new folder
+    setTab(selectedPrivacy);
+}
+
+// ── Open folder (placeholder — wire to folder detail page later) ──
+function openFolder(folderId) {
+    window.location.href = `folder.html?id=${folderId}`;
+}
+
+// ── Close modal on backdrop click ──
+document.getElementById('createModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCreateModal();
+});
+
+// ── Enter key creates folder ──
+document.getElementById('folderNameInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') createFolder();
+});
+
+// ── Logout ──
+function toggleLogoutPopup(e) {
+    e.preventDefault();
+    document.getElementById('logoutPopup').classList.toggle('active');
+}
+function closeLogoutPopup() {
+    document.getElementById('logoutPopup').classList.remove('active');
+}
+function handleLogout() {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = '../login.html';
+}
+document.getElementById('logoutPopup').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeLogoutPopup();
+});
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', function() {
+    loadProfile();
+    renderFolders();
+});
+</script>
+</body>
+</html>
