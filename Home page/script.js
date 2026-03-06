@@ -1,37 +1,36 @@
-// AVATAR SETUP — reads from localStorage set during signup
+// ─── AVATAR SETUP ────────────────────────────────────────────────────────────
 function loadAvatar() {
     const profileAvatar = document.getElementById('profileAvatar');
     if (!profileAvatar) return;
 
     const initial = localStorage.getItem('userInitial');
-    const color = localStorage.getItem('userAvatarColor');
-    const name = localStorage.getItem('userDisplayName');
+    const color   = localStorage.getItem('userAvatarColor');
+    const name    = localStorage.getItem('userDisplayName');
 
     if (initial && color) {
         profileAvatar.innerHTML = initial;
-        profileAvatar.style.backgroundColor = color;
-        profileAvatar.style.display = 'flex';
-        profileAvatar.style.alignItems = 'center';
-        profileAvatar.style.justifyContent = 'center';
-        profileAvatar.style.color = 'white';
-        profileAvatar.style.fontSize = '20px';
-        profileAvatar.style.fontWeight = '700';
-        profileAvatar.style.fontFamily = "'Poppins', sans-serif";
+        profileAvatar.style.cssText = `
+            background-color:${color};
+            display:flex;align-items:center;justify-content:center;
+            color:white;font-size:20px;font-weight:700;
+            font-family:'Poppins',sans-serif;
+        `;
         profileAvatar.title = name || '';
     }
 }
 
-// LOGOUT POPUP FUNCTIONS
+// ─── NAVIGATION ───────────────────────────────────────────────────────────────
+function openRecipe(mealId) {
+    window.location.href = `recipe.html?id=${mealId}`;
+}
 
 function toggleLogoutPopup(event) {
     event.preventDefault();
-    const popup = document.getElementById('logoutPopup');
-    popup.classList.toggle('active');
+    document.getElementById('logoutPopup').classList.toggle('active');
 }
 
 function closeLogoutPopup() {
-    const popup = document.getElementById('logoutPopup');
-    popup.classList.remove('active');
+    document.getElementById('logoutPopup').classList.remove('active');
 }
 
 function handleLogout() {
@@ -40,67 +39,239 @@ function handleLogout() {
     window.location.href = '../login.html';
 }
 
-// LOAD RANDOM RECIPES FROM MEALDB
+// ─── AREAS LIST (fetched dynamically from MealDB) ─────────────────────────────
+// knownAreas: Map of lowercase name → exact canonical string MealDB expects
+let knownAreas = new Map();
 
-let isLoading = false;
+// Common aliases people might type that differ from MealDB's canonical names
+const AREA_ALIASES = {
+    'america':      'American',
+    'usa':          'American',
+    'us':           'American',
+    'uk':           'British',
+    'england':      'British',
+    'english':      'British',
+    'britain':      'British',
+    'france':       'French',
+    'italy':        'Italian',
+    'spain':        'Spanish',
+    'greece':       'Greek',
+    'japan':        'Japanese',
+    'china':        'Chinese',
+    'india':        'Indian',
+    'mexico':       'Mexican',
+    'thailand':     'Thai',
+    'turkey':       'Turkish',
+    'morocco':      'Moroccan',
+    'egypt':        'Egyptian',
+    'ireland':      'Irish',
+    'portugal':     'Portuguese',
+    'russia':       'Russian',
+    'ukraine':      'Ukrainian',
+    'poland':       'Polish',
+    'jamaica':      'Jamaican',
+    'kenya':        'Kenyan',
+    'malaysia':     'Malaysian',
+    'philippines':  'Filipino',
+    'vietnam':      'Vietnamese',
+    'croatia':      'Croatian',
+    'netherlands':  'Dutch',
+    'holland':      'Dutch',
+    'canada':       'Canadian',
+    'tunisia':      'Tunisian',
+    'kiwi':         'New Zealand',
+};
 
-async function loadRandomRecipes() {
-    const grid = document.getElementById("foodGrid");
-    if (!grid || isLoading) return;
-    isLoading = true;
-
-    const loadingText = document.createElement("p");
-    loadingText.innerText = "Loading recipes...";
-    grid.appendChild(loadingText);
-
-    for (let i = 0; i < 12; i++) {
-        const response = await fetch("https://www.themealdb.com/api/json/v1/1/random.php");
-        const data = await response.json();
-        const meal = data.meals[0];
-
-        const recipeCard = document.createElement("div");
-        recipeCard.classList.add("food-card");
-        recipeCard.onclick = () => openRecipe(meal.idMeal);
-
-        recipeCard.innerHTML = `
-            <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
-            <div class="food-info">
-                <h4>${meal.strMeal}</h4>
-            </div>
-            <button class="save-btn" onclick="event.stopPropagation()">Save</button>
-        `;
-
-        grid.appendChild(recipeCard);
+async function loadAreas() {
+    try {
+        const res  = await fetch('https://www.themealdb.com/api/json/v1/1/list.php?a=list');
+        const data = await res.json();
+        if (data.meals) {
+            data.meals.forEach(item => {
+                // item.strArea is the exact canonical string MealDB uses
+                knownAreas.set(item.strArea.toLowerCase(), item.strArea);
+            });
+        }
+    } catch (err) {
+        console.warn('Could not fetch areas list:', err);
     }
-
-    loadingText.remove();
-    isLoading = false;
 }
 
-// SINGLE DOMContentLoaded — everything starts here
-document.addEventListener("DOMContentLoaded", function () {
+/**
+ * Returns the exact canonical area string if query matches a cuisine, else null.
+ * Checks: aliases → exact area name (case-insensitive via the knownAreas map).
+ */
+function matchCuisine(query) {
+    const q = query.trim().toLowerCase();
+    if (AREA_ALIASES[q])   return AREA_ALIASES[q];
+    if (knownAreas.has(q)) return knownAreas.get(q);
+    return null;
+}
 
-    // Load avatar
+// ─── RENDER HELPERS ───────────────────────────────────────────────────────────
+function createCard(meal) {
+    const card = document.createElement('div');
+    card.classList.add('food-card');
+    card.onclick = () => openRecipe(meal.idMeal);
+    card.innerHTML = `
+        <img src="${meal.strMealThumb}" alt="${meal.strMeal}" loading="lazy">
+        <div class="food-info"><h4>${meal.strMeal}</h4></div>
+        <button class="save-btn" onclick="event.stopPropagation()">Save</button>
+    `;
+    return card;
+}
+
+function showMessage(grid, text) {
+    grid.innerHTML = `<p>${text}</p>`;
+}
+
+// ─── ALL-RECIPES LOADER ───────────────────────────────────────────────────────
+let allMealsCache   = [];
+let allMealsLoaded  = false;
+let allMealsLoading = false;
+
+async function loadAllRecipes() {
+    const grid = document.getElementById('foodGrid');
+    if (!grid || allMealsLoading) return;
+    allMealsLoading = true;
+
+    showMessage(grid, 'Loading all recipes…');
+
+    try {
+        const catRes  = await fetch('https://www.themealdb.com/api/json/v1/1/categories.php');
+        const catData = await catRes.json();
+        const categories = catData.categories.map(c => c.strCategory);
+
+        grid.innerHTML = '';
+        const seenIds = new Set();
+
+        await Promise.all(categories.map(async (cat) => {
+            try {
+                const res  = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${encodeURIComponent(cat)}`);
+                const data = await res.json();
+                if (!data.meals) return;
+                data.meals.forEach(meal => {
+                    if (seenIds.has(meal.idMeal)) return;
+                    seenIds.add(meal.idMeal);
+                    allMealsCache.push(meal);
+                    grid.appendChild(createCard(meal));
+                });
+            } catch (_) {}
+        }));
+
+        allMealsLoaded  = true;
+        allMealsLoading = false;
+
+        if (grid.children.length === 0) {
+            showMessage(grid, 'No recipes could be loaded. Please try again later.');
+        }
+    } catch (err) {
+        allMealsLoading = false;
+        showMessage(grid, 'Failed to load recipes. Please check your connection.');
+        console.error('loadAllRecipes error:', err);
+    }
+}
+
+function restoreAllRecipes(grid) {
+    grid.innerHTML = '';
+    const seen = new Set();
+    allMealsCache.forEach(meal => {
+        if (!seen.has(meal.idMeal)) {
+            seen.add(meal.idMeal);
+            grid.appendChild(createCard(meal));
+        }
+    });
+}
+
+// ─── SMART SEARCH ────────────────────────────────────────────────────────────
+let searchDebounceTimer = null;
+let isSearchActive      = false;
+
+async function searchRecipes(query) {
+    const grid = document.getElementById('foodGrid');
+    if (!grid) return;
+
+    showMessage(grid, 'Searching…');
+
+    try {
+        const cuisineMatch = matchCuisine(query);
+
+        if (cuisineMatch) {
+            // ── CUISINE / AREA SEARCH ──────────────────────────────────
+            const res  = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?a=${encodeURIComponent(cuisineMatch)}`);
+            const data = await res.json();
+
+            grid.innerHTML = '';
+
+            if (!data.meals || data.meals.length === 0) {
+                showMessage(grid, `No ${cuisineMatch} recipes found.`);
+                return;
+            }
+
+            const header = document.createElement('p');
+            header.textContent = `${cuisineMatch} cuisine — ${data.meals.length} recipes`;
+            header.style.cssText = 'grid-column:1/-1;font-weight:600;color:#5A5A5A;padding:4px 0 8px;';
+            grid.appendChild(header);
+
+            data.meals.forEach(meal => grid.appendChild(createCard(meal)));
+
+        } else {
+            // ── DISH NAME SEARCH ───────────────────────────────────────
+            const res  = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(query)}`);
+            const data = await res.json();
+
+            grid.innerHTML = '';
+
+            if (!data.meals || data.meals.length === 0) {
+                showMessage(grid, 'No recipes found. Try a cuisine (e.g. Indian, Mexican) or a dish name.');
+                return;
+            }
+
+            data.meals.forEach(meal => grid.appendChild(createCard(meal)));
+        }
+
+    } catch (err) {
+        showMessage(grid, 'Search failed. Please check your connection.');
+        console.error('searchRecipes error:', err);
+    }
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async function () {
+
     loadAvatar();
 
-    // Load recipes
-    loadRandomRecipes();
+    // Load the real area list from MealDB first, then start everything else
+    await loadAreas();
+    loadAllRecipes();
 
-    // Close logout popup when clicking outside
-    const popup = document.getElementById('logoutPopup');
-    if (popup) {
-        popup.addEventListener('click', function (event) {
-            if (event.target === popup) closeLogoutPopup();
+    const searchInput = document.querySelector('.search-bar input');
+    const grid        = document.getElementById('foodGrid');
+
+    if (searchInput && grid) {
+        searchInput.addEventListener('input', function () {
+            const query = this.value.trim();
+            clearTimeout(searchDebounceTimer);
+
+            if (query.length === 0) {
+                isSearchActive = false;
+                if (allMealsLoaded) {
+                    restoreAllRecipes(grid);
+                } else {
+                    loadAllRecipes();
+                }
+                return;
+            }
+
+            isSearchActive = true;
+            searchDebounceTimer = setTimeout(() => searchRecipes(query), 350);
         });
     }
 
-    // Infinite scroll
-    const grid = document.getElementById("foodGrid");
-    if (grid) {
-        grid.addEventListener("scroll", () => {
-            if (grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 200 && !isLoading) {
-                loadRandomRecipes();
-            }
+    const popup = document.getElementById('logoutPopup');
+    if (popup) {
+        popup.addEventListener('click', e => {
+            if (e.target === popup) closeLogoutPopup();
         });
     }
 });
