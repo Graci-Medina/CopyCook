@@ -32,6 +32,7 @@ function newUser(id, name, mail, color) {
   setDoc(user, userData);
 }
 
+//savedRecipes: {uid, mealId, mealName, mealThumb, savedAt}. folders: {uid, name, mealIds[]}.
 
 //TESTING - Aubrey
 signupForm.addEventListener('submit', async function (e) {
