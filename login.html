@@ -5,6 +5,141 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CopyCook - Login</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .forgot-link {
+            text-align: right;
+            margin-top: -10px;
+        }
+        .forgot-link a {
+            color: #9FB19F;
+            font-size: 13px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .forgot-link a:hover {
+            color: #D4A5A5;
+            text-decoration: underline;
+        }
+
+        /* Forgot Password Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: #FDFBF7;
+            border: 3px solid #E8B4B4;
+            border-radius: 24px;
+            padding: 40px 48px;
+            width: 460px;
+            max-width: 90vw;
+            animation: modalIn 0.25s ease-out;
+            position: relative;
+        }
+        @keyframes modalIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to   { transform: translateY(0);     opacity: 1; }
+        }
+        .modal-box h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #3A3A3A;
+            margin-bottom: 8px;
+        }
+        .modal-box p {
+            font-size: 14px;
+            color: #7A7A7A;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+        .modal-box input[type="email"] {
+            background-color: #E8E8E0;
+            border: 2px solid transparent;
+            padding: 18px 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            color: #5A5A5A;
+            outline: none;
+            width: 100%;
+            margin-bottom: 20px;
+            font-family: 'Poppins', sans-serif;
+            transition: border-color 0.2s;
+        }
+        .modal-box input[type="email"]:focus {
+            border-color: #9FB19F;
+            background-color: #DDD;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .modal-actions button {
+            flex: 1;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-cancel-modal {
+            background: #E8E8E0;
+            color: #5A5A5A;
+        }
+        .btn-cancel-modal:hover { background: #DDD; }
+        .btn-send {
+            background: #9FB19F;
+            color: white;
+        }
+        .btn-send:hover { background: #8AA08A; }
+        .btn-send:disabled {
+            background: #CCC;
+            cursor: not-allowed;
+        }
+        .modal-message {
+            font-size: 13px;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 14px;
+            display: none;
+        }
+        .modal-message.success {
+            background: #D4EDDA;
+            color: #155724;
+            border: 1px solid #C3E6CB;
+            display: block;
+        }
+        .modal-message.error {
+            background: #F8D7DA;
+            color: #721C24;
+            border: 1px solid #F5C6CB;
+            display: block;
+        }
+        .modal-close {
+            position: absolute;
+            top: 16px; right: 20px;
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: #9A9A9A;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+        .modal-close:hover { color: #D4A5A5; }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -29,6 +164,11 @@
             <form id="loginForm">
                 <input type="email" id="email" placeholder="Email" required>
                 <input type="password" id="password" placeholder="Password" required>
+
+                <!-- Forgot Password link -->
+                <div class="forgot-link">
+                    <a href="#" id="forgotPasswordLink">Forgot password?</a>
+                </div>
                 
                 <button type="submit" class="submit-btn" id="submitBtn">Login</button>
                 
@@ -40,6 +180,21 @@
             </form>
         </div>
     </main>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal-overlay" id="forgotModal">
+        <div class="modal-box">
+            <button class="modal-close" id="modalCloseBtn">&#x2715;</button>
+            <h2>Reset Password</h2>
+            <p>Enter your email address and we'll send you a link to reset your password.</p>
+            <input type="email" id="resetEmail" placeholder="Enter your email">
+            <div class="modal-actions">
+                <button class="btn-cancel-modal" id="cancelResetBtn">Cancel</button>
+                <button class="btn-send" id="sendResetBtn">Send Reset Link</button>
+            </div>
+            <div class="modal-message" id="resetMessage"></div>
+        </div>
+    </div>
 
     <!-- Firebase SDK -->
     <script type="module" src="firebase-config.js"></script>

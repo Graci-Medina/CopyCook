@@ -181,7 +181,7 @@ body {
     overflow: hidden;
     cursor: pointer;
     transition: transform 0.3s, box-shadow 0.3s;
-    aspect-ratio: 3/4;
+    aspect-ratio: 2/3;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 

@@ -9,6 +9,9 @@
 body {
     font-family: 'Poppins', sans-serif;
     background-color: #F5EFE7;
+    background-image: url('bg-pattern.jpg');
+    background-size: auto;
+    background-repeat: repeat;
     min-height: 100vh;
     display: flex;
     flex-direction: column;

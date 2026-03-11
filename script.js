@@ -2,7 +2,8 @@ import { auth } from './firebase-config.js';
 import {
     signInWithEmailAndPassword,
     onAuthStateChanged,
-    signOut
+    signOut,
+    sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const loginForm = document.getElementById('loginForm');
@@ -32,6 +33,7 @@ function saveAvatarToLocalStorage(user) {
     }
 }
 
+// ── LOGIN ────────────────────────────────────────────────────────────────────
 loginForm.addEventListener('submit', async function (e) {
     e.preventDefault();
 
@@ -54,10 +56,7 @@ loginForm.addEventListener('submit', async function (e) {
 
     try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-
-        // Save avatar data from Firebase profile to localStorage
         saveAvatarToLocalStorage(userCredential.user);
-
         showMessage('Login successful! Welcome back!', 'success');
         loginForm.reset();
 
@@ -97,6 +96,103 @@ loginForm.addEventListener('submit', async function (e) {
     }
 });
 
+// ── FORGOT PASSWORD MODAL ────────────────────────────────────────────────────
+const forgotModal    = document.getElementById('forgotModal');
+const resetEmailInput = document.getElementById('resetEmail');
+const resetMessage   = document.getElementById('resetMessage');
+const sendResetBtn   = document.getElementById('sendResetBtn');
+
+function openForgotModal() {
+    resetEmailInput.value = '';
+    resetMessage.className = 'modal-message';
+    resetMessage.textContent = '';
+    sendResetBtn.disabled = false;
+    sendResetBtn.textContent = 'Send Reset Link';
+    forgotModal.classList.add('active');
+    setTimeout(() => resetEmailInput.focus(), 100);
+}
+
+function closeForgotModal() {
+    forgotModal.classList.remove('active');
+}
+
+// Pre-fill email from login field if already typed
+document.getElementById('forgotPasswordLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    const currentEmail = emailInput.value.trim();
+    if (currentEmail) resetEmailInput.value = currentEmail;
+    openForgotModal();
+});
+
+document.getElementById('modalCloseBtn').addEventListener('click', closeForgotModal);
+document.getElementById('cancelResetBtn').addEventListener('click', closeForgotModal);
+
+// Close on backdrop click
+forgotModal.addEventListener('click', function (e) {
+    if (e.target === forgotModal) closeForgotModal();
+});
+
+// Send password reset email
+sendResetBtn.addEventListener('click', async function () {
+    const email = resetEmailInput.value.trim();
+
+    if (!email) {
+        showResetMessage('Please enter your email address.', 'error');
+        return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showResetMessage('Please enter a valid email address.', 'error');
+        return;
+    }
+
+    sendResetBtn.disabled = true;
+    sendResetBtn.textContent = 'Sending...';
+
+    try {
+        await sendPasswordResetEmail(auth, email);
+        showResetMessage(
+            `Reset link sent to ${email}. Check your inbox (and spam folder).`,
+            'success'
+        );
+        sendResetBtn.textContent = 'Sent ✓';
+    } catch (error) {
+        console.error('Password reset error:', error);
+        let msg = 'Something went wrong. Please try again.';
+
+        switch (error.code) {
+            case 'auth/user-not-found':
+                msg = 'No account found with that email address.';
+                break;
+            case 'auth/invalid-email':
+                msg = 'Please enter a valid email address.';
+                break;
+            case 'auth/too-many-requests':
+                msg = 'Too many requests. Please wait a moment and try again.';
+                break;
+            case 'auth/network-request-failed':
+                msg = 'Network error. Please check your connection.';
+                break;
+        }
+
+        showResetMessage(msg, 'error');
+        sendResetBtn.disabled = false;
+        sendResetBtn.textContent = 'Send Reset Link';
+    }
+});
+
+// Enter key triggers send
+resetEmailInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') sendResetBtn.click();
+});
+
+function showResetMessage(msg, type) {
+    resetMessage.textContent = msg;
+    resetMessage.className = `modal-message ${type}`;
+}
+
+// ── AUTH STATE ───────────────────────────────────────────────────────────────
 onAuthStateChanged(auth, (user) => {
     if (user) {
         console.log('User is signed in:', user.email);
@@ -105,6 +201,7 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
+// ── HELPERS ──────────────────────────────────────────────────────────────────
 function showMessage(message, type) {
     messageDiv.textContent = message;
     messageDiv.className = `message ${type}`;
