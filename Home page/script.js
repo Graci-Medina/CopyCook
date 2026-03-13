@@ -116,7 +116,7 @@ function createCard(meal) {
     card.innerHTML = `
         <img src="${meal.strMealThumb}" alt="${meal.strMeal}" loading="lazy">
         <div class="food-info"><h4>${meal.strMeal}</h4></div>
-        <button class="save-btn" onclick="event.stopPropagation()">Save</button>
+        <button class="save-btn" onclick="event.stopPropagation(); openFolderPicker(meal, this)">Save</button>
     `;
     return card;
 }
@@ -274,4 +274,143 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (e.target === popup) closeLogoutPopup();
         });
     }
+});
+// ─── FOLDER PICKER ────────────────────────────────────────────────────────────
+let activeMeal    = null;
+let activeSaveBtn = null;
+
+function openFolderPicker(meal, saveBtn) {
+    activeMeal    = meal;
+    activeSaveBtn = saveBtn;
+
+    // Position popup near the save button
+    var rect   = saveBtn.getBoundingClientRect();
+    var popup  = document.getElementById('folderPickerPopup');
+    var popupW = 240;
+    var left   = rect.right - popupW;
+    if (left < 8) left = 8;
+    var top = rect.bottom + 8;
+    if (top + 300 > window.innerHeight) top = rect.top - 300;
+    popup.style.left = left + 'px';
+    popup.style.top  = top  + 'px';
+
+    document.getElementById('folderPickerBody').innerHTML =
+        '<p class="folder-picker-empty">Loading…</p>';
+    document.getElementById('folderPickerOverlay').classList.add('active');
+
+    var uid = localStorage.getItem('userUID');
+    if (!uid) {
+        document.getElementById('folderPickerBody').innerHTML =
+            '<p class="folder-picker-empty">Please log in to save recipes.</p>';
+        return;
+    }
+
+    import('./firebase-functions.js').then(function(mod) {
+        mod.getFolders(uid).then(function(folders) {
+            renderFolderList(folders);
+        }).catch(function() {
+            document.getElementById('folderPickerBody').innerHTML =
+                '<p class="folder-picker-empty">Could not load folders.</p>';
+        });
+    });
+}
+
+function renderFolderList(folders) {
+    var body = document.getElementById('folderPickerBody');
+    body.innerHTML = '';
+    if (!folders || folders.length === 0) {
+        body.innerHTML = '<p class="folder-picker-empty">No folders yet — create one below!</p>';
+        return;
+    }
+    folders.forEach(function(folder) {
+        var btn = document.createElement('button');
+        btn.className = 'folder-picker-item';
+        btn.innerHTML =
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none">' +
+            '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"' +
+            ' stroke="#9FB19F" stroke-width="1.8" fill="none"/></svg>' +
+            '<span>' + folder.name + '</span>';
+        btn.onclick = function() { saveToFolder(folder); };
+        body.appendChild(btn);
+    });
+}
+
+function closeFolderPicker() {
+    document.getElementById('folderPickerOverlay').classList.remove('active');
+    activeMeal    = null;
+    activeSaveBtn = null;
+}
+
+function saveToFolder(folder) {
+    if (!activeMeal) return;
+    var uid  = localStorage.getItem('userUID');
+    var meal = activeMeal;
+    var btn  = activeSaveBtn;
+    closeFolderPicker();
+    flashSaved(btn);
+    import('./firebase-functions.js').then(function(mod) {
+        mod.saveRecipe(uid, folder.name, meal);
+    });
+}
+
+function flashSaved(btn) {
+    if (!btn) return;
+    btn.textContent = 'Saved ✓';
+    btn.style.opacity = '1';
+    btn.style.background = 'rgba(138,160,138,0.95)';
+    setTimeout(function() {
+        btn.textContent = 'Save';
+        btn.style.background = '';
+        btn.style.opacity = '';
+    }, 2000);
+}
+
+// ─── CREATE FOLDER ────────────────────────────────────────────────────────────
+function openCreateFolder() {
+    var pickerPopup = document.getElementById('folderPickerPopup');
+    var createPopup = document.getElementById('createFolderPopup');
+    createPopup.style.left = pickerPopup.style.left;
+    createPopup.style.top  = pickerPopup.style.top;
+
+    document.getElementById('folderPickerOverlay').classList.remove('active');
+    document.getElementById('newFolderName').value = '';
+    document.getElementById('createFolderError').textContent = '';
+    document.getElementById('createFolderOverlay').classList.add('active');
+    setTimeout(function() { document.getElementById('newFolderName').focus(); }, 80);
+}
+
+function closeCreateFolder() {
+    document.getElementById('createFolderOverlay').classList.remove('active');
+    activeMeal    = null;
+    activeSaveBtn = null;
+}
+
+function confirmCreateFolder() {
+    var name = document.getElementById('newFolderName').value.trim();
+    var err  = document.getElementById('createFolderError');
+    if (!name) { err.textContent = 'Please enter a folder name.'; return; }
+
+    var uid  = localStorage.getItem('userUID');
+    if (!uid) { err.textContent = 'You must be logged in.'; return; }
+
+    var meal = activeMeal;
+    var btn  = activeSaveBtn;
+    closeCreateFolder();
+    flashSaved(btn);
+
+    import('./firebase-functions.js').then(function(mod) {
+        mod.createFolder(uid, name, 'private').then(function() {
+            if (meal) mod.saveRecipe(uid, name, meal);
+        });
+    });
+}
+
+// Close pickers on backdrop click
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('folderPickerOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeFolderPicker();
+    });
+    document.getElementById('createFolderOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeCreateFolder();
+    });
 });

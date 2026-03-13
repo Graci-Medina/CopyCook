@@ -70,6 +70,45 @@
             <button class="cancel-btn" onclick="closeLogoutPopup()">Cancel</button>
         </div>
     </div>
+
+    <!-- Folder Picker Popup -->
+    <div id="folderPickerOverlay" class="folder-picker-overlay">
+        <div class="folder-picker-popup" id="folderPickerPopup">
+            <div class="folder-picker-header">
+                <span>Save to folder</span>
+                <button class="folder-picker-close" onclick="closeFolderPicker()">&times;</button>
+            </div>
+            <div class="folder-picker-body" id="folderPickerBody"></div>
+            <div class="folder-picker-footer">
+                <button class="folder-create-btn" onclick="openCreateFolder()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>
+                    Create new folder
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Folder Popup -->
+    <div id="createFolderOverlay" class="folder-picker-overlay">
+        <div class="folder-picker-popup" id="createFolderPopup">
+            <div class="folder-picker-header">
+                <span>New folder</span>
+                <button class="folder-picker-close" onclick="closeCreateFolder()">&times;</button>
+            </div>
+            <div class="folder-picker-body" style="padding:16px 20px 8px;">
+                <input type="text" id="newFolderName" class="folder-name-input" placeholder="Folder name…" maxlength="40" onkeydown="if(event.key==='Enter') confirmCreateFolder()">
+                <div id="createFolderError" class="folder-error"></div>
+            </div>
+            <div class="folder-picker-footer">
+                <button class="folder-create-btn" onclick="confirmCreateFolder()" style="justify-content:center;">
+                    Create &amp; save
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
