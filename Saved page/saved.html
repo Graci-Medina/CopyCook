@@ -137,7 +137,6 @@
         }
 
         .profile-avatar:hover { transform: scale(1.05); }
-        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
         /* ── Page body ── */
         .page-body {
@@ -169,12 +168,6 @@
             flex-shrink: 0;
         }
 
-        .profile-card-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
         .profile-card-avatar.initials {
             display: flex;
             align-items: center;
@@ -184,11 +177,7 @@
             color: white;
         }
 
-        .profile-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
+        .profile-info { display: flex; flex-direction: column; gap: 4px; }
 
         .profile-name {
             font-size: 18px;
@@ -203,10 +192,7 @@
             color: #5A5A5A;
         }
 
-        .profile-stats span b {
-            color: #2A2A2A;
-            font-weight: 600;
-        }
+        .profile-stats span b { color: #2A2A2A; font-weight: 600; }
 
         .view-profile-btn {
             background-color: #9FB19F;
@@ -222,10 +208,7 @@
             white-space: nowrap;
         }
 
-        .view-profile-btn:hover {
-            background-color: #8AA08A;
-            transform: scale(1.03);
-        }
+        .view-profile-btn:hover { background-color: #8AA08A; transform: scale(1.03); }
 
         /* ── Section header ── */
         .section-header {
@@ -235,11 +218,7 @@
             margin-bottom: 20px;
         }
 
-        .section-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: #2A2A2A;
-        }
+        .section-title { font-size: 28px; font-weight: 700; color: #2A2A2A; }
 
         .create-btn {
             background-color: #9FB19F;
@@ -254,17 +233,10 @@
             transition: background-color 0.2s, transform 0.2s;
         }
 
-        .create-btn:hover {
-            background-color: #8AA08A;
-            transform: scale(1.03);
-        }
+        .create-btn:hover { background-color: #8AA08A; transform: scale(1.03); }
 
         /* ── Filter tabs ── */
-        .filter-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 24px;
-        }
+        .filter-tabs { display: flex; gap: 10px; margin-bottom: 24px; }
 
         .filter-tab {
             padding: 9px 24px;
@@ -277,19 +249,9 @@
             border: none;
         }
 
-        .filter-tab.active {
-            background-color: #3A3A3A;
-            color: white;
-        }
-
-        .filter-tab.inactive {
-            background-color: #9FB19F;
-            color: white;
-        }
-
-        .filter-tab.inactive:hover {
-            background-color: #8AA08A;
-        }
+        .filter-tab.active { background-color: #3A3A3A; color: white; }
+        .filter-tab.inactive { background-color: #9FB19F; color: white; }
+        .filter-tab.inactive:hover { background-color: #8AA08A; }
 
         /* ── Folders grid ── */
         .folders-grid {
@@ -319,23 +281,18 @@
         }
 
         .folder-thumb img {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             object-fit: cover;
             display: block;
             transition: transform 0.3s;
         }
 
-        .folder-card:hover .folder-thumb img {
-            transform: scale(1.05);
-        }
+        .folder-card:hover .folder-thumb img { transform: scale(1.05); }
 
         .lock-badge {
             position: absolute;
-            top: 12px;
-            left: 12px;
-            width: 32px;
-            height: 32px;
+            top: 12px; left: 12px;
+            width: 32px; height: 32px;
             background: rgba(255,255,255,0.88);
             border-radius: 50%;
             display: flex;
@@ -344,16 +301,22 @@
             backdrop-filter: blur(4px);
         }
 
-        .lock-badge svg {
-            width: 16px;
-            height: 16px;
-        }
+        .lock-badge svg { width: 16px; height: 16px; }
 
         .folder-name {
             padding: 12px 14px;
             font-size: 15px;
             font-weight: 600;
             color: #2A2A2A;
+        }
+
+        /* ── Loading state ── */
+        .loading-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #9FB19F;
+            font-size: 15px;
+            padding: 40px 0;
         }
 
         /* ── Empty state ── */
@@ -398,12 +361,7 @@
             to   { transform: translateY(0);     opacity: 1; }
         }
 
-        .modal h3 {
-            font-size: 22px;
-            font-weight: 700;
-            color: #2A2A2A;
-            margin-bottom: 24px;
-        }
+        .modal h3 { font-size: 22px; font-weight: 700; color: #2A2A2A; margin-bottom: 24px; }
 
         .modal input[type="text"] {
             width: 100%;
@@ -421,11 +379,7 @@
 
         .modal input[type="text"]:focus { border-color: #9FB19F; }
 
-        .modal-privacy {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 28px;
-        }
+        .modal-privacy { display: flex; gap: 10px; margin-bottom: 28px; }
 
         .privacy-btn {
             flex: 1;
@@ -441,16 +395,9 @@
             transition: all 0.2s;
         }
 
-        .privacy-btn.selected {
-            border-color: #9FB19F;
-            background: #9FB19F;
-            color: white;
-        }
+        .privacy-btn.selected { border-color: #9FB19F; background: #9FB19F; color: white; }
 
-        .modal-actions {
-            display: flex;
-            gap: 12px;
-        }
+        .modal-actions { display: flex; gap: 12px; }
 
         .modal-actions button {
             flex: 1;
@@ -499,9 +446,7 @@
         .cancel-btn:hover { background: #8AA08A; }
 
         /* ── Responsive ── */
-        @media (max-width: 1100px) {
-            .folders-grid { grid-template-columns: repeat(3, 1fr); }
-        }
+        @media (max-width: 1100px) { .folders-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 768px) {
             .sidebar { width: 60px; }
             .nav-icon { width: 28px; height: 28px; }
@@ -509,7 +454,6 @@
             .top-bar { padding: 14px 16px; }
             .page-body { padding: 0 16px 20px; }
         }
-
         @media (max-width: 480px) {
             .sidebar { width: 50px; padding: 15px 0; }
             .nav-icon { width: 24px; height: 24px; }
@@ -524,13 +468,13 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <img src="logo.png" alt="CopyCook" onclick="window.location.href='../Home page/home.html'">
+            <img src="../logo.png" alt="CopyCook" onclick="window.location.href='../Home page/home.html'">
         </div>
         <nav class="nav-icons">
             <a href="../Home page/home.html" class="nav-icon">
                 <img src="home-icon.png" alt="Home">
             </a>
-            <a href="#" class="nav-icon">
+            <a href="../Explore/explore.html" class="nav-icon">
                 <img src="explore-icon.png" alt="Explore">
             </a>
             <a href="#" class="nav-icon">
@@ -569,15 +513,13 @@
                     <line x1="9" y1="20" x2="15" y2="20" stroke="#D4A5A5" stroke-width="2"/>
                 </svg>
             </div>
-            <div class="profile-avatar" id="profileAvatar">
-                <img src="drakepfp.png" alt="Profile">
-            </div>
+            <div class="profile-avatar" id="profileAvatar"></div>
         </div>
 
         <!-- Page body -->
         <div class="page-body">
 
-            <!-- Profile card (top-right aligned like screenshot) -->
+            <!-- Profile card -->
             <div class="profile-card">
                 <div class="profile-info" style="text-align:right;">
                     <div class="profile-name" id="profileName">Loading...</div>
@@ -603,7 +545,9 @@
             </div>
 
             <!-- Folders grid -->
-            <div class="folders-grid" id="foldersGrid"></div>
+            <div class="folders-grid" id="foldersGrid">
+                <p class="loading-state">Loading your folders...</p>
+            </div>
 
             <!-- Empty state -->
             <div class="empty-state" id="emptyState">
@@ -642,7 +586,9 @@
     </div>
 </div>
 
-<script>
+<script type="module">
+import { createFolder as createFolderFS, getFolders as getFoldersFS } from '../firebase-functions.js';
+
 // ── Constants ──
 const PLACEHOLDER_IMAGES = [
     'https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg',
@@ -658,7 +604,7 @@ const PLACEHOLDER_IMAGES = [
 // ── State ──
 let currentTab      = 'private';
 let selectedPrivacy = 'private';
-let folders = JSON.parse(localStorage.getItem('ccFolders') || '[]');
+let folders         = [];
 
 function saveFolders() {
     localStorage.setItem('ccFolders', JSON.stringify(folders));
@@ -670,15 +616,12 @@ function loadProfile() {
     const color   = localStorage.getItem('userAvatarColor');
     const name    = localStorage.getItem('userDisplayName') || 'Your Profile';
 
-    // Top-right small avatar
     const topAvatar = document.getElementById('profileAvatar');
     if (initial && color) {
-        topAvatar.innerHTML = initial;
+        topAvatar.textContent = initial;
         topAvatar.style.backgroundColor = color;
-        topAvatar.querySelector('img') && (topAvatar.innerHTML = initial);
     }
 
-    // Profile card avatar
     const cardAvatar = document.getElementById('profileCardAvatar');
     if (initial && color) {
         cardAvatar.textContent = initial;
@@ -688,17 +631,15 @@ function loadProfile() {
         cardAvatar.style.backgroundColor = '#D4A5A5';
     }
 
-    document.getElementById('profileName').textContent = name;
-
-    // Fake follower/following counts (replace with Firestore later)
-    document.getElementById('followerCount').textContent  = localStorage.getItem('ccFollowers')  || '0';
-    document.getElementById('followingCount').textContent = localStorage.getItem('ccFollowing')  || '0';
+    document.getElementById('profileName').textContent        = name;
+    document.getElementById('followerCount').textContent      = localStorage.getItem('ccFollowers')  || '0';
+    document.getElementById('followingCount').textContent     = localStorage.getItem('ccFollowing')  || '0';
 }
 
 // ── Render folders ──
 function renderFolders() {
-    const grid  = document.getElementById('foldersGrid');
-    const empty = document.getElementById('emptyState');
+    const grid     = document.getElementById('foldersGrid');
+    const empty    = document.getElementById('emptyState');
     const filtered = folders.filter(f => f.privacy === currentTab);
 
     grid.innerHTML = '';
@@ -715,7 +656,7 @@ function renderFolders() {
         card.className = 'folder-card';
         card.onclick = () => openFolder(folder.id);
 
-        const thumb = folder.coverImage || PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
+        const thumb    = folder.coverImage || PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
         const lockIcon = folder.privacy === 'private' ? `
             <div class="lock-badge">
                 <svg viewBox="0 0 24 24" fill="none">
@@ -731,7 +672,7 @@ function renderFolders() {
             </div>`;
 
         const recipeCount = (folder.recipes || []).length;
-        const subtitle = recipeCount === 0 ? 'Empty' : `${recipeCount} recipe${recipeCount !== 1 ? 's' : ''}`;
+        const subtitle    = recipeCount === 0 ? 'Empty' : `${recipeCount} recipe${recipeCount !== 1 ? 's' : ''}`;
 
         card.innerHTML = `
             <div class="folder-thumb">
@@ -749,32 +690,33 @@ function renderFolders() {
 }
 
 // ── Tab switching ──
-function setTab(tab) {
+window.setTab = function(tab) {
     currentTab = tab;
     document.getElementById('tabPrivate').className = `filter-tab ${tab === 'private' ? 'active' : 'inactive'}`;
     document.getElementById('tabPublic').className  = `filter-tab ${tab === 'public'  ? 'active' : 'inactive'}`;
     renderFolders();
-}
+};
 
 // ── Create folder modal ──
-function openCreateModal() {
+window.openCreateModal = function() {
     document.getElementById('folderNameInput').value = '';
     selectPrivacy('private');
     document.getElementById('createModal').classList.add('active');
     setTimeout(() => document.getElementById('folderNameInput').focus(), 100);
-}
+};
 
-function closeCreateModal() {
+window.closeCreateModal = function() {
     document.getElementById('createModal').classList.remove('active');
-}
+};
 
-function selectPrivacy(p) {
+window.selectPrivacy = function(p) {
     selectedPrivacy = p;
     document.getElementById('btnPrivate').className = `privacy-btn ${p === 'private' ? 'selected' : ''}`;
     document.getElementById('btnPublic').className  = `privacy-btn ${p === 'public'  ? 'selected' : ''}`;
-}
+};
 
-function createFolder() {
+// ── Create folder — saves to Firestore + updates local state ──
+window.createFolder = async function() {
     const name = document.getElementById('folderNameInput').value.trim();
     if (!name) {
         document.getElementById('folderNameInput').style.borderColor = '#D4A5A5';
@@ -783,23 +725,35 @@ function createFolder() {
     }
 
     const newFolder = {
-        id:          Date.now().toString(),
+        id:         name.replace(/\//g, '_'),   // mirrors the Firestore doc ID
         name,
-        privacy:     selectedPrivacy,
-        recipes:     [],
-        coverImage:  null,
-        createdAt:   new Date().toISOString()
+        privacy:    selectedPrivacy,
+        recipes:    [],
+        coverImage: null,
+        createdAt:  new Date().toISOString()
     };
 
+    // 1. Update local state and UI immediately so it feels instant
     folders.push(newFolder);
     saveFolders();
     closeCreateModal();
-
-    // Switch to the matching tab so user sees their new folder
     setTab(selectedPrivacy);
-}
 
-// ── Open folder (placeholder — wire to folder detail page later) ──
+    // 2. Persist to Firestore so it survives logout
+    const uid = localStorage.getItem('userUID');
+    if (uid) {
+        try {
+            await createFolderFS(uid, name, selectedPrivacy);
+            console.log('✅ Folder saved to Firestore:', name);
+        } catch (err) {
+            console.error('❌ Firestore folder save failed:', err);
+        }
+    } else {
+        console.warn('No userUID in localStorage — folder saved locally only. Try logging out and back in.');
+    }
+};
+
+// ── Open folder ──
 function openFolder(folderId) {
     window.location.href = `folder.html?id=${folderId}`;
 }
@@ -815,25 +769,42 @@ document.getElementById('folderNameInput').addEventListener('keydown', function(
 });
 
 // ── Logout ──
-function toggleLogoutPopup(e) {
+window.toggleLogoutPopup = function(e) {
     e.preventDefault();
     document.getElementById('logoutPopup').classList.toggle('active');
-}
-function closeLogoutPopup() {
+};
+window.closeLogoutPopup = function() {
     document.getElementById('logoutPopup').classList.remove('active');
-}
-function handleLogout() {
+};
+window.handleLogout = function() {
     localStorage.clear();
     sessionStorage.clear();
     window.location.href = '../login.html';
-}
+};
 document.getElementById('logoutPopup').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeLogoutPopup();
 });
 
-// ── Init ──
-document.addEventListener('DOMContentLoaded', function() {
+// ── Init — load folders from Firestore on every page load ──
+document.addEventListener('DOMContentLoaded', async function() {
     loadProfile();
+
+    const uid = localStorage.getItem('userUID');
+    if (uid) {
+        try {
+            // Always read from Firestore so folders survive logout/device changes
+            folders = await getFoldersFS(uid);
+            saveFolders(); // keep localStorage in sync as a cache
+            console.log('✅ Folders loaded from Firestore:', folders.length);
+        } catch (err) {
+            console.error('❌ Failed to load from Firestore, falling back to localStorage:', err);
+            folders = JSON.parse(localStorage.getItem('ccFolders') || '[]');
+        }
+    } else {
+        console.warn('No userUID found — make sure you are logged in');
+        folders = JSON.parse(localStorage.getItem('ccFolders') || '[]');
+    }
+
     renderFolders();
 });
 </script>

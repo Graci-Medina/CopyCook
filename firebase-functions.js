@@ -1,75 +1,75 @@
 import { db } from './firebase-config.js';
 
 import {
-    doc, setDoc, updateDoc, getDoc, arrayUnion, arrayRemove
+    doc, setDoc, updateDoc, getDoc, getDocs, collection, arrayUnion, arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-function newUser(id, name, mail, color) {
-  const userData = {
-    uid: id,
-    displayName: name,
-    email: mail,
-    avatarColor: color
-  }
-  const user = doc(db, 'users/' + id);
-  setDoc(user, userData);
+// Each user document contains a subcollection of folders.
+// Each folder document lists all saved recipe objects inside it.
+// Ex: users/uid/folders/cheatfood  →  { name, privacy, savedRecipes: [meal, ...] }
+
+export function newUser(id, name, mail, color) {
+    const userData = {
+        uid: id,
+        displayName: name,
+        email: mail,
+        avatarColor: color
+    };
+    const userRef = doc(db, 'users/' + id);
+    setDoc(userRef, userData);
 }
 
-//NOTE: If all recipes are saved to folders, have each user document contain a collection
-//for folders which includes documents for each folder listing all of the ids of the recipes
-//in them
-//Ex: users/uid/folders/cheatfood(savedRecipes: rid, rid2, rid3)
-
-
-function createFolder(id, folderName, publicToggle) {
-  const folderData = {
-    name: folderName,
-    public: publicToggle,
-    savedRecipes: []
-  }
-  const folder = doc(db, 'users/' + id + '/folders/' + folderName);
-  setDoc(folder, folderData);
+// Creates a folder under users/uid/folders/safeName
+// Stores privacy and createdAt so data survives logout
+export function createFolder(id, folderName, privacy = 'private') {
+    const safeName = folderName.replace(/\//g, '_');
+    const folderData = {
+        name: folderName,
+        privacy: privacy,
+        savedRecipes: [],
+        createdAt: new Date().toISOString()
+    };
+    const folderRef = doc(db, 'users/' + id + '/folders/' + safeName);
+    setDoc(folderRef, folderData);
 }
 
-function saveRecipe(id, folderName, mealObj) {
-  const folder = doc(db, 'users/' + id + '/folders/' + folderName);
-  updateDoc(folder, {
-    savedRecipes: arrayUnion(mealObj)
-  });
+// Reads all folders for a user from Firestore and returns them
+// as an array shaped the same way saved.html expects
+export async function getFolders(uid) {
+    const foldersRef = collection(db, 'users/' + uid + '/folders');
+    const snapshot = await getDocs(foldersRef);
+    return snapshot.docs.map(docSnap => ({
+        id:         docSnap.id,
+        name:       docSnap.data().name,
+        privacy:    docSnap.data().privacy        || 'private',
+        recipes:    docSnap.data().savedRecipes   || [],
+        coverImage: docSnap.data().coverImage     || null,
+        createdAt:  docSnap.data().createdAt      || ''
+    }));
 }
 
-function unsaveRecipe(id, folderName, mealObj) {
-  const folder = doc(db, 'users/' + id + '/folders/' + folderName);
-  updateDoc(folder, {
-    savedRecipes: arrayRemove(mealObj)
-  });
+export function saveRecipe(id, folderName, mealObj) {
+    const safeName = folderName.replace(/\//g, '_');
+    const folderRef = doc(db, 'users/' + id + '/folders/' + safeName);
+    updateDoc(folderRef, {
+        savedRecipes: arrayUnion(mealObj)
+    });
 }
 
-//NOT WORKING
-/*
-function getSavedRecipes(id) {
-    const user = doc(db, 'users/' + id);
-    const doc = await getDoc(user);
+export function unsaveRecipe(id, folderName, mealObj) {
+    const safeName = folderName.replace(/\//g, '_');
+    const folderRef = doc(db, 'users/' + id + '/folders/' + safeName);
+    updateDoc(folderRef, {
+        savedRecipes: arrayRemove(mealObj)
+    });
+}
 
-    if (doc.exists()) {
-        return doc;
+export async function getSavedRecipes(id) {
+    const userRef = doc(db, 'users/' + id);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+        return userSnap.data();
+    } else {
+        return null;
     }
-    else {
-        return "Null";
-    }
 }
-*/
-
-//TESTING - Aubrey
-signupForm.addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    //newUser(123, "Aubrey", "aubsickle@gmail.com", "#D4A5A5");
-    //createFolder(123, "Meat Dishes");
-    //saveRecipe(123, "Vegetarian Dishes", "testmeal");
-    //unsaveRecipe(123, "Vegetarian Dishes", "testmeal");
-
-
-    //document.getElementById("demo").innerHTML = getSavedRecipes(123);
-
-});
