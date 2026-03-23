@@ -21,16 +21,17 @@ export function newUser(id, name, mail, color) {
 
 // Creates a folder under users/uid/folders/safeName
 // Stores privacy and createdAt so data survives logout
-export function createFolder(id, folderName, privacy = 'private') {
+export async function createFolder(id, folderName, privacy = 'private') {
     const safeName = folderName.replace(/\//g, '_');
     const folderData = {
         name: folderName,
         privacy: privacy,
         savedRecipes: [],
+        coverImage: null,
         createdAt: new Date().toISOString()
     };
     const folderRef = doc(db, 'users/' + id + '/folders/' + safeName);
-    setDoc(folderRef, folderData);
+    await setDoc(folderRef, folderData);
 }
 
 // Reads all folders for a user from Firestore and returns them
@@ -48,18 +49,24 @@ export async function getFolders(uid) {
     }));
 }
 
-export function saveRecipe(id, folderName, mealObj) {
+export async function saveRecipe(id, folderName, mealObj) {
     const safeName = folderName.replace(/\//g, '_');
     const folderRef = doc(db, 'users/' + id + '/folders/' + safeName);
-    updateDoc(folderRef, {
+    // setDoc with merge so it works even if folder doc doesn't exist yet
+    await setDoc(folderRef, {
         savedRecipes: arrayUnion(mealObj)
-    });
+    }, { merge: true });
+    // Also update coverImage if not set
+    const snap = await getDoc(folderRef);
+    if (snap.exists() && !snap.data().coverImage) {
+        await updateDoc(folderRef, { coverImage: mealObj.thumb });
+    }
 }
 
-export function unsaveRecipe(id, folderName, mealObj) {
+export async function unsaveRecipe(id, folderName, mealObj) {
     const safeName = folderName.replace(/\//g, '_');
     const folderRef = doc(db, 'users/' + id + '/folders/' + safeName);
-    updateDoc(folderRef, {
+    await updateDoc(folderRef, {
         savedRecipes: arrayRemove(mealObj)
     });
 }

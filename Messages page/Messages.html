@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CopyCook - Messages</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #F5EFE7;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 75px;
+            background-color: #F5EFE7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            border-right: 2px solid #E8B4B4;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .logo { margin-bottom: 40px; }
+        .logo img { height: 50px; width: auto; cursor: pointer; }
+
+        .nav-icons {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            flex: 1;
+            margin-top: 150px;
+        }
+
+        .nav-icon {
+            position: relative;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+        }
+
+        .nav-icon:hover { transform: scale(1.1); }
+        .nav-icon img { width: 100%; height: 100%; border-radius: 50%; }
+        .nav-icon.active { box-shadow: 0 0 0 3px #E8B4B4; }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px; right: -5px;
+            background-color: #D4A5A5;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .nav-bottom { margin-top: auto; padding-bottom: 20px; }
+
+        /* ── Left Panel (Messages List) ── */
+        .messages-panel {
+            width: 340px;
+            flex-shrink: 0;
+            background-color: #FDFBF7;
+            border-right: 2px solid #E8B4B4;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .messages-header {
+            padding: 28px 24px 16px;
+            flex-shrink: 0;
+        }
+
+        .messages-header h2 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #2A2A2A;
+            margin-bottom: 16px;
+        }
+
+        /* New Message button */
+        .new-message-btn {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 8px;
+        }
+
+        .new-message-btn:hover { background: #F0EBE3; }
+
+        .new-msg-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #E8B4B4, #D4A5A5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .new-msg-icon svg { width: 22px; height: 22px; }
+
+        .new-msg-label {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2A2A2A;
+        }
+
+        /* Search inside panel */
+        .msg-search {
+            margin: 0 16px 12px;
+            display: flex;
+            align-items: center;
+            background: #F0EBE3;
+            border-radius: 12px;
+            padding: 10px 14px;
+            gap: 8px;
+        }
+
+        .msg-search input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            color: #3A3A3A;
+        }
+
+        .msg-search input::placeholder { color: #9A9A9A; }
+
+        /* Conversation list */
+        .conv-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 8px 8px;
+        }
+
+        .conv-list::-webkit-scrollbar { width: 6px; }
+        .conv-list::-webkit-scrollbar-thumb { background: #D4A5A5; border-radius: 6px; }
+
+        .conv-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 12px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+
+        .conv-item:hover { background: #F0EBE3; }
+        .conv-item.active { background: #F0EBE3; }
+
+        .conv-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            overflow: hidden;
+            border: 2px solid #E8B4B4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .conv-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        .conv-info { flex: 1; min-width: 0; }
+
+        .conv-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2A2A2A;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .conv-preview {
+            font-size: 12px;
+            color: #7A7A7A;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+
+        .conv-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .conv-time {
+            font-size: 11px;
+            color: #9A9A9A;
+        }
+
+        .unread-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #D4A5A5;
+        }
+
+        /* Section label */
+        .conv-section-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #9A9A9A;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            padding: 12px 12px 6px;
+        }
+
+        /* ── Right Panel (Chat View) ── */
+        .chat-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: #F5EFE7;
+        }
+
+        /* Chat top bar */
+        .chat-topbar {
+            display: flex;
+            align-items: center;
+            padding: 18px 28px;
+            gap: 14px;
+            background: #FDFBF7;
+            border-bottom: 2px solid #E8B4B4;
+            flex-shrink: 0;
+        }
+
+        .chat-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid #E8B4B4;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .chat-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        .chat-contact-info { flex: 1; }
+
+        .chat-contact-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2A2A2A;
+        }
+
+        .chat-contact-status {
+            font-size: 12px;
+            color: #9FB19F;
+            font-weight: 500;
+        }
+
+        .chat-actions { display: flex; gap: 10px; }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: #F0EBE3;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .icon-btn:hover { background: #E8B4B4; transform: scale(1.05); }
+        .icon-btn svg { width: 18px; height: 18px; }
+
+        /* ── Messages area ── */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .chat-messages::-webkit-scrollbar { width: 6px; }
+        .chat-messages::-webkit-scrollbar-thumb { background: #D4A5A5; border-radius: 6px; }
+
+        /* Date divider */
+        .date-divider {
+            text-align: center;
+            font-size: 11px;
+            color: #9A9A9A;
+            font-weight: 500;
+            position: relative;
+            margin: 4px 0;
+        }
+
+        .date-divider::before, .date-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 38%;
+            height: 1px;
+            background: #E8B4B4;
+        }
+
+        .date-divider::before { left: 0; }
+        .date-divider::after { right: 0; }
+
+        /* Message bubbles */
+        .msg-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg-row.sent { flex-direction: row-reverse; }
+
+        .msg-row-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .msg-row-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        .bubble-wrap { display: flex; flex-direction: column; gap: 2px; max-width: 60%; }
+        .msg-row.sent .bubble-wrap { align-items: flex-end; }
+
+        .bubble {
+            padding: 11px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #2A2A2A;
+            word-break: break-word;
+        }
+
+        .bubble.received {
+            background: white;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .bubble.sent {
+            background: #9FB19F;
+            color: white;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 2px 8px rgba(159,177,159,0.3);
+        }
+
+        /* Recipe share bubble */
+        .recipe-bubble {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            max-width: 240px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+            border-bottom-left-radius: 4px;
+        }
+
+        .recipe-bubble:hover { transform: scale(1.02); }
+
+        .recipe-bubble img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .recipe-bubble-info {
+            padding: 10px 14px 12px;
+        }
+
+        .recipe-bubble-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #D4A5A5;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+
+        .recipe-bubble-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2A2A2A;
+        }
+
+        .msg-time {
+            font-size: 10px;
+            color: #9A9A9A;
+            padding: 0 4px;
+        }
+
+        /* ── Input area ── */
+        .chat-input-area {
+            padding: 16px 28px 20px;
+            background: #FDFBF7;
+            border-top: 2px solid #E8B4B4;
+            flex-shrink: 0;
+        }
+
+        .chat-input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #F0EBE3;
+            border-radius: 20px;
+            padding: 10px 14px;
+        }
+
+        .input-icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .input-icon-btn:hover { background: #E8B4B4; }
+        .input-icon-btn svg { width: 18px; height: 18px; }
+
+        .chat-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            color: #3A3A3A;
+            resize: none;
+            line-height: 1.4;
+        }
+
+        .chat-input::placeholder { color: #9A9A9A; }
+
+        .send-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: #9FB19F;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.2s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover { background: #8AA08A; transform: scale(1.08); }
+        .send-btn svg { width: 16px; height: 16px; }
+
+        /* ── Logout popup ── */
+        .logout-popup {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center; justify-content: center;
+        }
+        .logout-popup.active { display: flex; }
+        .logout-content {
+            background: #FDFBF7;
+            border: 3px solid #E8B4B4;
+            border-radius: 20px;
+            padding: 40px 50px;
+            text-align: center;
+        }
+        .logout-content h3 { color: #3A3A3A; font-size: 22px; margin-bottom: 24px; font-weight: 500; }
+        .logout-btn, .cancel-btn {
+            width: 100%; padding: 14px 30px; border: none; border-radius: 12px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+            font-family: 'Poppins', sans-serif; margin: 6px 0; transition: all 0.2s;
+        }
+        .logout-btn { background: #D4A5A5; color: white; }
+        .logout-btn:hover { background: #C49595; }
+        .cancel-btn { background: #9FB19F; color: white; }
+        .cancel-btn:hover { background: #8AA08A; }
+
+        /* ── Empty / No chat selected state ── */
+        .no-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            color: #9A9A9A;
+        }
+
+        .no-chat svg { opacity: 0.3; }
+
+        .no-chat p {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .messages-panel { width: 260px; }
+        }
+
+        @media (max-width: 680px) {
+            .messages-panel { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="logo.png" alt="CopyCook Logo">
+            </div>
+            <nav class="nav-icons">
+                <a href="../Home page/home.html" class="nav-icon">
+                    <img src="home-icon.png" alt="Home">
+                </a>
+                <a href="../Explore/explore.html" class="nav-icon">
+                    <img src="explore-icon.png" alt="Explore">
+                </a>
+                <a href="#" class="nav-icon">
+                    <img src="plus-icon.png" alt="Add">
+                </a>
+                <a href="../Saved page/saved.html" class="nav-icon">
+                    <img src="save-icon.png" alt="Saved">
+                </a>
+                <a href="../Messages page/messages.html" class="nav-icon active">
+                    <img src="message.png" alt="Messages">
+                    <span class="notification-badge">10</span>
+                </a>
+            </nav>
+            <div class="nav-bottom">
+                <a href="#" class="nav-icon" onclick="toggleLogoutPopup(event)">
+                    <img src="settings-icon.png" alt="Settings">
+                </a>
+            </div>
+        </aside>
+
+    <!-- Messages List Panel -->
+    <div class="messages-panel">
+        <div class="messages-header">
+            <h2>Messages</h2>
+
+            <!-- New Message -->
+            <div class="new-message-btn" onclick="startNewMessage()">
+                <div class="new-msg-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+                    </svg>
+                </div>
+                <span class="new-msg-label">New Message</span>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="msg-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke="#9A9A9A" stroke-width="2"/>
+                <path d="M16 16L20 20" stroke="#9A9A9A" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input type="text" placeholder="Search messages" id="msgSearchInput" oninput="filterConversations(this.value)">
+        </div>
+
+        <!-- Conversation list -->
+        <div class="conv-list" id="convList">
+            <div class="conv-section-label">Recent</div>
+
+            <!-- Conversations injected by JS -->
+        </div>
+    </div>
+
+    <!-- Chat Panel -->
+    <div class="chat-panel" id="chatPanel">
+
+        <!-- No chat selected -->
+        <div class="no-chat" id="noChatState">
+            <svg width="72" height="72" viewBox="0 0 24 24" fill="none">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#D4A5A5" stroke-width="1.5" fill="none"/>
+            </svg>
+            <p>Select a conversation to start chatting</p>
+        </div>
+
+        <!-- Active chat (hidden until selected) -->
+        <div id="activeChatState" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+
+            <!-- Chat top bar -->
+            <div class="chat-topbar">
+                <div class="chat-avatar" id="chatAvatar"></div>
+                <div class="chat-contact-info">
+                    <div class="chat-contact-name" id="chatName"></div>
+                    <div class="chat-contact-status" id="chatStatus">● Active now</div>
+                </div>
+                <div class="chat-actions">
+                    <button class="icon-btn" title="Voice call">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke="#9FB19F" stroke-width="2" fill="none"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" title="Video call">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <polygon points="23 7 16 12 23 17 23 7" stroke="#D4A5A5" stroke-width="2" fill="none"/>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2" stroke="#D4A5A5" stroke-width="2" fill="none"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" title="Info">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="#A5B4D4" stroke-width="2" fill="none"/>
+                            <line x1="12" y1="8" x2="12" y2="8" stroke="#A5B4D4" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="12" y1="12" x2="12" y2="16" stroke="#A5B4D4" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div class="chat-messages" id="chatMessages"></div>
+
+            <!-- Input -->
+            <div class="chat-input-area">
+                <div class="chat-input-row">
+                    <button class="input-icon-btn" title="Attach image" onclick="attachRecipe()">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="3" width="18" height="18" rx="2" stroke="#D4A5A5" stroke-width="2" fill="none"/>
+                            <circle cx="8.5" cy="8.5" r="1.5" stroke="#D4A5A5" stroke-width="1.5" fill="none"/>
+                            <polyline points="21 15 16 10 5 21" stroke="#D4A5A5" stroke-width="2" fill="none"/>
+                        </svg>
+                    </button>
+                    <button class="input-icon-btn" title="Share recipe" onclick="shareRecipe()">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M3 6h18M3 12h18M3 18h18" stroke="#9FB19F" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                    <textarea class="chat-input" id="chatInput" placeholder="Type a message…" rows="1"
+                        oninput="autoResize(this)"
+                        onkeydown="handleInputKey(event)"></textarea>
+                    <button class="send-btn" onclick="sendMessage()">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <line x1="22" y1="2" x2="11" y2="13" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2" stroke="white" stroke-width="2" fill="none"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Popup -->
+<div id="logoutPopup" class="logout-popup">
+    <div class="logout-content">
+        <h3>Account Settings</h3>
+        <button class="logout-btn" onclick="handleLogout()">Log Out</button>
+        <button class="cancel-btn" onclick="closeLogoutPopup()">Cancel</button>
+    </div>
+</div>
+
+<script>
+// ── Avatar color palette ──
+const AVATAR_COLORS = ['#D4A5A5','#9FB19F','#A5B4D4','#D4C4A5','#B4A5D4','#A5D4C4','#D4A5B4','#C4D4A5'];
+
+function colorFor(name) {
+    let h = 0;
+    for (let c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+    return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+
+// ── Conversations data ──
+const CONVERSATIONS = [
+    {
+        id: 1,
+        name: 'Alex Rivera',
+        initial: 'A',
+        time: 'Just now',
+        preview: '🍜 Check out this ramen recipe!',
+        unread: true,
+        status: '● Active now',
+        messages: [
+            { type: 'received', text: 'Hey! Did you try that ramen spot?', time: '2:10 PM' },
+            { type: 'sent',     text: 'Not yet but I found a copycat recipe 👀', time: '2:11 PM' },
+            { type: 'received', recipe: { name: 'Tonkotsu Ramen', img: 'https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg' }, time: '2:12 PM' },
+            { type: 'sent',     text: 'OMG this looks amazing, saving it!', time: '2:13 PM' },
+            { type: 'received', text: '🍜 Check out this ramen recipe!', time: '2:14 PM' },
+        ]
+    },
+    {
+        id: 2,
+        name: 'Jordan Kim',
+        initial: 'J',
+        time: '14m',
+        preview: 'Can you send that pasta recipe?',
+        unread: true,
+        status: '● Active 5m ago',
+        messages: [
+            { type: 'received', text: 'Hey! Can you send that pasta recipe from yesterday?', time: '1:50 PM' },
+            { type: 'sent',     text: 'Sure! One sec', time: '1:51 PM' },
+            { type: 'sent',     recipe: { name: 'Spaghetti Carbonara', img: 'https://www.themealdb.com/images/media/meals/uquqtu1511178042.jpg' }, time: '1:52 PM' },
+            { type: 'received', text: 'Can you send that pasta recipe?', time: '1:53 PM' },
+        ]
+    },
+    {
+        id: 3,
+        name: 'Sam Patel',
+        initial: 'S',
+        time: '1h',
+        preview: 'The chicken tikka was perfect 🔥',
+        unread: false,
+        status: '● Active 1h ago',
+        messages: [
+            { type: 'sent',     text: 'Made the tikka masala last night!', time: '12:30 PM' },
+            { type: 'received', text: 'How did it turn out??', time: '12:32 PM' },
+            { type: 'sent',     text: 'The chicken tikka was perfect 🔥', time: '12:33 PM' },
+            { type: 'received', text: 'You have to teach me the technique!', time: '12:34 PM' },
+        ]
+    },
+    {
+        id: 4,
+        name: 'Morgan Lee',
+        initial: 'M',
+        time: '2h',
+        preview: 'Same time next week for the cook-off?',
+        unread: false,
+        status: '● Active 2h ago',
+        messages: [
+            { type: 'received', text: 'That was such a fun cook-off!', time: '10:00 AM' },
+            { type: 'sent',     text: 'My bibimbap definitely won 😄', time: '10:02 AM' },
+            { type: 'received', text: 'Haha debatable! Same time next week for the cook-off?', time: '10:04 AM' },
+        ]
+    },
+    {
+        id: 5,
+        name: 'Taylor Brooks',
+        initial: 'T',
+        time: '2d',
+        preview: 'Hey!',
+        unread: false,
+        status: '● Active 2d ago',
+        messages: [
+            { type: 'received', text: 'Hey!', time: 'Mon' },
+        ]
+    },
+    {
+        id: 6,
+        name: 'Casey Nguyen',
+        initial: 'C',
+        time: '3d',
+        preview: 'Which folder did you save that in?',
+        unread: false,
+        status: '● Active 3d ago',
+        messages: [
+            { type: 'sent',     text: 'I found that amazing sushi recipe we talked about!', time: 'Sun' },
+            { type: 'received', text: 'Which folder did you save that in?', time: 'Sun' },
+        ]
+    },
+];
+
+let activeConvId = null;
+let allConvs = [...CONVERSATIONS];
+
+// ── Build avatar HTML ──
+function makeAvatarEl(name, initial, size = 48) {
+    const color = colorFor(name);
+    return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.38)}px;font-weight:700;color:white;">${initial}</div>`;
+}
+
+// ── Render conversation list ──
+function renderConvList(convs) {
+    const list = document.getElementById('convList');
+    list.innerHTML = '<div class="conv-section-label">Recent</div>';
+
+    convs.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'conv-item' + (c.id === activeConvId ? ' active' : '');
+        item.dataset.id = c.id;
+        item.onclick = () => openConversation(c.id);
+
+        item.innerHTML = `
+            ${makeAvatarEl(c.name, c.initial, 48).replace('<div ', '<div class="conv-avatar" ')}
+            <div class="conv-info">
+                <div class="conv-name">${c.name}</div>
+                <div class="conv-preview">${c.preview}</div>
+            </div>
+            <div class="conv-meta">
+                <span class="conv-time">${c.time}</span>
+                ${c.unread ? '<div class="unread-dot"></div>' : ''}
+            </div>
+        `;
+
+        list.appendChild(item);
+    });
+}
+
+// ── Open a conversation ──
+function openConversation(id) {
+    activeConvId = id;
+    const conv = CONVERSATIONS.find(c => c.id === id);
+    if (!conv) return;
+
+    // Mark as read
+    conv.unread = false;
+    renderConvList(allConvs);
+
+    // Show active state
+    document.getElementById('noChatState').style.display = 'none';
+    const activeChat = document.getElementById('activeChatState');
+    activeChat.style.display = 'flex';
+
+    // Set header
+    const avatarEl = document.getElementById('chatAvatar');
+    avatarEl.style.cssText = `width:44px;height:44px;border-radius:50%;background:${colorFor(conv.name)};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;border:2px solid #E8B4B4;flex-shrink:0;`;
+    avatarEl.textContent = conv.initial;
+    document.getElementById('chatName').textContent = conv.name;
+    document.getElementById('chatStatus').textContent = conv.status;
+
+    // Render messages
+    renderMessages(conv.messages);
+}
+
+// ── Render messages ──
+function renderMessages(messages) {
+    const container = document.getElementById('chatMessages');
+    container.innerHTML = '';
+
+    // Add date divider
+    const divider = document.createElement('div');
+    divider.className = 'date-divider';
+    divider.textContent = 'Today';
+    container.appendChild(divider);
+
+    const myInitial = localStorage.getItem('userInitial') || 'Y';
+    const myColor   = localStorage.getItem('userAvatarColor') || '#9FB19F';
+    const conv      = CONVERSATIONS.find(c => c.id === activeConvId);
+
+    messages.forEach(msg => {
+        const row = document.createElement('div');
+        row.className = 'msg-row ' + msg.type;
+
+        if (msg.type === 'received') {
+            // Their avatar
+            const avDiv = document.createElement('div');
+            avDiv.className = 'msg-row-avatar';
+            avDiv.style.cssText = `background:${colorFor(conv.name)};`;
+            avDiv.textContent = conv.initial;
+            row.appendChild(avDiv);
+        }
+
+        const wrap = document.createElement('div');
+        wrap.className = 'bubble-wrap';
+
+        if (msg.recipe) {
+            // Recipe card bubble
+            const recipeCard = document.createElement('div');
+            recipeCard.className = 'recipe-bubble';
+            recipeCard.innerHTML = `
+                <img src="${msg.recipe.img}" alt="${msg.recipe.name}" onerror="this.src='https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg'">
+                <div class="recipe-bubble-info">
+                    <div class="recipe-bubble-label">Shared Recipe</div>
+                    <div class="recipe-bubble-name">${msg.recipe.name}</div>
+                </div>
+            `;
+            wrap.appendChild(recipeCard);
+        } else {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble ' + msg.type;
+            bubble.textContent = msg.text;
+            wrap.appendChild(bubble);
+        }
+
+        const timeEl = document.createElement('div');
+        timeEl.className = 'msg-time';
+        timeEl.textContent = msg.time;
+        wrap.appendChild(timeEl);
+
+        row.appendChild(wrap);
+
+        if (msg.type === 'sent') {
+            const avDiv = document.createElement('div');
+            avDiv.className = 'msg-row-avatar';
+            avDiv.style.cssText = `background:${myColor};`;
+            avDiv.textContent = myInitial;
+            row.appendChild(avDiv);
+        }
+
+        container.appendChild(row);
+    });
+
+    // Scroll to bottom
+    setTimeout(() => container.scrollTop = container.scrollHeight, 50);
+}
+
+// ── Send message ──
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const text  = input.value.trim();
+    if (!text || !activeConvId) return;
+
+    const conv = CONVERSATIONS.find(c => c.id === activeConvId);
+    if (!conv) return;
+
+    const now = new Date();
+    const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+    conv.messages.push({ type: 'sent', text, time });
+    conv.preview = text;
+    conv.time    = 'Just now';
+
+    input.value = '';
+    input.style.height = 'auto';
+
+    renderMessages(conv.messages);
+    renderConvList(allConvs);
+
+    // Simulate a reply after 1.5s
+    setTimeout(() => simulateReply(conv), 1500);
+}
+
+const AUTO_REPLIES = [
+    'That sounds delicious! 😋',
+    'I need to try this recipe!',
+    'CopyCook is the best for finding recipes 🍳',
+    'You always find the best dishes!',
+    'OMG yes, let\'s make it together!',
+    '🔥🔥🔥',
+    'Saving this for the weekend!',
+];
+
+function simulateReply(conv) {
+    if (conv.id !== activeConvId) return;
+    const reply = AUTO_REPLIES[Math.floor(Math.random() * AUTO_REPLIES.length)];
+    const now   = new Date();
+    const time  = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+    conv.messages.push({ type: 'received', text: reply, time });
+    conv.preview = reply;
+    conv.time    = 'Just now';
+
+    renderMessages(conv.messages);
+    renderConvList(allConvs);
+}
+
+function handleInputKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+}
+
+function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+// ── Share recipe (demo) ──
+function shareRecipe() {
+    if (!activeConvId) return;
+    const conv = CONVERSATIONS.find(c => c.id === activeConvId);
+    if (!conv) return;
+
+    const recipes = [
+        { name: 'Chicken Tikka Masala', img: 'https://www.themealdb.com/images/media/meals/1tikk1d1574863350.jpg' },
+        { name: 'Spaghetti Carbonara',  img: 'https://www.themealdb.com/images/media/meals/uquqtu1511178042.jpg' },
+        { name: 'Beef Bibimbap',        img: 'https://www.themealdb.com/images/media/meals/1529446352.jpg' },
+        { name: 'Pad Thai',             img: 'https://www.themealdb.com/images/media/meals/uuuspp1511297945.jpg' },
+    ];
+    const recipe = recipes[Math.floor(Math.random() * recipes.length)];
+    const now    = new Date();
+    const time   = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+    conv.messages.push({ type: 'sent', recipe, time });
+    conv.preview = `Shared: ${recipe.name}`;
+    conv.time    = 'Just now';
+
+    renderMessages(conv.messages);
+    renderConvList(allConvs);
+}
+
+function attachRecipe() {
+    shareRecipe(); // same demo behavior
+}
+
+// ── Search ──
+function filterConversations(query) {
+    const q = query.trim().toLowerCase();
+    allConvs = q
+        ? CONVERSATIONS.filter(c => c.name.toLowerCase().includes(q) || c.preview.toLowerCase().includes(q))
+        : [...CONVERSATIONS];
+    renderConvList(allConvs);
+}
+
+// ── New message (demo) ──
+function startNewMessage() {
+    alert('New message composer coming soon!');
+}
+
+// ── Logout ──
+function toggleLogoutPopup(e) { e.preventDefault(); document.getElementById('logoutPopup').classList.toggle('active'); }
+function closeLogoutPopup() { document.getElementById('logoutPopup').classList.remove('active'); }
+function handleLogout() { localStorage.clear(); sessionStorage.clear(); window.location.href = 'login.html'; }
+document.getElementById('logoutPopup').addEventListener('click', e => { if (e.target === e.currentTarget) closeLogoutPopup(); });
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', () => {
+    // Load profile avatar in sidebar if stored
+    const initial = localStorage.getItem('userInitial');
+    const color   = localStorage.getItem('userAvatarColor');
+
+    renderConvList(CONVERSATIONS);
+
+    // Auto-open first conversation
+    openConversation(1);
+});
+</script>
+</body>
+</html>

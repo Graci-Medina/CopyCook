@@ -17,7 +17,7 @@
                 <a href="home.html" class="nav-icon active">
                     <img src="home-icon.png" alt="Home">
                 </a>
-                <a href="../explore/explore.html" class="nav-icon">
+                <a href="../Explore/explore.html" class="nav-icon">
                     <img src="explore-icon.png" alt="Explore">
                 </a>
                 <a href="#" class="nav-icon">
@@ -26,7 +26,7 @@
                 <a href="../Saved page/saved.html" class="nav-icon">
                     <img src="save-icon.png" alt="Saved">
                 </a>
-                <a href="#" class="nav-icon">
+                <a href="../Messages page/Messages.html" class="nav-icon">
                     <img src="message.png" alt="Messages">
                     <span class="notification-badge">10</span>
                 </a>
@@ -46,7 +46,7 @@
                         <circle cx="11" cy="11" r="7" stroke="#5A5A5A" stroke-width="2"/>
                         <path d="M16 16L20 20" stroke="#5A5A5A" stroke-width="2" stroke-linecap="round"/>
                     </svg>
-                    <input type="text" placeholder="Search restaurants or dishes">
+                    <input type="text" id="mainSearchInput" placeholder="Search restaurants or dishes" oninput="searchRecipes(this.value)">
                     <svg class="mic-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
                         <rect x="10" y="5" width="4" height="10" rx="2" fill="#D4A5A5"/>
                         <path d="M7 12C7 14.7614 9.23858 17 12 17C14.7614 17 17 14.7614 17 12" stroke="#D4A5A5" stroke-width="2"/>
@@ -124,6 +124,7 @@
         </div>
     </div>
 
+    <script type="module" src="home-firebase.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
