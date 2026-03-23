@@ -17,7 +17,7 @@
                 <a href="home.html" class="nav-icon active">
                     <img src="home-icon.png" alt="Home">
                 </a>
-                <a href="../explore/explore.html" class="nav-icon">
+                <a href="../Explore/explore.html" class="nav-icon">
                     <img src="explore-icon.png" alt="Explore">
                 </a>
                 <a href="#" class="nav-icon">
@@ -26,7 +26,7 @@
                 <a href="../Saved page/saved.html" class="nav-icon">
                     <img src="save-icon.png" alt="Saved">
                 </a>
-                <a href="#" class="nav-icon">
+                <a href="../Messages page/Messages.html" class="nav-icon">
                     <img src="message.png" alt="Messages">
                     <span class="notification-badge">10</span>
                 </a>
@@ -46,7 +46,7 @@
                         <circle cx="11" cy="11" r="7" stroke="#5A5A5A" stroke-width="2"/>
                         <path d="M16 16L20 20" stroke="#5A5A5A" stroke-width="2" stroke-linecap="round"/>
                     </svg>
-                    <input type="text" placeholder="Search restaurants or dishes">
+                    <input type="text" id="mainSearchInput" placeholder="Search restaurants or dishes" oninput="searchRecipes(this.value)">
                     <svg class="mic-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
                         <rect x="10" y="5" width="4" height="10" rx="2" fill="#D4A5A5"/>
                         <path d="M7 12C7 14.7614 9.23858 17 12 17C14.7614 17 17 14.7614 17 12" stroke="#D4A5A5" stroke-width="2"/>
@@ -71,44 +71,60 @@
         </div>
     </div>
 
-    <!-- Folder Picker Popup -->
-    <div id="folderPickerOverlay" class="folder-picker-overlay">
-        <div class="folder-picker-popup" id="folderPickerPopup">
-            <div class="folder-picker-header">
-                <span>Save to folder</span>
-                <button class="folder-picker-close" onclick="closeFolderPicker()">&times;</button>
+    <!-- Save to Folder Popup -->
+    <div id="savePopupOverlay" class="save-popup-overlay" onclick="closeSavePopup(event)">
+        <div class="save-popup">
+            <h2 class="save-popup-title">Save</h2>
+            <div class="save-search-bar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <circle cx="11" cy="11" r="7" stroke="#D4A5A5" stroke-width="2"/>
+                    <path d="M16 16L20 20" stroke="#D4A5A5" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <input type="text" id="folderSearchInput" placeholder="" oninput="filterFolders(this.value)">
             </div>
-            <div class="folder-picker-body" id="folderPickerBody"></div>
-            <div class="folder-picker-footer">
-                <button class="folder-create-btn" onclick="openCreateFolder()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <p class="save-popup-label">All folders</p>
+            <div class="save-folders-list" id="saveFoldersList"></div>
+            <button class="save-create-folder-btn" onclick="openSaveCreateFolder()">
+                <span class="save-create-plus">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" fill="#9FB19F"/>
+                        <path d="M12 7v10M7 12h10" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
                     </svg>
-                    Create new folder
+                </span>
+                Create Folder
+            </button>
+        </div>
+    </div>
+
+    <!-- Create Folder Sub-popup -->
+    <div id="createFolderPopup" class="save-popup-overlay" onclick="closeCreateFolderPopup(event)">
+        <div class="save-popup">
+            <h2 class="save-popup-title">New Folder</h2>
+            <input type="text" id="newFolderNameInput" class="new-folder-input" placeholder="Folder name" maxlength="40">
+            <div class="folder-privacy-row">
+                <button class="privacy-opt selected" id="privOptPrivate" onclick="selectSavePrivacy('private')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="2" fill="none"/>
+                    </svg>
+                    Private
                 </button>
+                <button class="privacy-opt" id="privOptPublic" onclick="selectSavePrivacy('public')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" fill="none"/>
+                    </svg>
+                    Public
+                </button>
+            </div>
+            <div class="save-popup-actions">
+                <button class="sp-cancel-btn" onclick="closeCreateFolderPopup()">Cancel</button>
+                <button class="sp-confirm-btn" onclick="confirmCreateFolder()">Create</button>
             </div>
         </div>
     </div>
 
-    <!-- Create Folder Popup -->
-    <div id="createFolderOverlay" class="folder-picker-overlay">
-        <div class="folder-picker-popup" id="createFolderPopup">
-            <div class="folder-picker-header">
-                <span>New folder</span>
-                <button class="folder-picker-close" onclick="closeCreateFolder()">&times;</button>
-            </div>
-            <div class="folder-picker-body" style="padding:16px 20px 8px;">
-                <input type="text" id="newFolderName" class="folder-name-input" placeholder="Folder name…" maxlength="40" onkeydown="if(event.key==='Enter') confirmCreateFolder()">
-                <div id="createFolderError" class="folder-error"></div>
-            </div>
-            <div class="folder-picker-footer">
-                <button class="folder-create-btn" onclick="confirmCreateFolder()" style="justify-content:center;">
-                    Create &amp; save
-                </button>
-            </div>
-        </div>
-    </div>
-
+    <script type="module" src="home-firebase.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
