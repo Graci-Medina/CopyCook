@@ -1,12 +1,17 @@
-import { db } from './firebase-config.js';
+import { db, auth } from './firebase-config.js';
 
 import {
-    doc, setDoc, updateDoc, getDoc, getDocs, collection, arrayUnion, arrayRemove
+    updateProfile, updateEmail
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+import {
+    doc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, collection, arrayUnion, arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Each user document contains a subcollection of folders.
 // Each folder document lists all saved recipe objects inside it.
 // Ex: users/uid/folders/cheatfood  →  { name, privacy, savedRecipes: [meal, ...] }
+
 
 export function newUser(id, name, mail, color) {
     const userData = {
@@ -18,6 +23,73 @@ export function newUser(id, name, mail, color) {
     const userRef = doc(db, 'users/' + id);
     setDoc(userRef, userData);
 }
+
+export async function getUser(uid) {
+    const userRef = collection(db, 'users/' + uid);
+    const snapshot = await getDoc(userRef);
+    return snapshot.docs.map(docSnap => ({
+        uid:         docSnap.uid,
+        displayName:       docSnap.data().displayName,
+        email:    docSnap.data().email        || '',
+        bio:    docSnap.data().bio   || '',
+        dietaryPrefs: docSnap.data().dietaryPrefs     || [],
+        avatarColor:  docSnap.data().avatarColor      || ''
+    }));
+}
+
+/*
+export function getUser() {
+    const user = auth.currentUser;
+    if (user !== null) {
+        user.providerData.forEach((profile) => {
+            //console.log("Sign-in provider: " + profile.providerId);
+            console.log("  Provider-specific UID: " + profile.uid);
+            console.log("  Name: " + profile.displayName);
+            console.log("  Email: " + profile.email);
+            //console.log("  Photo URL: " + profile.photoURL);
+        });
+    }
+}
+*/
+
+
+/*
+export function updateUserDisplayName(newDisplayName) {
+    updateProfile(auth.currentUser, {
+        displayName: newDisplayName
+    }).then(() => {
+        // Profile updated!
+        // ...
+    }).catch((error) => {
+        // An error occurred
+        // ...
+    });
+}
+ */
+
+/*
+export function updateMail(id, newEmail, privacy = 'private') {
+    updateEmail(auth.currentUser, newEmail).then(() => {
+        // Email updated!
+        // ...
+    }).catch((error) => {
+        // An error occurred
+        // ...
+    });
+}
+*/
+
+
+export function updateUserProfile(id, name, bio, dietaryPrefs) {
+    const userRef = doc(db, 'users/' + id);
+    const userData = {
+        displayName: name,
+        bio: bio,
+        dietaryPrefs: dietaryPrefs
+    }
+    updateDoc(userRef, userData)
+}
+
 
 // Creates a folder under users/uid/folders/safeName
 // Stores privacy and createdAt so data survives logout
@@ -46,6 +118,13 @@ export async function getFolders(uid) {
         coverImage: docSnap.data().coverImage     || null,
         createdAt:  docSnap.data().createdAt      || ''
     }));
+}
+
+//Deletes a specified folder within a users collection
+export function deleteFolder(id, folderName) {
+    const safeName = folderName.replace(/\//g, '_');
+    const folderRef = doc(db, 'users/' + id + '/folders/' + safeName);
+    deleteDoc(folderRef);
 }
 
 export function saveRecipe(id, folderName, mealObj) {
