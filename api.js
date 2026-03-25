@@ -67,7 +67,7 @@ export async function saveRecipeToFolder(folderName, meal) {
  * DELETE /api/recipes/save/:mealId?folderName=...
  * Removes a recipe from the specified folder.
  *
- * @param {string} mealId     - idMeal value from MealDB
+ * @param {string} mealId     -  idMeal value from MealDB
  * @param {string} folderName - folder to remove it from
  */
 export async function unsaveRecipeFromFolder(mealId, folderName) {
