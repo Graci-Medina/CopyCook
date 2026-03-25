@@ -177,7 +177,14 @@ sendResetBtn.addEventListener('click', async () => {
     sendResetBtn.textContent = 'Sending…';
 
     try {
-        await sendPasswordResetEmail(auth, email);
+        const isDev = window.location.hostname === 'localhost';
+        const actionCodeSettings = {
+            url: isDev
+                ? 'http://localhost:3000/reset-password.html'
+                : 'https://copycook-f596a.web.app/reset-password.html',
+            handleCodeInApp: false,
+        };
+        await sendPasswordResetEmail(auth, email, actionCodeSettings);
         showResetMessage('Reset link sent! Check your inbox.', 'success');
         sendResetBtn.textContent = 'Sent!';
     } catch (error) {

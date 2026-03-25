@@ -39,7 +39,7 @@ function handleLogout() {
     window.location.href = '../login.html';
 }
 
-// ── AREAS LIST (fetched dynamically from MealDB) ─────────────────────────────
+// ─── AREAS LIST (fetched dynamically from MealDB) ─────────────────────────────
 // knownAreas: Map of lowercase name → exact canonical string MealDB expects
 let knownAreas = new Map();
 
