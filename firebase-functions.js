@@ -37,47 +37,7 @@ export async function getUser(uid) {
     }));
 }
 
-/*
-export function getUser() {
-    const user = auth.currentUser;
-    if (user !== null) {
-        user.providerData.forEach((profile) => {
-            //console.log("Sign-in provider: " + profile.providerId);
-            console.log("  Provider-specific UID: " + profile.uid);
-            console.log("  Name: " + profile.displayName);
-            console.log("  Email: " + profile.email);
-            //console.log("  Photo URL: " + profile.photoURL);
-        });
-    }
-}
-*/
 
-
-/*
-export function updateUserDisplayName(newDisplayName) {
-    updateProfile(auth.currentUser, {
-        displayName: newDisplayName
-    }).then(() => {
-        // Profile updated!
-        // ...
-    }).catch((error) => {
-        // An error occurred
-        // ...
-    });
-}
- */
-
-/*
-export function updateMail(id, newEmail, privacy = 'private') {
-    updateEmail(auth.currentUser, newEmail).then(() => {
-        // Email updated!
-        // ...
-    }).catch((error) => {
-        // An error occurred
-        // ...
-    });
-}
-*/
 
 
 export function updateUserProfile(id, name, bio, dietaryPrefs) {
