@@ -1,11 +1,12 @@
+// This file lives in ./Home page/ so imports need ../ to reach root files
 import {
     saveRecipe,
     unsaveRecipe,
     createFolder,
     getFolders
-} from './firebase-functions.js';
+} from '../firebase-functions.js';
 
-// Expose Firebase functions globally so Home_script.js (plain script) can call them
+// Expose Firebase functions globally so script.js (plain <script> tag) can call them
 window.fbSaveRecipe   = saveRecipe;
 window.fbUnsaveRecipe = unsaveRecipe;
 window.fbCreateFolder = createFolder;

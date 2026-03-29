@@ -4,7 +4,14 @@
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "serviceAccountKey.json",
+      ".env",
+      "server.js",
+      "authMiddleware.js",
+      "firebaseAdmin.js",
+      "package.json",
+      "package-lock.json"
     ]
   }
 }

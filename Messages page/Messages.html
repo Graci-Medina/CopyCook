@@ -593,7 +593,7 @@
                 <a href="../Saved page/saved.html" class="nav-icon">
                     <img src="save-icon.png" alt="Saved">
                 </a>
-                <a href="../Messages page/messages.html" class="nav-icon active">
+                <a href="Messages.html" class="nav-icon active">
                     <img src="message.png" alt="Messages">
                     <span class="notification-badge">10</span>
                 </a>
@@ -1064,7 +1064,7 @@ function startNewMessage() {
 // ── Logout ──
 function toggleLogoutPopup(e) { e.preventDefault(); document.getElementById('logoutPopup').classList.toggle('active'); }
 function closeLogoutPopup() { document.getElementById('logoutPopup').classList.remove('active'); }
-function handleLogout() { localStorage.clear(); sessionStorage.clear(); window.location.href = 'login.html'; }
+function handleLogout() { localStorage.clear(); sessionStorage.clear(); window.location.href = '/login.html'; }
 document.getElementById('logoutPopup').addEventListener('click', e => { if (e.target === e.currentTarget) closeLogoutPopup(); });
 
 // ── Init ──

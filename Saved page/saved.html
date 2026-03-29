@@ -15,10 +15,7 @@
             overflow: hidden;
         }
 
-        .container {
-            display: flex;
-            height: 100vh;
-        }
+        .container { display: flex; height: 100vh; }
 
         /* ── Sidebar ── */
         .sidebar {
@@ -45,12 +42,9 @@
 
         .nav-icon {
             position: relative;
-            width: 30px;
-            height: 30px;
+            width: 30px; height: 30px;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             cursor: pointer;
             transition: transform 0.3s, box-shadow 0.3s;
             text-decoration: none;
@@ -65,188 +59,175 @@
             top: -3px; right: -3px;
             background-color: #D4A5A5;
             color: white;
-            font-size: 10px;
-            font-weight: 700;
+            font-size: 10px; font-weight: 700;
             padding: 2px 5px;
             border-radius: 10px;
-            min-width: 18px;
-            text-align: center;
+            min-width: 18px; text-align: center;
         }
 
         .nav-bottom { margin-top: auto; padding-bottom: 20px; }
 
         /* ── Main ── */
         .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            background-color: #F5EFE7;
+            flex: 1; display: flex; flex-direction: column;
+            overflow: hidden; background-color: #F5EFE7;
         }
 
         /* ── Top bar ── */
         .top-bar {
-            display: flex;
-            align-items: center;
-            padding: 18px 30px;
-            gap: 15px;
-            flex-shrink: 0;
+            display: flex; align-items: center;
+            padding: 18px 30px; gap: 15px; flex-shrink: 0;
         }
 
         .search-bar {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            background-color: #9FB19F;
-            border-radius: 15px;
-            padding: 13px 20px;
-            gap: 12px;
-            transition: background-color 0.3s;
-            cursor: text;
+            flex: 1; display: flex; align-items: center;
+            background-color: #9FB19F; border-radius: 15px;
+            padding: 13px 20px; gap: 12px;
+            transition: background-color 0.3s; cursor: text;
         }
 
         .search-bar:hover { background-color: #8AA08A; }
 
         .search-bar input {
-            flex: 1;
-            border: none;
-            background: transparent;
-            outline: none;
-            font-size: 15px;
-            color: #3A3A3A;
-            font-family: 'Poppins', sans-serif;
+            flex: 1; border: none; background: transparent; outline: none;
+            font-size: 15px; color: #3A3A3A; font-family: 'Poppins', sans-serif;
         }
 
         .search-bar input::placeholder { color: #5A5A5A; }
 
         .profile-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: 3px solid #E8B4B4;
-            cursor: pointer;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: 700;
-            color: white;
-            flex-shrink: 0;
-            transition: transform 0.3s, box-shadow 0.3s;
+            width: 50px; height: 50px;
+            border-radius: 50%; border: 3px solid #E8B4B4;
+            cursor: pointer; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; font-weight: 700; color: white;
+            flex-shrink: 0; transition: transform 0.3s, box-shadow 0.3s;
         }
 
         .profile-avatar:hover { transform: scale(1.05); }
 
         /* ── Page body ── */
-        .page-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0 30px 30px;
-        }
-
+        .page-body { flex: 1; overflow-y: auto; padding: 0 30px 30px; }
         .page-body::-webkit-scrollbar { width: 8px; }
         .page-body::-webkit-scrollbar-track { background: #F5EFE7; }
         .page-body::-webkit-scrollbar-thumb { background: #D4A5A5; border-radius: 8px; }
 
         /* ── Profile card ── */
         .profile-card {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 16px;
-            margin-bottom: 28px;
-            padding: 16px 0 0;
+            display: flex; align-items: center; justify-content: flex-end;
+            gap: 16px; margin-bottom: 28px; padding: 16px 0 0;
         }
 
         .profile-card-avatar {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            border: 3px solid #E8B4B4;
-            overflow: hidden;
-            flex-shrink: 0;
+            width: 64px; height: 64px;
+            border-radius: 50%; border: 3px solid #E8B4B4;
+            overflow: hidden; flex-shrink: 0;
         }
 
         .profile-card-avatar.initials {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: 700;
-            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; font-weight: 700; color: white;
         }
 
         .profile-info { display: flex; flex-direction: column; gap: 4px; }
+        .profile-name { font-size: 18px; font-weight: 700; color: #2A2A2A; }
 
-        .profile-name {
-            font-size: 18px;
-            font-weight: 700;
-            color: #2A2A2A;
-        }
-
-        .profile-stats {
-            display: flex;
-            gap: 20px;
-            font-size: 13px;
-            color: #5A5A5A;
-        }
-
+        .profile-stats { display: flex; gap: 20px; font-size: 13px; color: #5A5A5A; }
         .profile-stats span b { color: #2A2A2A; font-weight: 600; }
 
         .view-profile-btn {
-            background-color: #9FB19F;
-            color: white;
-            border: none;
-            padding: 10px 22px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
+            background-color: #9FB19F; color: white; border: none;
+            padding: 10px 22px; border-radius: 20px;
+            font-size: 13px; font-weight: 600; cursor: pointer;
             font-family: 'Poppins', sans-serif;
-            transition: background-color 0.2s, transform 0.2s;
-            white-space: nowrap;
+            transition: background-color 0.2s, transform 0.2s; white-space: nowrap;
         }
 
         .view-profile-btn:hover { background-color: #8AA08A; transform: scale(1.03); }
 
         /* ── Section header ── */
         .section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
+            display: flex; align-items: center;
+            justify-content: space-between; margin-bottom: 20px;
         }
 
         .section-title { font-size: 28px; font-weight: 700; color: #2A2A2A; }
 
+        /* Right side of section header: sort + create */
+        .section-actions {
+            display: flex; align-items: center; gap: 10px;
+        }
+
         .create-btn {
-            background-color: #9FB19F;
-            color: white;
-            border: none;
-            padding: 12px 28px;
-            border-radius: 20px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
+            background-color: #9FB19F; color: white; border: none;
+            padding: 12px 28px; border-radius: 20px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
             font-family: 'Poppins', sans-serif;
             transition: background-color 0.2s, transform 0.2s;
         }
 
         .create-btn:hover { background-color: #8AA08A; transform: scale(1.03); }
 
+        /* ── Sort wrapper (same pattern as folder.html) ── */
+        .sort-wrapper { position: relative; }
+
+        .sort-btn {
+            display: flex; align-items: center; gap: 7px;
+            background: white; border: 2px solid #E8E8E0;
+            border-radius: 20px; padding: 11px 18px;
+            font-size: 14px; font-weight: 600; color: #5A5A5A;
+            cursor: pointer; font-family: 'Poppins', sans-serif;
+            transition: all 0.2s; white-space: nowrap;
+        }
+
+        .sort-btn:hover { border-color: #9FB19F; color: #9FB19F; }
+        .sort-btn:hover svg line { stroke: #9FB19F; }
+        .sort-btn.active { border-color: #9FB19F; background: #9FB19F; color: white; }
+        .sort-btn.active svg line { stroke: white; }
+
+        .sort-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px); right: 0;
+            background: white;
+            border: 2px solid #E8E8E0;
+            border-radius: 16px; overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            z-index: 50; min-width: 180px;
+            animation: dropIn 0.15s ease-out;
+        }
+
+        @keyframes dropIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .sort-dropdown.open { display: block; }
+
+        .sort-option {
+            display: flex; align-items: center; gap: 10px;
+            width: 100%; padding: 13px 18px;
+            font-size: 13px; font-weight: 500; color: #3A3A3A;
+            background: none; border: none;
+            border-bottom: 1px solid #F0EDE8;
+            cursor: pointer; font-family: 'Poppins', sans-serif;
+            text-align: left; transition: background 0.15s;
+        }
+
+        .sort-option:last-child { border-bottom: none; }
+        .sort-option:hover { background: #F5EFE7; }
+        .sort-option.selected { color: #9FB19F; font-weight: 700; }
+
+        .sort-check { margin-left: auto; opacity: 0; color: #9FB19F; font-size: 14px; }
+        .sort-option.selected .sort-check { opacity: 1; }
+
         /* ── Filter tabs ── */
         .filter-tabs { display: flex; gap: 10px; margin-bottom: 24px; }
 
         .filter-tab {
-            padding: 9px 24px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: 'Poppins', sans-serif;
-            transition: all 0.2s;
-            border: none;
+            padding: 9px 24px; border-radius: 20px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            font-family: 'Poppins', sans-serif; transition: all 0.2s; border: none;
         }
 
         .filter-tab.active { background-color: #3A3A3A; color: white; }
@@ -254,19 +235,12 @@
         .filter-tab.inactive:hover { background-color: #8AA08A; }
 
         /* ── Folders grid ── */
-        .folders-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-        }
+        .folders-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 
         .folder-card {
-            border-radius: 20px;
-            overflow: hidden;
-            cursor: pointer;
+            border-radius: 20px; overflow: hidden; cursor: pointer;
             transition: transform 0.25s, box-shadow 0.25s;
-            background: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         .folder-card:hover {
@@ -274,86 +248,106 @@
             box-shadow: 0 10px 28px rgba(0,0,0,0.14);
         }
 
-        .folder-thumb {
-            position: relative;
-            aspect-ratio: 4/3;
-            overflow: hidden;
-        }
+        .folder-thumb { position: relative; aspect-ratio: 4/3; overflow: hidden; }
 
         .folder-thumb img {
             width: 100%; height: 100%;
-            object-fit: cover;
-            display: block;
-            transition: transform 0.3s;
+            object-fit: cover; display: block; transition: transform 0.3s;
         }
 
         .folder-card:hover .folder-thumb img { transform: scale(1.05); }
 
+        /* ── Delete button ── */
+        .delete-folder-btn {
+            position: absolute; top: 10px; right: 10px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background: rgba(255,255,255,0.9); border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.2s, background 0.2s, transform 0.2s;
+            backdrop-filter: blur(4px); z-index: 5;
+        }
+
+        .folder-card:hover .delete-folder-btn { opacity: 1; }
+        .delete-folder-btn:hover { background: #D4A5A5; transform: scale(1.1); }
+        .delete-folder-btn:hover svg path { stroke: white; }
+
+        /* ── Confirm delete modal ── */
+        .confirm-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); z-index: 300;
+            align-items: center; justify-content: center;
+        }
+
+        .confirm-overlay.active { display: flex; }
+
+        .confirm-box {
+            background: #FDFBF7; border: 3px solid #E8B4B4;
+            border-radius: 24px; padding: 36px 44px;
+            width: 380px; max-width: 90vw;
+            text-align: center; animation: popIn 0.2s ease-out;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.92); opacity: 0; }
+            to   { transform: scale(1);    opacity: 1; }
+        }
+
+        .confirm-box h3 { font-size: 19px; font-weight: 700; color: #2A2A2A; margin-bottom: 8px; }
+        .confirm-box p  { font-size: 14px; color: #7A7A7A; margin-bottom: 28px; line-height: 1.5; }
+        .confirm-actions { display: flex; gap: 12px; }
+
+        .confirm-actions button {
+            flex: 1; padding: 13px; border-radius: 12px; border: none;
+            font-size: 14px; font-weight: 600; font-family: 'Poppins', sans-serif;
+            cursor: pointer; transition: all 0.2s;
+        }
+
+        .btn-keep { background: #E8E8E0; color: #5A5A5A; }
+        .btn-keep:hover { background: #DDD; }
+        .btn-remove { background: #D4A5A5; color: white; }
+        .btn-remove:hover { background: #C49595; }
+
         .lock-badge {
-            position: absolute;
-            top: 12px; left: 12px;
+            position: absolute; top: 12px; left: 12px;
             width: 32px; height: 32px;
-            background: rgba(255,255,255,0.88);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: rgba(255,255,255,0.88); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
             backdrop-filter: blur(4px);
         }
 
         .lock-badge svg { width: 16px; height: 16px; }
 
         .folder-name {
-            padding: 12px 14px;
-            font-size: 15px;
-            font-weight: 600;
-            color: #2A2A2A;
+            padding: 12px 14px; font-size: 15px; font-weight: 600; color: #2A2A2A;
         }
 
-        /* ── Loading state ── */
+        /* ── Loading / empty state ── */
         .loading-state {
-            grid-column: 1 / -1;
-            text-align: center;
-            color: #9FB19F;
-            font-size: 15px;
-            padding: 40px 0;
+            grid-column: 1 / -1; text-align: center;
+            color: #9FB19F; font-size: 15px; padding: 40px 0;
         }
 
-        /* ── Empty state ── */
         .empty-state {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 0;
-            gap: 12px;
-            color: #9FB19F;
-            font-size: 15px;
+            display: none; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 60px 0; gap: 12px; color: #9FB19F; font-size: 15px;
         }
 
         .empty-state svg { opacity: 0.4; }
 
         /* ── Create folder modal ── */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.45);
-            z-index: 100;
-            align-items: center;
-            justify-content: center;
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); z-index: 100;
+            align-items: center; justify-content: center;
         }
 
         .modal-overlay.active { display: flex; }
 
         .modal {
-            background: #FDFBF7;
-            border: 3px solid #E8B4B4;
-            border-radius: 24px;
-            padding: 40px 48px;
-            width: 460px;
-            max-width: 90vw;
-            animation: modalIn 0.25s ease-out;
+            background: #FDFBF7; border: 3px solid #E8B4B4;
+            border-radius: 24px; padding: 40px 48px;
+            width: 460px; max-width: 90vw; animation: modalIn 0.25s ease-out;
         }
 
         @keyframes modalIn {
@@ -364,17 +358,10 @@
         .modal h3 { font-size: 22px; font-weight: 700; color: #2A2A2A; margin-bottom: 24px; }
 
         .modal input[type="text"] {
-            width: 100%;
-            background: #E8E8E0;
-            border: 2px solid transparent;
-            padding: 16px 18px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: 'Poppins', sans-serif;
-            color: #3A3A3A;
-            outline: none;
-            margin-bottom: 16px;
-            transition: border-color 0.2s;
+            width: 100%; background: #E8E8E0; border: 2px solid transparent;
+            padding: 16px 18px; border-radius: 12px;
+            font-size: 16px; font-family: 'Poppins', sans-serif;
+            color: #3A3A3A; outline: none; margin-bottom: 16px; transition: border-color 0.2s;
         }
 
         .modal input[type="text"]:focus { border-color: #9FB19F; }
@@ -382,17 +369,10 @@
         .modal-privacy { display: flex; gap: 10px; margin-bottom: 28px; }
 
         .privacy-btn {
-            flex: 1;
-            padding: 11px;
-            border-radius: 12px;
-            border: 2px solid #E8E8E0;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: 'Poppins', sans-serif;
-            cursor: pointer;
-            background: white;
-            color: #5A5A5A;
-            transition: all 0.2s;
+            flex: 1; padding: 11px; border-radius: 12px;
+            border: 2px solid #E8E8E0; font-size: 14px; font-weight: 600;
+            font-family: 'Poppins', sans-serif; cursor: pointer;
+            background: white; color: #5A5A5A; transition: all 0.2s;
         }
 
         .privacy-btn.selected { border-color: #9FB19F; background: #9FB19F; color: white; }
@@ -400,15 +380,9 @@
         .modal-actions { display: flex; gap: 12px; }
 
         .modal-actions button {
-            flex: 1;
-            padding: 14px;
-            border-radius: 12px;
-            border: none;
-            font-size: 15px;
-            font-weight: 600;
-            font-family: 'Poppins', sans-serif;
-            cursor: pointer;
-            transition: all 0.2s;
+            flex: 1; padding: 14px; border-radius: 12px; border: none;
+            font-size: 15px; font-weight: 600; font-family: 'Poppins', sans-serif;
+            cursor: pointer; transition: all 0.2s;
         }
 
         .btn-cancel { background: #E8E8E0; color: #5A5A5A; }
@@ -418,28 +392,26 @@
 
         /* ── Logout popup ── */
         .logout-popup {
-            display: none;
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 200;
-            align-items: center;
-            justify-content: center;
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 200;
+            align-items: center; justify-content: center;
         }
+
         .logout-popup.active { display: flex; }
+
         .logout-content {
-            background: #FDFBF7;
-            border: 3px solid #E8B4B4;
-            border-radius: 20px;
-            padding: 40px 50px;
-            text-align: center;
+            background: #FDFBF7; border: 3px solid #E8B4B4;
+            border-radius: 20px; padding: 40px 50px; text-align: center;
         }
+
         .logout-content h3 { color: #3A3A3A; font-size: 22px; margin-bottom: 24px; font-weight: 500; }
+
         .logout-btn, .cancel-btn {
-            width: 100%; padding: 14px 30px; border: none;
-            border-radius: 12px; font-size: 15px; font-weight: 600;
-            cursor: pointer; font-family: 'Poppins', sans-serif; margin: 6px 0;
-            transition: all 0.2s;
+            width: 100%; padding: 14px 30px; border: none; border-radius: 12px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+            font-family: 'Poppins', sans-serif; margin: 6px 0; transition: all 0.2s;
         }
+
         .logout-btn { background: #D4A5A5; color: white; }
         .logout-btn:hover { background: #C49595; }
         .cancel-btn { background: #9FB19F; color: white; }
@@ -458,46 +430,44 @@
             .sidebar { width: 50px; padding: 15px 0; }
             .nav-icon { width: 24px; height: 24px; }
             .notification-badge { font-size: 8px; padding: 1px 4px; }
-            .folders-grid { gap: 8px; padding: 0 10px 10px 10px; }
+            .folders-grid { gap: 8px; }
         }
     </style>
 </head>
 <body>
 <div class="container">
 
-    <!-- Sidebar Navigation -->
-        <aside class="sidebar">
-            <div class="logo">
-                <img src="logo.png" alt="CopyCook Logo">
-            </div>
-            <nav class="nav-icons">
-                <a href="../Home page/home.html" class="nav-icon">
-                    <img src="home-icon.png" alt="Home">
-                </a>
-                <a href="../Explore/explore.html" class="nav-icon">
-                    <img src="explore-icon.png" alt="Explore">
-                </a>
-                <a href="#" class="nav-icon">
-                    <img src="plus-icon.png" alt="Add">
-                </a>
-                <a href="../Saved page/saved.html" class="nav-icon active">
-                    <img src="save-icon.png" alt="Saved">
-                </a>
-                <a href="../Messages page/Messages.html" class="nav-icon">
-                    <img src="message.png" alt="Messages">
-                    <span class="notification-badge">10</span>
-                </a>
-            </nav>
-            <div class="nav-bottom">
-                <a href="#" class="nav-icon" onclick="toggleLogoutPopup(event)">
-                    <img src="settings-icon.png" alt="Settings">
-                </a>
-            </div>
-        </aside>
-    <!-- Main -->
+    <aside class="sidebar">
+        <div class="logo">
+            <img src="logo.png" alt="CopyCook Logo">
+        </div>
+        <nav class="nav-icons">
+            <a href="../Home page/home.html" class="nav-icon">
+                <img src="home-icon.png" alt="Home">
+            </a>
+            <a href="../Explore/explore.html" class="nav-icon">
+                <img src="explore-icon.png" alt="Explore">
+            </a>
+            <a href="#" class="nav-icon">
+                <img src="plus-icon.png" alt="Add">
+            </a>
+            <a href="../Saved page/saved.html" class="nav-icon active">
+                <img src="save-icon.png" alt="Saved">
+            </a>
+            <a href="../Messages page/Messages.html" class="nav-icon">
+                <img src="message.png" alt="Messages">
+                <span class="notification-badge">10</span>
+            </a>
+        </nav>
+        <div class="nav-bottom">
+            <a href="#" class="nav-icon" onclick="toggleLogoutPopup(event)">
+                <img src="settings-icon.png" alt="Settings">
+            </a>
+        </div>
+    </aside>
+
     <main class="main-content">
 
-        <!-- Top bar -->
         <div class="top-bar">
             <div class="search-bar" onclick="window.location.href='../Home page/home.html'">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -515,10 +485,8 @@
             <div class="profile-avatar" id="profileAvatar"></div>
         </div>
 
-        <!-- Page body -->
         <div class="page-body">
 
-            <!-- Profile card -->
             <div class="profile-card">
                 <div class="profile-info" style="text-align:right;">
                     <div class="profile-name" id="profileName">Loading...</div>
@@ -531,27 +499,63 @@
                 <button class="view-profile-btn">View Profile</button>
             </div>
 
-            <!-- Section header -->
             <div class="section-header">
                 <h2 class="section-title">Your saved folders</h2>
-                <button class="create-btn" onclick="openCreateModal()">Create</button>
+                <!-- Sort + Create grouped on the right -->
+                <div class="section-actions">
+                    <div class="sort-wrapper">
+                        <button class="sort-btn" id="sortBtn">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                <line x1="3" y1="6"  x2="21" y2="6"  stroke="#5A5A5A" stroke-width="2" stroke-linecap="round"/>
+                                <line x1="3" y1="12" x2="15" y2="12" stroke="#5A5A5A" stroke-width="2" stroke-linecap="round"/>
+                                <line x1="3" y1="18" x2="9"  y2="18" stroke="#5A5A5A" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            Sort
+                        </button>
+                        <div class="sort-dropdown" id="sortDropdown">
+                            <button class="sort-option selected" data-sort="date">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="#9FB19F" stroke-width="2" fill="none"/>
+                                    <line x1="3" y1="9" x2="21" y2="9" stroke="#9FB19F" stroke-width="2"/>
+                                    <line x1="8" y1="2" x2="8" y2="6" stroke="#9FB19F" stroke-width="2" stroke-linecap="round"/>
+                                    <line x1="16" y1="2" x2="16" y2="6" stroke="#9FB19F" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                                Date created
+                                <span class="sort-check">✓</span>
+                            </button>
+                            <button class="sort-option" data-sort="az">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <path d="M4 6h16M4 12h10M4 18h6" stroke="#9FB19F" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                                A → Z
+                                <span class="sort-check">✓</span>
+                            </button>
+                            <button class="sort-option" data-sort="za">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <path d="M4 6h6M4 12h10M4 18h16" stroke="#9FB19F" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                                Z → A
+                                <span class="sort-check">✓</span>
+                            </button>
+                        </div>
+                    </div>
+                    <button class="create-btn" onclick="openCreateModal()">Create</button>
+                </div>
             </div>
 
-            <!-- Filter tabs -->
             <div class="filter-tabs">
                 <button class="filter-tab active" id="tabPrivate" onclick="setTab('private')">Private</button>
                 <button class="filter-tab inactive" id="tabPublic" onclick="setTab('public')">Public</button>
             </div>
 
-            <!-- Folders grid -->
             <div class="folders-grid" id="foldersGrid">
                 <p class="loading-state">Loading your folders...</p>
             </div>
 
-            <!-- Empty state -->
             <div class="empty-state" id="emptyState">
                 <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
-                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2z" stroke="#9FB19F" stroke-width="1.5" fill="none"/>
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2z"
+                        stroke="#9FB19F" stroke-width="1.5" fill="none"/>
                 </svg>
                 <p>No folders yet. Hit <b>Create</b> to make your first one!</p>
             </div>
@@ -576,6 +580,18 @@
     </div>
 </div>
 
+<!-- Confirm Delete Folder Modal -->
+<div class="confirm-overlay" id="confirmDeleteOverlay">
+    <div class="confirm-box">
+        <h3>Delete folder?</h3>
+        <p id="confirmDeleteText">This will permanently delete the folder and all its saved recipes.</p>
+        <div class="confirm-actions">
+            <button class="btn-keep" onclick="closeConfirmDelete()">Cancel</button>
+            <button class="btn-remove" id="btnConfirmDelete">Delete</button>
+        </div>
+    </div>
+</div>
+
 <!-- Logout Popup -->
 <div id="logoutPopup" class="logout-popup">
     <div class="logout-content">
@@ -586,7 +602,7 @@
 </div>
 
 <script type="module">
-import { createFolder as createFolderFS, getFolders as getFoldersFS } from '../firebase-functions.js';
+import { createFolder as createFolderFS, getFolders as getFoldersFS, deleteFolder as deleteFolderFS } from '../firebase-functions.js';
 
 // ── Constants ──
 const PLACEHOLDER_IMAGES = [
@@ -603,13 +619,50 @@ const PLACEHOLDER_IMAGES = [
 // ── State ──
 let currentTab      = 'private';
 let selectedPrivacy = 'private';
+let currentSort     = 'date';
 let folders         = [];
 
-function saveFolders() {
-    localStorage.setItem('ccFolders', JSON.stringify(folders));
+function saveFolders() { localStorage.setItem('ccFolders', JSON.stringify(folders)); }
+
+// ── Sort helper ──────────────────────────────────────────────────────────────
+function getSortedFolders(list) {
+    const copy = [...list];
+    if (currentSort === 'az') copy.sort((a, b) => a.name.localeCompare(b.name));
+    if (currentSort === 'za') copy.sort((a, b) => b.name.localeCompare(a.name));
+    // 'date' keeps Firestore/creation order (already sorted by createdAt desc from Firestore)
+    return copy;
 }
 
-// ── Avatar & Profile ──
+// ── Sort button ──────────────────────────────────────────────────────────────
+document.getElementById('sortBtn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    const isOpen = document.getElementById('sortDropdown').classList.toggle('open');
+    document.getElementById('sortBtn').classList.toggle('active', isOpen);
+});
+
+document.getElementById('sortDropdown').addEventListener('click', function(e) {
+    const option = e.target.closest('.sort-option');
+    if (!option) return;
+
+    currentSort = option.dataset.sort;
+    document.querySelectorAll('.sort-option').forEach(o => o.classList.remove('selected'));
+    option.classList.add('selected');
+
+    document.getElementById('sortDropdown').classList.remove('open');
+    document.getElementById('sortBtn').classList.remove('active');
+
+    renderFolders();
+});
+
+document.addEventListener('click', function(e) {
+    const wrapper = document.querySelector('.sort-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        document.getElementById('sortDropdown').classList.remove('open');
+        document.getElementById('sortBtn').classList.remove('active');
+    }
+});
+
+// ── Avatar & Profile ──────────────────────────────────────────────────────────
 function loadProfile() {
     const initial = localStorage.getItem('userInitial');
     const color   = localStorage.getItem('userAvatarColor');
@@ -630,16 +683,16 @@ function loadProfile() {
         cardAvatar.style.backgroundColor = '#D4A5A5';
     }
 
-    document.getElementById('profileName').textContent        = name;
-    document.getElementById('followerCount').textContent      = localStorage.getItem('ccFollowers')  || '0';
-    document.getElementById('followingCount').textContent     = localStorage.getItem('ccFollowing')  || '0';
+    document.getElementById('profileName').textContent    = name;
+    document.getElementById('followerCount').textContent  = localStorage.getItem('ccFollowers')  || '0';
+    document.getElementById('followingCount').textContent = localStorage.getItem('ccFollowing')  || '0';
 }
 
-// ── Render folders ──
+// ── Render folders ────────────────────────────────────────────────────────────
 function renderFolders() {
     const grid     = document.getElementById('foldersGrid');
     const empty    = document.getElementById('emptyState');
-    const filtered = folders.filter(f => f.privacy === currentTab);
+    const filtered = getSortedFolders(folders.filter(f => f.privacy === currentTab));
 
     grid.innerHTML = '';
 
@@ -677,18 +730,27 @@ function renderFolders() {
             <div class="folder-thumb">
                 <img src="${thumb}" alt="${folder.name}" loading="lazy">
                 ${lockIcon}
+                <button class="delete-folder-btn" title="Delete folder" aria-label="Delete ${folder.name}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M18 6L6 18M6 6l12 12" stroke="#5A5A5A" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
             </div>
             <div class="folder-name">
                 ${folder.name}
                 <div style="font-size:12px;font-weight:400;color:#9A9A9A;margin-top:2px;">${subtitle}</div>
-            </div>
-        `;
+            </div>`;
+
+        card.querySelector('.delete-folder-btn').addEventListener('click', e => {
+            e.stopPropagation();
+            openConfirmDelete(folder, card);
+        });
 
         grid.appendChild(card);
     });
 }
 
-// ── Tab switching ──
+// ── Tab switching ─────────────────────────────────────────────────────────────
 window.setTab = function(tab) {
     currentTab = tab;
     document.getElementById('tabPrivate').className = `filter-tab ${tab === 'private' ? 'active' : 'inactive'}`;
@@ -696,7 +758,7 @@ window.setTab = function(tab) {
     renderFolders();
 };
 
-// ── Create folder modal ──
+// ── Create folder modal ───────────────────────────────────────────────────────
 window.openCreateModal = function() {
     document.getElementById('folderNameInput').value = '';
     selectPrivacy('private');
@@ -714,7 +776,6 @@ window.selectPrivacy = function(p) {
     document.getElementById('btnPublic').className  = `privacy-btn ${p === 'public'  ? 'selected' : ''}`;
 };
 
-// ── Create folder — saves to Firestore + updates local state ──
 window.createFolder = async function() {
     const name = document.getElementById('folderNameInput').value.trim();
     if (!name) {
@@ -724,50 +785,89 @@ window.createFolder = async function() {
     }
 
     const newFolder = {
-        id:         name.replace(/\//g, '_'),   // mirrors the Firestore doc ID
-        name,
-        privacy:    selectedPrivacy,
-        recipes:    [],
-        coverImage: null,
-        createdAt:  new Date().toISOString()
+        id: name.replace(/\//g, '_'), name,
+        privacy: selectedPrivacy, recipes: [], coverImage: null,
+        createdAt: new Date().toISOString()
     };
 
-    // 1. Update local state and UI immediately so it feels instant
     folders.push(newFolder);
     saveFolders();
     closeCreateModal();
     setTab(selectedPrivacy);
 
-    // 2. Persist to Firestore so it survives logout
     const uid = localStorage.getItem('userUID');
     if (uid) {
         try {
             await createFolderFS(uid, name, selectedPrivacy);
             console.log('✅ Folder saved to Firestore:', name);
-        } catch (err) {
-            console.error('❌ Firestore folder save failed:', err);
-        }
-    } else {
-        console.warn('No userUID in localStorage — folder saved locally only. Try logging out and back in.');
+        } catch (err) { console.error('❌ Firestore folder save failed:', err); }
     }
 };
 
-// ── Open folder ──
+// ── Delete folder ─────────────────────────────────────────────────────────────
+let pendingDelete = null;
+
+function openConfirmDelete(folder, cardEl) {
+    pendingDelete = { folder, cardEl };
+    document.getElementById('confirmDeleteText').textContent =
+        `"${folder.name}" and all its saved recipes will be permanently deleted.`;
+    document.getElementById('confirmDeleteOverlay').classList.add('active');
+}
+
+window.closeConfirmDelete = function() {
+    document.getElementById('confirmDeleteOverlay').classList.remove('active');
+    pendingDelete = null;
+};
+
+document.getElementById('btnConfirmDelete').addEventListener('click', async () => {
+    if (!pendingDelete) return;
+    const { folder, cardEl } = pendingDelete;
+    closeConfirmDelete();
+
+    cardEl.style.transition = 'opacity 0.3s, transform 0.3s';
+    cardEl.style.opacity    = '0';
+    cardEl.style.transform  = 'scale(0.9)';
+    setTimeout(() => cardEl.remove(), 300);
+
+    folders = folders.filter(f => f.id !== folder.id);
+    saveFolders();
+
+    if (folders.filter(f => f.privacy === currentTab).length === 0) {
+        document.getElementById('emptyState').style.display = 'flex';
+    }
+
+    const uid = localStorage.getItem('userUID');
+    if (!uid) { console.warn('No userUID — Firestore delete skipped'); return; }
+
+    try {
+        await deleteFolderFS(uid, folder.name);
+        console.log('✅ Folder deleted from Firestore:', folder.name);
+    } catch (err) {
+        console.error('❌ Firestore delete failed:', err);
+        folders.push(folder);
+        saveFolders();
+        renderFolders();
+    }
+});
+
+document.getElementById('confirmDeleteOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeConfirmDelete();
+});
+
+// ── Open folder ───────────────────────────────────────────────────────────────
 function openFolder(folderId) {
     window.location.href = `folder.html?id=${folderId}`;
 }
 
-// ── Close modal on backdrop click ──
 document.getElementById('createModal').addEventListener('click', function(e) {
     if (e.target === this) closeCreateModal();
 });
 
-// ── Enter key creates folder ──
 document.getElementById('folderNameInput').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') createFolder();
 });
 
-// ── Logout ──
+// ── Logout ────────────────────────────────────────────────────────────────────
 window.toggleLogoutPopup = function(e) {
     e.preventDefault();
     document.getElementById('logoutPopup').classList.toggle('active');
@@ -776,31 +876,28 @@ window.closeLogoutPopup = function() {
     document.getElementById('logoutPopup').classList.remove('active');
 };
 window.handleLogout = function() {
-    localStorage.clear();
-    sessionStorage.clear();
+    localStorage.clear(); sessionStorage.clear();
     window.location.href = '../login.html';
 };
 document.getElementById('logoutPopup').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeLogoutPopup();
 });
 
-// ── Init — load folders from Firestore on every page load ──
+// ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async function() {
     loadProfile();
 
     const uid = localStorage.getItem('userUID');
     if (uid) {
         try {
-            // Always read from Firestore so folders survive logout/device changes
             folders = await getFoldersFS(uid);
-            saveFolders(); // keep localStorage in sync as a cache
+            saveFolders();
             console.log('✅ Folders loaded from Firestore:', folders.length);
         } catch (err) {
             console.error('❌ Failed to load from Firestore, falling back to localStorage:', err);
             folders = JSON.parse(localStorage.getItem('ccFolders') || '[]');
         }
     } else {
-        console.warn('No userUID found — make sure you are logged in');
         folders = JSON.parse(localStorage.getItem('ccFolders') || '[]');
     }
 

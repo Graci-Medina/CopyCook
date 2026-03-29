@@ -292,6 +292,54 @@ window.closeCreateFolderPopup = closeCreateFolderPopup;
 window.selectSavePrivacy      = selectSavePrivacy;
 window.confirmCreateFolder    = confirmCreateFolder;
 
+// ─── VOICE SEARCH ─────────────────────────────────────────────────────────────
+function initVoiceSearch(micEl, inputEl, onResult) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition || !micEl) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    let listening = false;
+
+    micEl.style.cursor = 'pointer';
+    micEl.title = 'Search by voice';
+
+    micEl.addEventListener('click', () => {
+        if (listening) { recognition.stop(); return; }
+        recognition.start();
+    });
+
+    recognition.addEventListener('start', () => {
+        listening = true;
+        micEl.style.opacity = '0.5';
+        micEl.style.transform = 'scale(1.2)';
+        if (inputEl) inputEl.placeholder = 'Listening…';
+    });
+
+    recognition.addEventListener('result', (e) => {
+        const transcript = e.results[0][0].transcript;
+        if (inputEl) inputEl.value = transcript;
+        if (onResult) onResult(transcript);
+    });
+
+    recognition.addEventListener('end', () => {
+        listening = false;
+        micEl.style.opacity = '1';
+        micEl.style.transform = 'scale(1)';
+        if (inputEl) inputEl.placeholder = 'Search restaurants or dishes';
+    });
+
+    recognition.addEventListener('error', () => {
+        listening = false;
+        micEl.style.opacity = '1';
+        micEl.style.transform = 'scale(1)';
+        if (inputEl) inputEl.placeholder = 'Search restaurants or dishes';
+    });
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async function () {
     loadAvatar();
@@ -312,7 +360,22 @@ document.addEventListener('DOMContentLoaded', async function () {
             isSearchActive = true;
             searchDebounceTimer = setTimeout(() => searchRecipes(query), 350);
         });
+
+        // ── Pre-populate search from ?q= param (redirected from recipe.html) ──
+        const urlQuery = new URLSearchParams(window.location.search).get('q');
+        if (urlQuery) {
+            searchInput.value = urlQuery;
+            isSearchActive = true;
+            searchRecipes(urlQuery);
+        }
     }
+
+    // ── Wire up mic icon for voice search ──
+    const micIcon = document.querySelector('.mic-icon');
+    initVoiceSearch(micIcon, searchInput, (transcript) => {
+        isSearchActive = true;
+        searchRecipes(transcript);
+    });
 
     const nfi = document.getElementById('newFolderNameInput');
     if (nfi) nfi.addEventListener('keydown', e => { if (e.key === 'Enter') confirmCreateFolder(); });
