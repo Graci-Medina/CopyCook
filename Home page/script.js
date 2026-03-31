@@ -155,10 +155,55 @@ async function searchRecipes(query) {
     }
 }
 
-// ─── SAVE POPUP ───────────────────────────────────────────────────────────────
-let currentSaveMeal = null, savePrivacy = 'private';
+// ─── SAVE MODAL (home.html) ───────────────────────────────────────────────────
+let currentSaveMeal = null, createPrivacy = 'private', selectedFolderId = null;
 
-const PLACEHOLDER_IMAGES = [
+function getFolders() { return JSON.parse(localStorage.getItem('ccFolders') || '[]'); }
+function saveFoldersLocal(f) { localStorage.setItem('ccFolders', JSON.stringify(f)); }
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+async function openSavePopup(meal) {
+    currentSaveMeal = meal;
+    selectedFolderId = null;
+    const saveBtn = document.getElementById('btnSaveToFolder');
+    if (saveBtn) saveBtn.disabled = true;
+
+    const modal = document.getElementById('saveModal');
+    if (!modal) return;
+    modal.classList.add('active');
+
+    // Reset new-folder input
+    const nfi = document.getElementById('newFolderInput');
+    if (nfi) nfi.value = '';
+    setCreatePrivacy('private');
+
+    // Refresh folders from Firebase if possible
+    const uid = localStorage.getItem('userUID');
+    if (uid && window.fbGetFolders) {
+        try { saveFoldersLocal(await window.fbGetFolders(uid)); }
+        catch (err) { console.warn('Could not refresh folders:', err); }
+    }
+    renderFolderList();
+}
+
+function closeSaveModal() {
+    const modal = document.getElementById('saveModal');
+    if (modal) modal.classList.remove('active');
+    selectedFolderId = null;
+}
+
+function handleSaveOverlayClick(e) {
+    if (e.target === document.getElementById('saveModal')) closeSaveModal();
+}
+
+const FOLDER_PLACEHOLDER_IMAGES = [
     'https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg',
     'https://www.themealdb.com/images/media/meals/wvpsxx1468256321.jpg',
     'https://www.themealdb.com/images/media/meals/58oia61564916529.jpg',
@@ -167,130 +212,118 @@ const PLACEHOLDER_IMAGES = [
     'https://www.themealdb.com/images/media/meals/tkxquw1628771028.jpg',
 ];
 
-function getFolders() { return JSON.parse(localStorage.getItem('ccFolders') || '[]'); }
-function saveFoldersLocal(f) { localStorage.setItem('ccFolders', JSON.stringify(f)); }
-
-async function openSavePopup(meal) {
-    currentSaveMeal = meal;
-    document.getElementById('folderSearchInput').value = '';
-    document.getElementById('savePopupOverlay').classList.add('active');
-    const uid = localStorage.getItem('userUID');
-    if (uid && window.fbGetFolders) {
-        try { saveFoldersLocal(await window.fbGetFolders(uid)); }
-        catch (err) { console.warn('Could not refresh folders:', err); }
-    }
-    renderSaveFolders('');
-}
-
-function closeSavePopup(e) {
-    if (!e || e.target === document.getElementById('savePopupOverlay'))
-        document.getElementById('savePopupOverlay').classList.remove('active');
-}
-
-function filterFolders(query) { renderSaveFolders(query.toLowerCase()); }
-
-function renderSaveFolders(query) {
-    const list    = document.getElementById('saveFoldersList');
+function renderFolderList() {
+    const list = document.getElementById('folderList');
+    if (!list) return;
     const folders = getFolders();
-    const filtered = query ? folders.filter(f => f.name.toLowerCase().includes(query)) : folders;
+    if (folders.length === 0) {
+        list.innerHTML = '<p class="no-folders-msg">No folders yet — create one below!</p>';
+        return;
+    }
     list.innerHTML = '';
-    if (filtered.length === 0) { list.innerHTML = `<p style="font-size:13px;color:#9A9A9A;padding:8px 12px;">No folders found.</p>`; return; }
-
-    filtered.forEach((folder, idx) => {
-        const isSaved = currentSaveMeal && (folder.recipes || []).some(r => r.id === currentSaveMeal.id);
-        const thumb   = folder.coverImage || PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
-        const lockSvg = folder.privacy === 'private'
-            ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="#5A5A5A" stroke-width="2" fill="none"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#5A5A5A" stroke-width="2" fill="none"/></svg>`
-            : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="#9FB19F" stroke-width="2" fill="none"/><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="#9FB19F" stroke-width="2" fill="none"/></svg>`;
-        const checkSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#9FB19F"/><path d="M7 12l4 4 6-6" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    folders.forEach((folder, idx) => {
+        const isSelected   = folder.id === selectedFolderId;
+        const alreadySaved = currentSaveMeal && (folder.recipes || []).some(
+            r => (r.idMeal || r.id) === currentSaveMeal.id
+        );
+        const thumb    = folder.coverImage || FOLDER_PLACEHOLDER_IMAGES[idx % FOLDER_PLACEHOLDER_IMAGES.length];
+        const count    = (folder.recipes || []).length;
+        const subtitle = alreadySaved ? 'Already saved' : `${count} recipe${count !== 1 ? 's' : ''}`;
 
         const item = document.createElement('div');
-        item.className = `save-folder-item${isSaved ? ' saved' : ''}`;
+        item.className = 'folder-list-item' +
+            (isSelected   ? ' selected'      : '') +
+            (alreadySaved ? ' already-saved' : '');
+        item.dataset.folderId = folder.id;
         item.innerHTML = `
-            <div class="save-folder-thumb"><img src="${thumb}" alt="${folder.name}" loading="lazy"></div>
-            <span class="save-folder-name">${folder.name}</span>
-            <div class="save-folder-icon">
-                <span class="checkmark">${checkSvg}</span>
-                <span class="privacy-icon" style="${isSaved ? 'display:none' : ''}">${lockSvg}</span>
+            <img class="folder-item-thumb" src="${thumb}" alt="${folder.name}" loading="lazy">
+            <div class="folder-item-info">
+                <div class="folder-item-name">${folder.name}</div>
+                <div class="folder-item-count">${subtitle}</div>
+            </div>
+            <div class="folder-item-check">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 13l4 4L19 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
             </div>`;
-        item.addEventListener('click', () => toggleSaveToFolder(folder.id));
+
+        if (!alreadySaved) {
+            item.addEventListener('click', () => {
+                selectedFolderId = folder.id;
+                const saveBtn = document.getElementById('btnSaveToFolder');
+                if (saveBtn) saveBtn.disabled = false;
+                renderFolderList();
+            });
+        }
         list.appendChild(item);
     });
 }
-
-async function toggleSaveToFolder(folderId) {
-    if (!currentSaveMeal) return;
-    const folders = getFolders();
-    const folder  = folders.find(f => f.id === folderId);
-    if (!folder) return;
-    folder.recipes = folder.recipes || [];
-    const idx   = folder.recipes.findIndex(r => r.id === currentSaveMeal.id);
-    const uid   = localStorage.getItem('userUID');
-    const mealObj = { id: currentSaveMeal.id, name: currentSaveMeal.name, thumb: currentSaveMeal.thumb };
-
-    if (idx === -1) {
-        folder.recipes.push(mealObj);
-        if (!folder.coverImage) folder.coverImage = currentSaveMeal.thumb;
-        if (uid && window.fbSaveRecipe) {
-            try { await window.fbSaveRecipe(uid, folder.name, mealObj); console.log('✅ Saved:', folder.name); }
-            catch (err) { console.error('❌ Save failed:', err); }
-        }
-    } else {
-        folder.recipes.splice(idx, 1);
-        if (uid && window.fbUnsaveRecipe) {
-            try { await window.fbUnsaveRecipe(uid, folder.name, mealObj); console.log('✅ Removed:', folder.name); }
-            catch (err) { console.error('❌ Remove failed:', err); }
-        }
-    }
-    saveFoldersLocal(folders);
-    renderSaveFolders(document.getElementById('folderSearchInput').value.toLowerCase());
+function setCreatePrivacy(p) {
+    createPrivacy = p;
+    const btnPriv = document.getElementById('cpBtnPrivate');
+    const btnPub  = document.getElementById('cpBtnPublic');
+    if (btnPriv) btnPriv.classList.toggle('selected', p === 'private');
+    if (btnPub)  btnPub.classList.toggle('selected',  p === 'public');
 }
 
-function openSaveCreateFolder() {
-    document.getElementById('newFolderNameInput').value = '';
-    selectSavePrivacy('private');
-    document.getElementById('createFolderPopup').classList.add('active');
-    setTimeout(() => document.getElementById('newFolderNameInput').focus(), 80);
-}
-
-function closeCreateFolderPopup(e) {
-    if (!e || e.target === document.getElementById('createFolderPopup'))
-        document.getElementById('createFolderPopup').classList.remove('active');
-}
-
-function selectSavePrivacy(p) {
-    savePrivacy = p;
-    document.getElementById('privOptPrivate').className = `privacy-opt${p === 'private' ? ' selected' : ''}`;
-    document.getElementById('privOptPublic').className  = `privacy-opt${p === 'public'  ? ' selected' : ''}`;
-}
-
-async function confirmCreateFolder() {
-    const name = document.getElementById('newFolderNameInput').value.trim();
+async function createAndSelect() {
+    const nfi  = document.getElementById('newFolderInput');
+    const name = nfi ? nfi.value.trim() : '';
     if (!name) {
-        document.getElementById('newFolderNameInput').style.borderColor = '#D4A5A5';
-        setTimeout(() => document.getElementById('newFolderNameInput').style.borderColor = '', 1500);
+        if (nfi) { nfi.style.borderColor = '#D4A5A5'; setTimeout(() => nfi.style.borderColor = '', 1500); }
         return;
     }
     const safeName = name.replace(/\//g, '_');
     const folders  = getFolders();
-    folders.push({ id: safeName, name, privacy: savePrivacy, recipes: [], coverImage: null, createdAt: new Date().toISOString() });
-    saveFoldersLocal(folders);
-    const uid = localStorage.getItem('userUID');
-    if (uid && window.fbCreateFolder) {
-        try { await window.fbCreateFolder(uid, name, savePrivacy); console.log('✅ Folder created:', name); }
-        catch (err) { console.error('❌ Folder create failed:', err); }
+    if (folders.find(f => f.id === safeName)) {
+        // folder already exists — just select it
+        selectedFolderId = safeName;
+    } else {
+        folders.push({ id: safeName, name, privacy: createPrivacy, recipes: [], coverImage: null, createdAt: new Date().toISOString() });
+        saveFoldersLocal(folders);
+        const uid = localStorage.getItem('userUID');
+        if (uid && window.fbCreateFolder) {
+            try { await window.fbCreateFolder(uid, name, createPrivacy); }
+            catch (err) { console.error('❌ Folder create failed:', err); }
+        }
+        selectedFolderId = safeName;
     }
-    document.getElementById('createFolderPopup').classList.remove('active');
-    renderSaveFolders(document.getElementById('folderSearchInput').value.toLowerCase());
+    if (nfi) nfi.value = '';
+    const saveBtn = document.getElementById('btnSaveToFolder');
+    if (saveBtn) saveBtn.disabled = false;
+    renderFolderList();
+}
+
+async function confirmSave() {
+    if (!currentSaveMeal || !selectedFolderId) return;
+    const folders = getFolders();
+    const folder  = folders.find(f => f.id === selectedFolderId);
+    if (!folder) return;
+
+    folder.recipes = folder.recipes || [];
+    const alreadySaved = folder.recipes.some(r => r.id === currentSaveMeal.id);
+    if (alreadySaved) { showToast('Already saved to this folder!'); closeSaveModal(); return; }
+
+    const mealObj = { id: currentSaveMeal.id, name: currentSaveMeal.name, thumb: currentSaveMeal.thumb };
+    folder.recipes.push(mealObj);
+    if (!folder.coverImage) folder.coverImage = currentSaveMeal.thumb;
+    saveFoldersLocal(folders);
+
+    const uid = localStorage.getItem('userUID');
+    if (uid && window.fbSaveRecipe) {
+        try { await window.fbSaveRecipe(uid, folder.name, mealObj); }
+        catch (err) { console.error('❌ Save failed:', err); }
+    }
+    showToast(`Saved to "${folder.name}"!`);
+    closeSaveModal();
 }
 
 window.openSavePopup          = openSavePopup;
-window.closeSavePopup         = closeSavePopup;
-window.filterFolders          = filterFolders;
-window.openSaveCreateFolder   = openSaveCreateFolder;
-window.closeCreateFolderPopup = closeCreateFolderPopup;
-window.selectSavePrivacy      = selectSavePrivacy;
-window.confirmCreateFolder    = confirmCreateFolder;
+window.closeSaveModal         = closeSaveModal;
+window.handleSaveOverlayClick = handleSaveOverlayClick;
+window.setCreatePrivacy       = setCreatePrivacy;
+window.createAndSelect        = createAndSelect;
+window.confirmSave            = confirmSave;
 
 // ─── VOICE SEARCH ─────────────────────────────────────────────────────────────
 function initVoiceSearch(micEl, inputEl, onResult) {
@@ -360,14 +393,14 @@ document.addEventListener('DOMContentLoaded', async function () {
             isSearchActive = true;
             searchDebounceTimer = setTimeout(() => searchRecipes(query), 350);
         });
+    }
 
-        // ── Pre-populate search from ?q= param (redirected from recipe.html) ──
-        const urlQuery = new URLSearchParams(window.location.search).get('q');
-        if (urlQuery) {
-            searchInput.value = urlQuery;
-            isSearchActive = true;
-            searchRecipes(urlQuery);
-        }
+    // ── Pre-populate search from ?q= param (voice redirect from other pages) ──
+    const urlQuery = new URLSearchParams(window.location.search).get('q');
+    if (urlQuery && searchInput) {
+        searchInput.value = urlQuery;
+        isSearchActive = true;
+        searchRecipes(urlQuery);
     }
 
     // ── Wire up mic icon for voice search ──
@@ -376,9 +409,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         isSearchActive = true;
         searchRecipes(transcript);
     });
-
-    const nfi = document.getElementById('newFolderNameInput');
-    if (nfi) nfi.addEventListener('keydown', e => { if (e.key === 'Enter') confirmCreateFolder(); });
 
     const popup = document.getElementById('logoutPopup');
     if (popup) popup.addEventListener('click', e => { if (e.target === popup) closeLogoutPopup(); });

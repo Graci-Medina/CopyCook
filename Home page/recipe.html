@@ -438,8 +438,8 @@
             <button onclick="createAndSelect()">+ Create</button>
         </div>
         <div class="create-privacy-row">
-            <button class="create-privacy-btn selected" id="cpBtnPrivate" onclick="setCreatePrivacy('private')">🔒 Private</button>
-            <button class="create-privacy-btn" id="cpBtnPublic" onclick="setCreatePrivacy('public')">🌍 Public</button>
+            <button class="create-privacy-btn selected" id="cpBtnPrivate" onclick="setCreatePrivacy('private')"> Private</button>
+            <button class="create-privacy-btn" id="cpBtnPublic" onclick="setCreatePrivacy('public')"> Public</button>
         </div>
         <div class="save-modal-actions">
             <button class="btn-modal-cancel" onclick="closeSaveModal()">Cancel</button>
@@ -452,7 +452,7 @@
 <div class="comment-drawer-overlay" id="commentDrawerOverlay" onclick="closeCommentDrawer()"></div>
 <div class="comment-drawer" id="commentDrawer">
     <div class="drawer-header">
-        <span class="drawer-title">💬 Comments <span id="drawerCommentCount" style="font-size:14px;color:#9A9A9A;font-weight:500"></span></span>
+        <span class="drawer-title"> Comments <span id="drawerCommentCount" style="font-size:14px;color:#9A9A9A;font-weight:500"></span></span>
         <button class="drawer-close" onclick="closeCommentDrawer()">&#x2715;</button>
     </div>
     <div class="drawer-body" id="drawerBody">
@@ -861,7 +861,7 @@ function buildLayout({ title, image, tag, ingredientRows, stepRows }) {
                 <div class="instructions-list">${stepRows}</div>
             </div>
             <div class="cost-card" id="costCard">
-                <div class="cost-header">💰 Cost Comparison</div>
+                <div class="cost-header"> Cost Comparison</div>
             </div>
         </div>
     `;
@@ -1186,12 +1186,12 @@ function renderCostCard(costData) {
         <div class="cost-header">💰 Cost Comparison</div>
         <div class="cost-columns">
             <div class="cost-box home">
-                <span class="cost-box-label">🏠 Cook at Home</span>
+                <span class="cost-box-label"> Cook at Home</span>
                 <span class="cost-box-price">$${homeCost.toFixed(2)}</span>
                 <span class="cost-box-note">~$${homePerServing}/serving · ${servings} serving${servings !== 1 ? 's' : ''}</span>
             </div>
             <div class="cost-box restaurant">
-                <span class="cost-box-label">🍽️ Dine Out</span>
+                <span class="cost-box-label"> Dine Out</span>
                 <span class="cost-box-price">$${restaurantCost.toFixed(2)}</span>
                 <span class="cost-box-note">~$${perPlate}/plate × ${servings} people</span>
             </div>
