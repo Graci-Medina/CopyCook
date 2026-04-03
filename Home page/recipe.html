@@ -481,8 +481,11 @@
     async function getFolders(uid) {
         const snapshot = await getDocs(collection(db, 'users', uid, 'folders'));
         return snapshot.docs.map(d => ({
-            id: d.id, name: d.data().name, privacy: d.data().privacy || 'private',
-            recipes: d.data().savedRecipes || [], coverImage: d.data().coverImage || null,
+            id: d.id,
+            name: d.data().name,
+            privacy: d.data().privacy || 'private',
+            recipes: d.data().savedRecipes || [],
+            coverImage: getLatestSavedThumb(d.data().savedRecipes || []) || d.data().coverImage || null,
             createdAt: d.data().createdAt || ''
         }));
     }
@@ -497,7 +500,7 @@
         const canonical = { idMeal: mealObj.idMeal, strMeal: mealObj.strMeal, strMealThumb: mealObj.strMealThumb };
         await setDoc(ref, { savedRecipes: arrayUnion(canonical) }, { merge: true });
         const snap = await getDoc(ref);
-        if (snap.exists() && !snap.data().coverImage) await updateDoc(ref, { coverImage: canonical.strMealThumb });
+        if (snap.exists()) await updateDoc(ref, { coverImage: getLatestSavedThumb(snap.data().savedRecipes || []) });
     }
     async function addComment(mealId, uid, displayName, avatarColor, text) {
         await addDoc(collection(db, 'recipes', mealId, 'comments'),
@@ -604,6 +607,23 @@
     let selectedFolderId = null;
     let createPrivacy    = 'private';
     let currentMealId    = null;
+
+    function getRecipeThumb(recipe) {
+        return recipe?.strMealThumb || recipe?.thumb || null;
+    }
+
+    function getLatestSavedThumb(recipes) {
+        const items = Array.isArray(recipes) ? recipes : [];
+        for (let index = items.length - 1; index >= 0; index -= 1) {
+            const thumb = getRecipeThumb(items[index]);
+            if (thumb) return thumb;
+        }
+        return null;
+    }
+
+    function getFolderThumb(folder) {
+        return getLatestSavedThumb(folder?.recipes) || folder?.coverImage || null;
+    }
 
     function setLikeButtonVisual(btn, liked) {
         if (!btn) return;
@@ -799,8 +819,9 @@
             const item = document.createElement('div');
             item.className = 'folder-list-item' + (alreadySaved ? ' already-saved' : '');
             item.dataset.folderId = folder.id;
-            const thumbHtml = folder.coverImage
-                ? `<img class="folder-item-thumb" src="${folder.coverImage}" alt="${folder.name}" loading="lazy">`
+            const thumb = getFolderThumb(folder);
+            const thumbHtml = thumb
+                ? `<img class="folder-item-thumb" src="${thumb}" alt="${folder.name}" loading="lazy">`
                 : `<div class="folder-item-thumb placeholder">📁</div>`;
             const count = (folder.recipes || []).length;
             const subtitle = alreadySaved ? 'Already saved' : `${count} recipe${count !== 1 ? 's' : ''}`;
@@ -858,6 +879,7 @@
             await saveRecipeToFolder(uid, folder.name, currentMeal);
             folder.recipes = folder.recipes || [];
             folder.recipes.push(currentMeal);
+            folder.coverImage = getLatestSavedThumb(folder.recipes);
             closeSaveModal();
             showToast(`Saved to "${folder.name}" ✓`, 'success');
             const btn = document.querySelector('.save-action-btn');
