@@ -247,6 +247,24 @@ const PLACEHOLDER_IMAGES = [
     'https://www.themealdb.com/images/media/meals/tkxquw1628771028.jpg',
 ];
 
+function getRecipeThumbnail(recipe) {
+    return recipe?.thumb || recipe?.strMealThumb || null;
+}
+
+function getLatestFolderThumbnail(folder) {
+    const recipes = Array.isArray(folder?.recipes) ? folder.recipes : [];
+    for (let index = recipes.length - 1; index >= 0; index -= 1) {
+        const thumb = getRecipeThumbnail(recipes[index]);
+        if (thumb) return thumb;
+    }
+    return folder?.coverImage || null;
+}
+
+function syncFolderCoverImage(folder) {
+    folder.coverImage = getLatestFolderThumbnail({ ...folder, coverImage: null });
+    return folder.coverImage;
+}
+
 function getFolders() { return JSON.parse(localStorage.getItem('ccFolders') || '[]'); }
 function saveFoldersLocal(f) { localStorage.setItem('ccFolders', JSON.stringify(f)); }
 
@@ -278,7 +296,7 @@ function renderSaveFolders(query) {
 
     filtered.forEach((folder, idx) => {
         const isSaved = currentSaveMeal && (folder.recipes || []).some(r => r.id === currentSaveMeal.id);
-        const thumb   = folder.coverImage || PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
+        const thumb   = getLatestFolderThumbnail(folder) || PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
         const lockSvg = folder.privacy === 'private'
             ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="#5A5A5A" stroke-width="2" fill="none"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#5A5A5A" stroke-width="2" fill="none"/></svg>`
             : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="#9FB19F" stroke-width="2" fill="none"/><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="#9FB19F" stroke-width="2" fill="none"/></svg>`;
@@ -310,13 +328,14 @@ async function toggleSaveToFolder(folderId) {
 
     if (idx === -1) {
         folder.recipes.push(mealObj);
-        if (!folder.coverImage) folder.coverImage = currentSaveMeal.thumb;
+        syncFolderCoverImage(folder);
         if (uid && window.fbSaveRecipe) {
             try { await window.fbSaveRecipe(uid, folder.name, mealObj); console.log('✅ Saved:', folder.name); }
             catch (err) { console.error('❌ Save failed:', err); }
         }
     } else {
         folder.recipes.splice(idx, 1);
+        syncFolderCoverImage(folder);
         if (uid && window.fbUnsaveRecipe) {
             try { await window.fbUnsaveRecipe(uid, folder.name, mealObj); console.log('✅ Removed:', folder.name); }
             catch (err) { console.error('❌ Remove failed:', err); }
