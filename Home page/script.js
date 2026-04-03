@@ -125,6 +125,69 @@ function restoreAllRecipes(grid) {
 
 // ─── SMART SEARCH ─────────────────────────────────────────────────────────────
 let searchDebounceTimer = null, isSearchActive = false;
+let micRecognition = null;
+let isMicListening = false;
+
+function setupMicrophoneSearch() {
+    const micIcon = document.querySelector('.mic-icon');
+    const searchInput = document.getElementById('mainSearchInput');
+    if (!micIcon || !searchInput) return;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        micIcon.style.opacity = '0.45';
+        micIcon.style.cursor = 'not-allowed';
+        micIcon.title = 'Voice search is not supported in this browser.';
+        return;
+    }
+
+    micRecognition = new SpeechRecognition();
+    micRecognition.lang = 'en-US';
+    micRecognition.interimResults = false;
+    micRecognition.maxAlternatives = 1;
+
+    micRecognition.onstart = () => {
+        isMicListening = true;
+        micIcon.style.filter = 'drop-shadow(0 0 6px rgba(212,165,165,0.65))';
+        micIcon.title = 'Listening...';
+    };
+
+    micRecognition.onend = () => {
+        isMicListening = false;
+        micIcon.style.filter = '';
+        micIcon.title = 'Search by voice';
+    };
+
+    micRecognition.onresult = (event) => {
+        const transcript = event.results?.[0]?.[0]?.transcript?.trim();
+        if (!transcript) return;
+        searchInput.value = transcript;
+        searchRecipes(transcript);
+    };
+
+    micRecognition.onerror = (event) => {
+        const messageByType = {
+            'not-allowed': 'Microphone access was blocked. Please allow microphone access in your browser settings.',
+            'service-not-allowed': 'Microphone access is disabled for this site.',
+            'no-speech': 'No speech was detected. Please try again.',
+            'audio-capture': 'No microphone was found on this device.',
+        };
+        const msg = messageByType[event.error] || `Voice search failed (${event.error}).`;
+        console.warn(msg);
+    };
+
+    micIcon.style.cursor = 'pointer';
+    micIcon.title = 'Search by voice';
+    micIcon.addEventListener('click', () => {
+        if (!micRecognition) return;
+        if (isMicListening) {
+            micRecognition.stop();
+            return;
+        }
+        try { micRecognition.start(); }
+        catch (err) { console.warn('Could not start voice recognition:', err); }
+    });
+}
 
 async function searchRecipes(query) {
     const grid = document.getElementById('foodGrid');
@@ -297,6 +360,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     loadAvatar();
     await loadAreas();
     loadAllRecipes();
+    setupMicrophoneSearch();
 
     const searchInput = document.querySelector('.search-bar input');
     const grid        = document.getElementById('foodGrid');

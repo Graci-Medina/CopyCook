@@ -6,8 +6,31 @@
 //   const folders = await apiFetch('/api/recipes/saved');
 
 import { auth } from './firebase-config.js';
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const BASE_URL = 'http://localhost:3000';
+
+async function waitForAuthUser(timeoutMs = 4000) {
+    if (auth.currentUser) return auth.currentUser;
+
+    return new Promise((resolve) => {
+        let settled = false;
+        const timer = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            unsub();
+            resolve(auth.currentUser || null);
+        }, timeoutMs);
+
+        const unsub = onAuthStateChanged(auth, (user) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            unsub();
+            resolve(user || null);
+        });
+    });
+}
 
 /**
  * Wraps fetch() with an Authorization: Bearer <token> header.
@@ -18,7 +41,7 @@ const BASE_URL = 'http://localhost:3000';
  * @returns {Promise<any>} - parsed JSON response
  */
 export async function apiFetch(path, options = {}) {
-    const user = auth.currentUser;
+    const user = await waitForAuthUser();
     if (!user) throw new Error('Not authenticated — no current user.');
 
     // Always get a fresh token (Firebase caches it and only refreshes when needed)

@@ -3,7 +3,7 @@ import {
     unsaveRecipe,
     createFolder,
     getFolders
-} from './firebase-functions.js';
+} from '../firebase-functions.js';
 
 // Expose Firebase functions globally so Home_script.js (plain script) can call them
 window.fbSaveRecipe   = saveRecipe;
