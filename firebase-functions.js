@@ -4,6 +4,8 @@ import {
     doc, setDoc, updateDoc, getDoc, getDocs, collection, arrayUnion, arrayRemove, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Firestore structure:
 //   users/{uid}/folders/{safeName}  →  { name, privacy, savedRecipes, coverImage, createdAt }
@@ -58,6 +60,20 @@ export function updateUserProfile(id, name, bio, dietaryPrefs) {
 // Firestore: users/{uid}/folders/{safeName}
 //   { id, name, privacy, recipes, coverImage, createdAt }
 
+// Gets thumbnail URL from a recipe object
+function getRecipeThumbnail(recipe) {
+    return recipe?.thumb || recipe?.strMealThumb || null;
+}
+
+function getLatestSavedRecipeThumbnail(recipes) {
+    const items = Array.isArray(recipes) ? recipes : [];
+    for (let index = items.length - 1; index >= 0; index -= 1) {
+        const thumb = getRecipeThumbnail(items[index]);
+        if (thumb) return thumb;
+    }
+    return null;
+}
+
 export async function createFolder(id, folderName, privacy = 'private') {
     const safeName = folderName.replace(/\//g, '_');
     const folderData = {
@@ -79,14 +95,18 @@ export async function deleteFolder(id, folderName) {
 export async function getFolders(uid) {
     const foldersRef = collection(db, 'users/' + uid + '/folders');
     const snapshot = await getDocs(foldersRef);
-    return snapshot.docs.map(docSnap => ({
-        id:         docSnap.id,
-        name:       docSnap.data().name,
-        privacy:    docSnap.data().privacy        || 'private',
-        recipes:    docSnap.data().savedRecipes   || [],
-        coverImage: docSnap.data().coverImage     || null,
-        createdAt:  docSnap.data().createdAt      || ''
-    }));
+    return snapshot.docs.map(docSnap => {
+        const data = docSnap.data();
+        const recipes = data.savedRecipes || [];
+        return {
+            id:         docSnap.id,
+            name:       data.name,
+            privacy:    data.privacy || 'private',
+            recipes,
+            coverImage: getLatestSavedRecipeThumbnail(recipes) || data.coverImage || null,
+            createdAt:  data.createdAt || ''
+        };
+    });
 }
 
 export async function saveRecipe(id, folderName, mealObj) {
@@ -96,10 +116,10 @@ export async function saveRecipe(id, folderName, mealObj) {
     await setDoc(folderRef, {
         savedRecipes: arrayUnion(mealObj)
     }, { merge: true });
-    // Also update coverImage if not set
     const snap = await getDoc(folderRef);
-    if (snap.exists() && !snap.data().coverImage) {
-        await updateDoc(folderRef, { coverImage: mealObj.thumb });
+    if (snap.exists()) {
+        const savedRecipes = snap.data().savedRecipes || [];
+        await updateDoc(folderRef, { coverImage: getLatestSavedRecipeThumbnail(savedRecipes) });
     }
 }
 
@@ -109,6 +129,11 @@ export async function unsaveRecipe(id, folderName, mealObj) {
     await updateDoc(folderRef, {
         savedRecipes: arrayRemove(mealObj)
     });
+    const snap = await getDoc(folderRef);
+    if (snap.exists()) {
+        const savedRecipes = snap.data().savedRecipes || [];
+        await updateDoc(folderRef, { coverImage: getLatestSavedRecipeThumbnail(savedRecipes) });
+    }
 }
 
 export async function getSavedRecipes(id) {
