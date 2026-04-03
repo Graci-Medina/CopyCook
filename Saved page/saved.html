@@ -710,6 +710,19 @@
         localStorage.setItem('ccFolders', JSON.stringify(folders));
     }
 
+    function getRecipeThumbnail(recipe) {
+        return recipe?.thumb || recipe?.strMealThumb || null;
+    }
+
+    function getFolderThumbnail(folder) {
+        const recipes = Array.isArray(folder?.recipes) ? folder.recipes : [];
+        for (let index = recipes.length - 1; index >= 0; index -= 1) {
+            const thumb = getRecipeThumbnail(recipes[index]);
+            if (thumb) return thumb;
+        }
+        return folder?.coverImage || null;
+    }
+
     // ── Avatar & Profile ──
     function loadProfile() {
         const initial = localStorage.getItem('userInitial');
@@ -756,7 +769,7 @@
             card.className = 'folder-card';
             card.onclick = () => openFolder(folder.id);
 
-            const thumb    = folder.coverImage || PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
+            const thumb    = getFolderThumbnail(folder) || PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
             const lockIcon = folder.privacy === 'private' ? `
                 <div class="lock-badge">
                     <svg viewBox="0 0 24 24" fill="none">
