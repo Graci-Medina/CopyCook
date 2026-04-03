@@ -133,6 +133,15 @@ function setupMicrophoneSearch() {
     const searchInput = document.getElementById('mainSearchInput');
     if (!micIcon || !searchInput) return;
 
+    function showMicError(msg) {
+        searchInput.placeholder = msg;
+        searchInput.style.color = '#D4A5A5';
+        setTimeout(() => {
+            searchInput.placeholder = 'Search restaurants or dishes';
+            searchInput.style.color = '';
+        }, 3500);
+    }
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
         micIcon.style.opacity = '0.45';
@@ -150,12 +159,20 @@ function setupMicrophoneSearch() {
         isMicListening = true;
         micIcon.style.filter = 'drop-shadow(0 0 6px rgba(212,165,165,0.65))';
         micIcon.title = 'Listening...';
+
+        micRecognition.onspeechstart = () => {
+            searchInput.placeholder = 'Listening…';
+        };
     };
 
     micRecognition.onend = () => {
         isMicListening = false;
         micIcon.style.filter = '';
         micIcon.title = 'Search by voice';
+
+        micRecognition.onnomatch = () => {
+            showMicError("Couldn't understand — please try again");
+        };
     };
 
     micRecognition.onresult = (event) => {
@@ -167,13 +184,13 @@ function setupMicrophoneSearch() {
 
     micRecognition.onerror = (event) => {
         const messageByType = {
-            'not-allowed': 'Microphone access was blocked. Please allow microphone access in your browser settings.',
-            'service-not-allowed': 'Microphone access is disabled for this site.',
-            'no-speech': 'No speech was detected. Please try again.',
-            'audio-capture': 'No microphone was found on this device.',
+            'not-allowed': 'Mic blocked — allow access in browser settings',
+            'service-not-allowed': 'Mic disabled for this site',
+            'no-speech': 'No speech detected — try again',
+            'audio-capture': 'No microphone found on this device',
         };
-        const msg = messageByType[event.error] || `Voice search failed (${event.error}).`;
-        console.warn(msg);
+        const msg = messageByType[event.error] || `Voice search failed (${event.error})`;
+        showMicError(msg);
     };
 
     micIcon.style.cursor = 'pointer';
