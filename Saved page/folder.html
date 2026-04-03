@@ -416,34 +416,34 @@
 <div class="container">
 
     <!-- Sidebar Navigation -->
-        <aside class="sidebar">
-            <div class="logo">
-                <img src="logo.png" alt="CopyCook Logo">
-            </div>
-            <nav class="nav-icons">
-                <a href="../Home page/home.html" class="nav-icon">
-                    <img src="home-icon.png" alt="Home">
-                </a>
-                <a href="../Explore/explore.html" class="nav-icon">
-                    <img src="explore-icon.png" alt="Explore">
-                </a>
-                <a href="#" class="nav-icon">
-                    <img src="plus-icon.png" alt="Add">
-                </a>
-                <a href="../Saved page/saved.html" class="nav-icon active">
-                    <img src="save-icon.png" alt="Saved">
-                </a>
-                <a href="../Messages page/Messages.html" class="nav-icon">
-                    <img src="message.png" alt="Messages">
-                    <span class="notification-badge">10</span>
-                </a>
-            </nav>
-            <div class="nav-bottom">
-                <a href="#" class="nav-icon" onclick="toggleLogoutPopup(event)">
-                    <img src="settings-icon.png" alt="Settings">
-                </a>
-            </div>
-        </aside>
+    <aside class="sidebar">
+        <div class="logo">
+            <img src="logo.png" alt="CopyCook Logo">
+        </div>
+        <nav class="nav-icons">
+            <a href="../Home page/home.html" class="nav-icon">
+                <img src="home-icon.png" alt="Home">
+            </a>
+            <a href="../Explore/explore.html" class="nav-icon">
+                <img src="explore-icon.png" alt="Explore">
+            </a>
+            <a href="#" class="nav-icon">
+                <img src="plus-icon.png" alt="Add">
+            </a>
+            <a href="../Saved page/saved.html" class="nav-icon active">
+                <img src="save-icon.png" alt="Saved">
+            </a>
+            <a href="../Messages page/Messages.html" class="nav-icon">
+                <img src="message.png" alt="Messages">
+                <span class="notification-badge">10</span>
+            </a>
+        </nav>
+        <div class="nav-bottom">
+            <a href="#" class="nav-icon" onclick="toggleLogoutPopup(event)">
+                <img src="settings-icon.png" alt="Settings">
+            </a>
+        </div>
+    </aside>
 
     <!-- Main -->
     <main class="main-content">
@@ -500,7 +500,7 @@
             <div class="empty-state" id="emptyState">
                 <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                        stroke="#9FB19F" stroke-width="1.5" fill="none"/>
+                          stroke="#9FB19F" stroke-width="1.5" fill="none"/>
                 </svg>
                 <p>This folder is empty.<br>Save recipes from the <a href="home.html" style="color:#9FB19F;font-weight:600;">Home</a> page to fill it up!</p>
             </div>
@@ -531,210 +531,211 @@
 </div>
 
 <script type="module">
-import { getSavedFolders, unsaveRecipeFromFolder } from '../api.js';
+    import { getSavedFolders, unsaveRecipeFromFolder } from '../api.js';
 
-// ── Read folder id and privacy from URL ──
-// e.g. folder.html?id=Favourites&privacy=public
-const params   = new URLSearchParams(window.location.search);
-const folderId = params.get('id');
-const privacyParam = params.get('privacy'); // used as fallback if API returns wrong value
+    // ── Read folder id and privacy from URL ──
+    // e.g. folder.html?id=Favourites&privacy=public
+    const params   = new URLSearchParams(window.location.search);
+    const folderId = params.get('id');
+    const privacyParam = params.get('privacy'); // used as fallback if API returns wrong value
 
-if (!folderId) {
-    window.location.href = 'saved.html';
-}
-
-// ── Avatar ──
-function loadAvatar() {
-    const el      = document.getElementById('profileAvatar');
-    const initial = localStorage.getItem('userInitial');
-    const color   = localStorage.getItem('userAvatarColor');
-    const name    = localStorage.getItem('userDisplayName');
-    if (initial && color && el) {
-        el.textContent       = initial;
-        el.style.backgroundColor = color;
-        el.title             = name || '';
-    }
-}
-
-// ── Render recipes into the grid ──
-function renderRecipes(recipes, folderName) {
-    const grid  = document.getElementById('recipesGrid');
-    const empty = document.getElementById('emptyState');
-    grid.innerHTML = '';
-
-    if (!recipes || recipes.length === 0) {
-        empty.style.display = 'flex';
-        return;
+    if (!folderId) {
+        window.location.href = 'saved.html';
     }
 
-    empty.style.display = 'none';
-
-    recipes.forEach(meal => {
-        const card = document.createElement('div');
-        card.className = 'recipe-card';
-
-        const category = meal.strCategory ? `${meal.strCategory}` : '';
-        const area     = meal.strArea     ? ` · ${meal.strArea}`  : '';
-
-        card.innerHTML = `
-            <img src="${meal.strMealThumb}" alt="${meal.strMeal}" loading="lazy">
-            <button class="unsave-btn" title="Remove from folder" aria-label="Remove ${meal.strMeal}">
-                <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M18 6L6 18M6 6l12 12" stroke="#5A5A5A" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-            </button>
-            <div class="recipe-card-info">
-                <div class="recipe-card-name">${meal.strMeal}</div>
-                <div class="recipe-card-meta">${category}${area}</div>
-            </div>
-        `;
-
-        // Click card → go to recipe detail page
-        card.addEventListener('click', () => {
-            window.location.href = `recipe.html?id=${meal.idMeal}`;
-        });
-
-        // Click unsave button → confirm then remove
-        card.querySelector('.unsave-btn').addEventListener('click', e => {
-            e.stopPropagation();
-            openConfirm(meal, folderName, card);
-        });
-
-        grid.appendChild(card);
-    });
-}
-
-// ── Update folder header ──
-function renderHeader(folder) {
-    document.title = `CopyCook - ${folder.name}`;
-    document.getElementById('folderTitle').textContent = folder.name;
-
-    const count = (folder.recipes || []).length;
-    document.getElementById('recipeCount').textContent =
-        `${count} recipe${count !== 1 ? 's' : ''}`;
-
-    const isPublic = folder.privacy === 'public';
-    document.getElementById('privacyLabel').textContent = isPublic ? 'Public' : 'Private';
-
-    const badge = document.getElementById('privacyBadge');
-    const icon  = document.getElementById('privacyIcon');
-
-    if (isPublic) {
-        badge.style.background = '#E8F0E8';
-        badge.style.color      = '#9FB19F';
-        icon.innerHTML =
-            `<circle cx="12" cy="12" r="4" stroke="#9FB19F" stroke-width="2" fill="none"/>
-             <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="#9FB19F" stroke-width="2" fill="none"/>`;
-    } else {
-        badge.style.background = '#E8E8E0';
-        badge.style.color      = '#5A5A5A';
-        icon.innerHTML =
-            `<rect x="5" y="11" width="14" height="10" rx="2" stroke="#5A5A5A" stroke-width="2" fill="none"/>
-             <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#5A5A5A" stroke-width="2" fill="none"/>`;
-    }
-}
-
-// ── Confirm unsave ──
-let pendingRemove = null; // { meal, folderName, cardEl }
-
-function openConfirm(meal, folderName, cardEl) {
-    pendingRemove = { meal, folderName, cardEl };
-    document.getElementById('confirmText').textContent =
-        `"${meal.strMeal}" will be removed from this folder.`;
-    document.getElementById('confirmOverlay').classList.add('active');
-}
-
-window.closeConfirm = function () {
-    document.getElementById('confirmOverlay').classList.remove('active');
-    pendingRemove = null;
-};
-
-document.getElementById('btnConfirmRemove').addEventListener('click', async () => {
-    if (!pendingRemove) return;
-
-    const { meal, folderName, cardEl } = pendingRemove;
-    closeConfirm();
-
-    // Optimistic UI — fade and remove card immediately
-    cardEl.style.transition = 'opacity 0.3s, transform 0.3s';
-    cardEl.style.opacity    = '0';
-    cardEl.style.transform  = 'scale(0.9)';
-
-    setTimeout(() => cardEl.remove(), 300);
-
-    // Update recipe count in header
-    const countEl = document.getElementById('recipeCount');
-    const current = parseInt(countEl.textContent) || 1;
-    const updated = current - 1;
-    countEl.textContent = `${updated} recipe${updated !== 1 ? 's' : ''}`;
-
-    if (updated === 0) {
-        document.getElementById('emptyState').style.display = 'flex';
+    // ── Avatar ──
+    function loadAvatar() {
+        const el      = document.getElementById('profileAvatar');
+        const initial = localStorage.getItem('userInitial');
+        const color   = localStorage.getItem('userAvatarColor');
+        const name    = localStorage.getItem('userDisplayName');
+        if (initial && color && el) {
+            el.textContent       = initial;
+            el.style.backgroundColor = color;
+            el.title             = name || '';
+        }
     }
 
-    try {
-        await unsaveRecipeFromFolder(meal.idMeal, folderName);
-        console.log('✅ Recipe removed:', meal.strMeal);
-    } catch (err) {
-        console.error('❌ Failed to remove recipe:', err);
-        // Re-add the card on failure so the user isn't left with broken state
-        document.getElementById('recipesGrid').appendChild(cardEl);
-        cardEl.style.opacity   = '1';
-        cardEl.style.transform = 'scale(1)';
-        countEl.textContent = `${current} recipe${current !== 1 ? 's' : ''}`;
-        document.getElementById('emptyState').style.display = 'none';
-    }
-});
+    // ── Render recipes into the grid ──
+    function renderRecipes(recipes, folderName) {
+        const grid  = document.getElementById('recipesGrid');
+        const empty = document.getElementById('emptyState');
+        grid.innerHTML = '';
 
-// Close confirm on backdrop click
-document.getElementById('confirmOverlay').addEventListener('click', function (e) {
-    if (e.target === this) closeConfirm();
-});
-
-// ── Logout ──
-window.toggleLogoutPopup = function (e) {
-    e.preventDefault();
-    document.getElementById('logoutPopup').classList.toggle('active');
-};
-window.closeLogoutPopup = function () {
-    document.getElementById('logoutPopup').classList.remove('active');
-};
-window.handleLogout = function () {
-    localStorage.clear();
-    sessionStorage.clear();
-    window.location.href = 'login.html';
-};
-document.getElementById('logoutPopup').addEventListener('click', e => {
-    if (e.target === e.currentTarget) closeLogoutPopup();
-});
-
-// ── Init ──
-document.addEventListener('DOMContentLoaded', async function () {
-    loadAvatar();
-
-    if (!folderId) return;
-
-    try {
-        // Fetch all folders from backend, then find the one matching this id
-        const folders = await getSavedFolders();
-        const folder  = folders.find(f => f.id === folderId);
-
-        if (!folder) {
-            document.getElementById('folderTitle').textContent = 'Folder not found';
-            document.getElementById('recipesGrid').innerHTML =
-                `<p class="state-message">This folder doesn't exist or was deleted.</p>`;
+        if (!recipes || recipes.length === 0) {
+            empty.style.display = 'flex';
             return;
         }
 
-        renderHeader({ ...folder, privacy: privacyParam || folder.privacy });
-        renderRecipes(folder.recipes || [], folder.name);
+        empty.style.display = 'none';
 
-    } catch (err) {
-        console.error('❌ Failed to load folder:', err);
-        document.getElementById('recipesGrid').innerHTML =
-            `<p class="state-message" style="color:#D4A5A5;">Could not load folder — make sure you're logged in and the server is running.</p>`;
+        recipes.forEach(meal => {
+            const card = document.createElement('div');
+            card.className = 'recipe-card';
+
+            const category = meal.strCategory ? `${meal.strCategory}` : '';
+            const area     = meal.strArea     ? ` · ${meal.strArea}`  : '';
+
+            card.innerHTML = `
+                <img src="${meal.strMealThumb}" alt="${meal.strMeal}" loading="lazy">
+                <button class="unsave-btn" title="Remove from folder" aria-label="Remove ${meal.strMeal}">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M18 6L6 18M6 6l12 12" stroke="#5A5A5A" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <div class="recipe-card-info">
+                    <div class="recipe-card-name">${meal.strMeal}</div>
+                    <div class="recipe-card-meta">${category}${area}</div>
+                </div>
+            `;
+
+            // Click card → go to recipe detail page
+            card.addEventListener('click', () => {
+                const recipeId = meal.idMeal || meal.id;
+                window.location.href = `../Home page/recipe.html?id=${recipeId}`;
+            });
+
+            // Click unsave button → confirm then remove
+            card.querySelector('.unsave-btn').addEventListener('click', e => {
+                e.stopPropagation();
+                openConfirm(meal, folderName, card);
+            });
+
+            grid.appendChild(card);
+        });
     }
-});
+
+    // ── Update folder header ──
+    function renderHeader(folder) {
+        document.title = `CopyCook - ${folder.name}`;
+        document.getElementById('folderTitle').textContent = folder.name;
+
+        const count = (folder.recipes || []).length;
+        document.getElementById('recipeCount').textContent =
+            `${count} recipe${count !== 1 ? 's' : ''}`;
+
+        const isPublic = folder.privacy === 'public';
+        document.getElementById('privacyLabel').textContent = isPublic ? 'Public' : 'Private';
+
+        const badge = document.getElementById('privacyBadge');
+        const icon  = document.getElementById('privacyIcon');
+
+        if (isPublic) {
+            badge.style.background = '#E8F0E8';
+            badge.style.color      = '#9FB19F';
+            icon.innerHTML =
+                `<circle cx="12" cy="12" r="4" stroke="#9FB19F" stroke-width="2" fill="none"/>
+                 <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="#9FB19F" stroke-width="2" fill="none"/>`;
+        } else {
+            badge.style.background = '#E8E8E0';
+            badge.style.color      = '#5A5A5A';
+            icon.innerHTML =
+                `<rect x="5" y="11" width="14" height="10" rx="2" stroke="#5A5A5A" stroke-width="2" fill="none"/>
+                 <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#5A5A5A" stroke-width="2" fill="none"/>`;
+        }
+    }
+
+    // ── Confirm unsave ──
+    let pendingRemove = null; // { meal, folderName, cardEl }
+
+    function openConfirm(meal, folderName, cardEl) {
+        pendingRemove = { meal, folderName, cardEl };
+        document.getElementById('confirmText').textContent =
+            `"${meal.strMeal}" will be removed from this folder.`;
+        document.getElementById('confirmOverlay').classList.add('active');
+    }
+
+    window.closeConfirm = function () {
+        document.getElementById('confirmOverlay').classList.remove('active');
+        pendingRemove = null;
+    };
+
+    document.getElementById('btnConfirmRemove').addEventListener('click', async () => {
+        if (!pendingRemove) return;
+
+        const { meal, folderName, cardEl } = pendingRemove;
+        closeConfirm();
+
+        // Optimistic UI — fade and remove card immediately
+        cardEl.style.transition = 'opacity 0.3s, transform 0.3s';
+        cardEl.style.opacity    = '0';
+        cardEl.style.transform  = 'scale(0.9)';
+
+        setTimeout(() => cardEl.remove(), 300);
+
+        // Update recipe count in header
+        const countEl = document.getElementById('recipeCount');
+        const current = parseInt(countEl.textContent) || 1;
+        const updated = current - 1;
+        countEl.textContent = `${updated} recipe${updated !== 1 ? 's' : ''}`;
+
+        if (updated === 0) {
+            document.getElementById('emptyState').style.display = 'flex';
+        }
+
+        try {
+            await unsaveRecipeFromFolder(meal.idMeal, folderName);
+            console.log('✅ Recipe removed:', meal.strMeal);
+        } catch (err) {
+            console.error('❌ Failed to remove recipe:', err);
+            // Re-add the card on failure so the user isn't left with broken state
+            document.getElementById('recipesGrid').appendChild(cardEl);
+            cardEl.style.opacity   = '1';
+            cardEl.style.transform = 'scale(1)';
+            countEl.textContent = `${current} recipe${current !== 1 ? 's' : ''}`;
+            document.getElementById('emptyState').style.display = 'none';
+        }
+    });
+
+    // Close confirm on backdrop click
+    document.getElementById('confirmOverlay').addEventListener('click', function (e) {
+        if (e.target === this) closeConfirm();
+    });
+
+    // ── Logout ──
+    window.toggleLogoutPopup = function (e) {
+        e.preventDefault();
+        document.getElementById('logoutPopup').classList.toggle('active');
+    };
+    window.closeLogoutPopup = function () {
+        document.getElementById('logoutPopup').classList.remove('active');
+    };
+    window.handleLogout = function () {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = 'login.html';
+    };
+    document.getElementById('logoutPopup').addEventListener('click', e => {
+        if (e.target === e.currentTarget) closeLogoutPopup();
+    });
+
+    // ── Init ──
+    document.addEventListener('DOMContentLoaded', async function () {
+        loadAvatar();
+
+        if (!folderId) return;
+
+        try {
+            // Fetch all folders from backend, then find the one matching this id
+            const folders = await getSavedFolders();
+            const folder  = folders.find(f => f.id === folderId);
+
+            if (!folder) {
+                document.getElementById('folderTitle').textContent = 'Folder not found';
+                document.getElementById('recipesGrid').innerHTML =
+                    `<p class="state-message">This folder doesn't exist or was deleted.</p>`;
+                return;
+            }
+
+            renderHeader({ ...folder, privacy: privacyParam || folder.privacy });
+            renderRecipes(folder.recipes || [], folder.name);
+
+        } catch (err) {
+            console.error('❌ Failed to load folder:', err);
+            document.getElementById('recipesGrid').innerHTML =
+                `<p class="state-message" style="color:#D4A5A5;">Could not load folder — make sure you're logged in and the server is running.</p>`;
+        }
+    });
 </script>
 </body>
 </html>
