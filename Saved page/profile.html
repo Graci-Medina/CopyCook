@@ -79,7 +79,6 @@
             padding: 18px 30px; gap: 15px; flex-shrink: 0;
         }
 
-        /* ── Back button ── */
         .back-btn {
             display: flex; align-items: center; gap: 5px;
             background: none; border: none;
@@ -221,7 +220,7 @@
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
-        /* ── Folder grid (public folders in Saves panel) ── */
+        /* ── Folder grid ── */
         .folders-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -366,7 +365,7 @@
             <a href="../Explore/explore.html" class="nav-icon">
                 <img src="explore-icon.png" alt="Explore">
             </a>
-            <a href="#" class="nav-icon">
+            <a href="../post page/post.html" class="nav-icon">
                 <img src="plus-icon.png" alt="Add">
             </a>
             <a href="saved.html" class="nav-icon active">
@@ -387,7 +386,7 @@
     <main class="main-content">
 
         <div class="top-bar">
-            <button class="back-btn" onclick="window.location.href='saved.html'">
+            <button class="back-btn" id="backBtn" onclick="history.back()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -399,12 +398,6 @@
                     <path d="M16 16L20 20" stroke="#5A5A5A" stroke-width="2" stroke-linecap="round"/>
                 </svg>
                 <input type="text" placeholder="Search restaurants or dishes" readonly>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    <rect x="10" y="5" width="4" height="10" rx="2" fill="#D4A5A5"/>
-                    <path d="M7 12C7 14.76 9.24 17 12 17C14.76 17 17 14.76 17 12" stroke="#D4A5A5" stroke-width="2"/>
-                    <line x1="12" y1="17" x2="12" y2="20" stroke="#D4A5A5" stroke-width="2"/>
-                    <line x1="9" y1="20" x2="15" y2="20" stroke="#D4A5A5" stroke-width="2"/>
-                </svg>
             </div>
             <div class="profile-avatar" id="profileAvatar" onclick="window.location.href='profile.html'"></div>
         </div>
@@ -414,8 +407,8 @@
             <!-- Profile hero -->
             <div class="profile-hero">
                 <div class="big-avatar" id="bigAvatar"></div>
-                <div class="hero-name" id="heroName">Your Name</div>
-                <div class="hero-handle" id="heroHandle">@username</div>
+                <div class="hero-name" id="heroName">Loading…</div>
+                <div class="hero-handle" id="heroHandle"></div>
                 <div class="hero-stats">
                     <div class="stat">
                         <div class="stat-num" id="statSaves">—</div>
@@ -430,7 +423,8 @@
                         <div class="stat-lbl">following</div>
                     </div>
                 </div>
-                <div class="hero-actions">
+                <!-- Only shown when viewing own profile -->
+                <div class="hero-actions" id="heroActions">
                     <button class="btn-outline">Share Profile</button>
                     <button class="btn-solid">Edit Profile</button>
                 </div>
@@ -442,7 +436,7 @@
                 <button class="tab" id="tabLikes" onclick="switchTab('likes')">Likes</button>
             </div>
 
-            <!-- ── Saves panel ── -->
+            <!-- Saves panel -->
             <div class="tab-panel active" id="panel-saves">
                 <div class="folders-grid" id="foldersGrid">
                     <div class="empty-state">
@@ -452,7 +446,7 @@
                 </div>
             </div>
 
-            <!-- ── Likes panel ── -->
+            <!-- Likes panel -->
             <div class="tab-panel" id="panel-likes">
                 <div class="recipe-grid" id="likesGrid">
                     <div class="empty-state">
@@ -480,7 +474,7 @@
     import { getFolders } from '../firebase-functions.js';
     import { onAuthStateChanged }
         from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-    import { collection, getDocs }
+    import { collection, getDocs, doc, getDoc, query, where }
         from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
     const PLACEHOLDER_IMAGES = [
@@ -494,34 +488,99 @@
         'https://www.themealdb.com/images/media/meals/1525876468.jpg',
     ];
 
-    // ── Profile info ─────────────────────────────────────────────────────────
-    function loadProfile() {
-        const initial = localStorage.getItem('userInitial') || '?';
-        const color   = localStorage.getItem('userAvatarColor') || '#D4A5A5';
-        const name    = localStorage.getItem('userDisplayName') || 'Your Name';
-        const email   = localStorage.getItem('userEmail') || '';
-        const handle  = email ? '@' + email.split('@')[0] : '@user';
+    // ── Detect if viewing another user's profile ──────────────────────────────
+    const params       = new URLSearchParams(window.location.search);
+    const viewUid      = params.get('uid');   // set when coming from Messages
+    const isOwnProfile = !viewUid;
 
+    // Hide edit/share buttons when viewing someone else
+    if (!isOwnProfile) {
+        document.getElementById('heroActions').style.display = 'none';
+    }
+
+    // ── Avatar helper ─────────────────────────────────────────────────────────
+    const AVATAR_COLORS = ['#D4A5A5','#9FB19F','#A5B4D4','#D4C4A5','#B4A5D4','#A5D4C4','#D4A5B4','#C4D4A5'];
+    function colorFor(str) {
+        let h = 0;
+        for (const c of (str || 'X')) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+        return AVATAR_COLORS[h % AVATAR_COLORS.length];
+    }
+
+    // ── Load profile info ─────────────────────────────────────────────────────
+    async function loadProfile(uid, isOwn) {
+        if (isOwn) {
+            // Own profile: read from localStorage (fast)
+            const initial = localStorage.getItem('userInitial') || '?';
+            const color   = localStorage.getItem('userAvatarColor') || '#D4A5A5';
+            const name    = localStorage.getItem('userDisplayName') || 'Your Name';
+            const email   = localStorage.getItem('userEmail') || '';
+            applyProfileUI(initial, color, name, email);
+        } else {
+            // Other user: fetch from Firestore users collection
+            try {
+                const snap = await getDoc(doc(db, 'users', uid));
+                if (snap.exists()) {
+                    const d = snap.data();
+                    const name    = d.displayName || 'Unknown User';
+                    const email   = d.email || '';
+                    const color   = d.avatarColor || colorFor(name);
+                    const initial = name.charAt(0).toUpperCase();
+                    applyProfileUI(initial, color, name, email);
+                } else {
+                    // Fallback to sessionStorage name set by Messages.html
+                    const name = sessionStorage.getItem('viewProfileName') || 'Unknown User';
+                    applyProfileUI(name.charAt(0).toUpperCase(), colorFor(name), name, '');
+                }
+            } catch(e) {
+                const name = sessionStorage.getItem('viewProfileName') || 'Unknown User';
+                applyProfileUI(name.charAt(0).toUpperCase(), colorFor(name), name, '');
+            }
+        }
+    }
+
+    function applyProfileUI(initial, color, name, email) {
+        const handle = email ? '@' + email.split('@')[0] : '@' + name.toLowerCase().replace(/\s+/g, '');
+
+        // Own avatar in top bar
         const topAv = document.getElementById('profileAvatar');
-        topAv.textContent = initial;
-        topAv.style.backgroundColor = color;
+        const myInitial = localStorage.getItem('userInitial') || initial;
+        const myColor   = localStorage.getItem('userAvatarColor') || color;
+        topAv.textContent = myInitial;
+        topAv.style.backgroundColor = myColor;
 
+        // Big avatar for viewed profile
         const bigAv = document.getElementById('bigAvatar');
         bigAv.textContent = initial;
         bigAv.style.backgroundColor = color;
 
         document.getElementById('heroName').textContent   = name;
         document.getElementById('heroHandle').textContent = handle;
+        document.title = isOwnProfile ? 'CopyCook - Profile' : name + ' - CopyCook';
     }
 
-    // ── Load saves: public folders + total recipe count ───────────────────────
+    // ── Load saves (public folders) ───────────────────────────────────────────
     async function loadSaves(uid) {
         const grid = document.getElementById('foldersGrid');
-
         try {
-            const allFolders    = await getFolders(uid);
-            const publicFolders = allFolders.filter(f => f.privacy === 'public');
-
+            let publicFolders;
+            if (isOwnProfile) {
+                const allFolders = await getFolders(uid);
+                publicFolders = allFolders.filter(f => f.privacy === 'public');
+            } else {
+                // Query only public folders directly from Firestore
+                const q = query(
+                    collection(db, 'users', uid, 'folders'),
+                    where('privacy', '==', 'public')
+                );
+                const snap = await getDocs(q);
+                publicFolders = snap.docs.map(d => ({
+                    id:         d.id,
+                    name:       d.data().name,
+                    privacy:    'public',
+                    recipes:    d.data().savedRecipes || [],
+                    coverImage: d.data().coverImage || null,
+                }));
+            }
             const totalRecipes = publicFolders.reduce((sum, f) => sum + (f.recipes || []).length, 0);
             document.getElementById('statSaves').textContent = totalRecipes;
 
@@ -532,7 +591,7 @@
                     <div class="empty-state">
                         <div class="empty-icon">🔖</div>
                         <p>No public folders yet</p>
-                        <span>Make a folder public in your saved page to show it here</span>
+                        <span>${isOwnProfile ? 'Make a folder public in your saved page' : 'This user has no public folders'}</span>
                     </div>`;
                 return;
             }
@@ -544,8 +603,7 @@
 
                 const card = document.createElement('div');
                 card.className = 'folder-card';
-                card.onclick = () => window.location.href = `folder.html?id=${folder.id}`;
-
+                card.onclick = () => window.location.href = `folder.html?id=${folder.id}${!isOwnProfile ? '&uid=' + encodeURIComponent(uid) : ''}`;
                 card.innerHTML = `
                     <div class="folder-thumb">
                         <img src="${thumb}" alt="${folder.name}" loading="lazy"
@@ -555,19 +613,13 @@
                         ${folder.name}
                         <div class="folder-subtitle">${subtitle}</div>
                     </div>`;
-
                 grid.appendChild(card);
             });
 
         } catch (e) {
             console.warn('Could not load saves:', e);
             document.getElementById('statSaves').textContent = '0';
-            grid.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">🔖</div>
-                    <p>Couldn't load folders</p>
-                    <span>Try refreshing the page</span>
-                </div>`;
+            grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🔖</div><p>Couldn't load folders</p></div>`;
         }
     }
 
@@ -576,7 +628,7 @@
         try {
             const snap  = await getDocs(collection(db, 'users', uid, 'likedRecipes'));
             const items = [];
-            snap.forEach(doc => items.push(doc.data()));
+            snap.forEach(d => items.push(d.data()));
             document.getElementById('statLikes').textContent = items.length;
             renderLikeCards(items);
         } catch (e) {
@@ -595,7 +647,7 @@
                 <div class="empty-state">
                     <div class="empty-icon">🤍</div>
                     <p>Nothing here yet</p>
-                    <span>Recipes you like will appear here</span>
+                    <span>${isOwnProfile ? 'Recipes you like will appear here' : 'No liked recipes yet'}</span>
                 </div>`;
             return;
         }
@@ -619,7 +671,6 @@
                     <div class="recipe-card-title">${title}</div>
                     ${cat ? `<div class="recipe-card-meta">${cat}</div>` : ''}
                 </div>`;
-
             grid.appendChild(card);
         });
     }
@@ -649,23 +700,17 @@
     });
 
     // ── Init ──────────────────────────────────────────────────────────────────
-    loadProfile();
+    onAuthStateChanged(auth, async user => {
+        const targetUid = viewUid || (user ? user.uid : null);
 
-    onAuthStateChanged(auth, user => {
-        if (user) {
-            loadSaves(user.uid);
-            loadLikes(user.uid);
-        } else {
-            document.getElementById('statSaves').textContent = '0';
-            document.getElementById('statLikes').textContent = '0';
-            document.getElementById('foldersGrid').innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">🔖</div>
-                    <p>No public folders yet</p>
-                    <span>Log in to see your folders</span>
-                </div>`;
-            renderLikeCards([]);
+        if (!targetUid) {
+            window.location.href = '../login.html';
+            return;
         }
+
+        await loadProfile(targetUid, isOwnProfile);
+        await loadSaves(targetUid);
+        await loadLikes(targetUid);
     });
 </script>
 </body>

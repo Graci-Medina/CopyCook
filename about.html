@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About – CopyCook</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Shrikhand&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --cream:   #F5EFE7;
+    --rose:    #E8B4B4;
+    --dusty:   #D4A5A5;
+    --sage:    #9FB19F;
+    --sage-dk: #7a9a7a;
+    --text:    #4A4A4A;
+    --muted:   #7A7A7A;
+    --white:   #ffffff;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--cream);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* dot pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle, #D4A5A530 1.5px, transparent 1.5px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Navbar ── */
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(245,239,231,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid #f0e2e2;
+  }
+
+  .logo img {
+    height: 52px;
+    width: auto;
+    cursor: pointer;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+  }
+
+  .nav-links a {
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+
+  .nav-links a:hover { color: var(--sage); }
+
+  .login-btn {
+    background-color: var(--rose);
+    color: #3A3A3A;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+
+  .login-btn:hover { background-color: var(--dusty); transform: scale(1.04); }
+
+  /* ── page sections ── */
+  section { position: relative; z-index: 1; }
+
+  /* ── HERO ── */
+  .hero {
+    text-align: center;
+    padding: 72px 24px 56px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-eyebrow {
+    display: inline-block;
+    background: var(--rose);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    padding: 5px 18px;
+    border-radius: 20px;
+    margin-bottom: 22px;
+    animation: fadeUp 0.7s ease both;
+  }
+
+  .hero h1 {
+    font-family: 'Shrikhand', cursive;
+    font-size: clamp(54px, 9vw, 100px);
+    color: var(--sage);
+    text-shadow: 3px 5px 0 var(--sage-dk);
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 20px;
+    animation: fadeUp 0.7s 0.1s ease both;
+  }
+
+  .hero p {
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.75;
+    animation: fadeUp 0.7s 0.2s ease both;
+  }
+
+  /* wavy divider */
+  .wave {
+    display: block;
+    width: 100%;
+    margin-top: -2px;
+    line-height: 0;
+  }
+
+  /* floating food */
+  .floaters {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .floater {
+    position: absolute;
+    font-size: 26px;
+    animation: float 7s ease-in-out infinite;
+    opacity: 0.5;
+  }
+
+  .floater:nth-child(1) { top: 15%; left: 5%;   animation-delay: 0s;   font-size: 34px; }
+  .floater:nth-child(2) { top: 60%; left: 2%;   animation-delay: 1.3s; font-size: 22px; }
+  .floater:nth-child(3) { top: 18%; right: 6%;  animation-delay: 0.8s; font-size: 30px; }
+  .floater:nth-child(4) { top: 70%; right: 4%;  animation-delay: 2.1s; font-size: 22px; }
+  .floater:nth-child(5) { top: 85%; left: 14%;  animation-delay: 1.7s; font-size: 20px; }
+  .floater:nth-child(6) { top: 10%; right: 20%; animation-delay: 3.2s; font-size: 18px; }
+
+  @keyframes float {
+    0%,100% { transform: translateY(0) rotate(-4deg); }
+    50%      { transform: translateY(-16px) rotate(4deg); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── STORY SECTION ── */
+  .story {
+    background: var(--white);
+    padding: 70px 24px;
+  }
+
+  .story-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    align-items: center;
+  }
+
+  .story-text .label {
+    display: inline-block;
+    background: #f0e6e6;
+    color: var(--dusty);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+
+  .story-text h2 {
+    font-family: 'Shrikhand', cursive;
+    font-size: clamp(34px, 4.5vw, 52px);
+    color: var(--sage);
+    text-shadow: 2px 3px 0 var(--sage-dk);
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 18px;
+  }
+
+  .story-text p {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.8;
+    margin-bottom: 14px;
+  }
+
+  .story-visual {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .stat-pill {
+    background: var(--cream);
+    border-radius: 18px;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 1.5px solid #f0e0e0;
+    transition: transform 0.2s;
+  }
+
+  .stat-pill:hover { transform: translateX(6px); }
+
+  .stat-pill .emoji { font-size: 28px; flex-shrink: 0; }
+
+  .stat-pill .stat-info strong {
+    display: block;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .stat-pill .stat-info span {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  /* ── FEATURES ── */
+  .features {
+    padding: 70px 24px;
+    background: var(--cream);
+  }
+
+  .section-label {
+    display: block;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--dusty);
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    text-align: center;
+    font-family: 'Shrikhand', cursive;
+    font-size: clamp(32px, 4vw, 48px);
+    color: var(--sage);
+    text-shadow: 2px 3px 0 var(--sage-dk);
+    letter-spacing: -1px;
+    margin-bottom: 44px;
+  }
+
+  .features-grid {
+    max-width: 860px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+
+  .feature-card {
+    background: var(--white);
+    border-radius: 22px;
+    padding: 28px 22px;
+    border: 1.5px solid #f0e2e2;
+    text-align: center;
+    transition: transform 0.25s, box-shadow 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feature-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 4px;
+  }
+
+  .feature-card:nth-child(1)::after { background: linear-gradient(90deg, var(--rose), var(--dusty)); }
+  .feature-card:nth-child(2)::after { background: linear-gradient(90deg, var(--sage), var(--sage-dk)); }
+  .feature-card:nth-child(3)::after { background: linear-gradient(90deg, #F0C8A0, #E8B4B4); }
+  .feature-card:nth-child(4)::after { background: linear-gradient(90deg, #C8B4D4, #D4A5A5); }
+  .feature-card:nth-child(5)::after { background: linear-gradient(90deg, var(--rose), #C8B4D4); }
+  .feature-card:nth-child(6)::after { background: linear-gradient(90deg, var(--sage-dk), var(--sage)); }
+
+  .feature-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 32px rgba(160,120,120,0.14);
+  }
+
+  .feature-card .f-icon { font-size: 36px; margin-bottom: 12px; display: block; }
+  .feature-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .feature-card p  { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* ── TEAM ── */
+  .team {
+    background: var(--white);
+    padding: 70px 24px 80px;
+  }
+
+  .team-grid {
+    max-width: 860px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  .team-card {
+    background: var(--cream);
+    border-radius: 24px;
+    padding: 0 0 24px 0;
+    text-align: center;
+    border: 1.5px solid #f0e2e2;
+    transition: transform 0.25s, box-shadow 0.25s;
+    position: relative;
+    overflow: hidden;
+    margin-top: 0;
+  }
+  .team-card:hover {
+    transform: translateY(-7px);
+    box-shadow: 0 14px 36px rgba(160,120,120,0.15);
+  }
+
+  /* colour accent bar per card */
+  .team-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+    border-radius: 24px 24px 0 0;
+  }
+
+  .team-card:nth-child(1)::before { background: linear-gradient(90deg, var(--rose), var(--dusty)); }
+  .team-card:nth-child(2)::before { background: linear-gradient(90deg, var(--sage), var(--sage-dk)); }
+  .team-card:nth-child(3)::before { background: linear-gradient(90deg, #F0C8A0, #E8B4B4); }
+  .team-card:nth-child(4)::before { background: linear-gradient(90deg, #C8B4D4, #B4A0C8); }
+
+  .avatar {
+    width: 100%;
+    height: 200px;
+    border-radius: 18px 18px 0 0;
+    overflow: hidden;
+    background: var(--cream);
+    margin-bottom: 16px;
+  }
+
+  .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 15%;
+    display: block;
+  }
+
+  .team-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--text);
+    padding: 0 18px;
+  }
+
+  .team-card .role {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--dusty);
+    margin-bottom: 10px;
+    padding: 0 18px;
+  }
+
+  .team-card .bio {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.6;
+    padding: 0 18px;
+  }
+
+  .team-card .fav {
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--muted);
+    background: #fff;
+    border-radius: 10px;
+    padding: 6px 10px;
+    display: inline-block;
+  }
+
+  .team-card .fav strong { color: var(--text); }
+
+  /* ── footer note ── */
+  .footer-note {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 32px 24px 48px;
+    font-size: 13px;
+    color: #bbb;
+    background: var(--cream);
+  }
+
+  .footer-note span { color: var(--rose); font-weight: 600; }
+
+  .divider {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 8px 0 28px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: var(--cream);
+  }
+
+  .divider::before, .divider::after {
+    content: '';
+    display: inline-block;
+    width: 60px;
+    height: 1px;
+    background: #D4A5A5;
+    vertical-align: middle;
+    margin: 0 12px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 760px) {
+    .story-inner { grid-template-columns: 1fr; gap: 32px; }
+    .features-grid { grid-template-columns: 1fr 1fr; }
+    .team-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 500px) {
+    .navbar { padding: 14px 18px; }
+    .nav-links a { display: none; }
+    .features-grid { grid-template-columns: 1fr; }
+    .team-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a href="index.html" class="logo"><img src="logo.png" alt="CopyCook Logo"></a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="contact.html">Contact</a>
+    <button class="login-btn" onclick="window.location.href='login.html'">Login</button>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="floaters">
+    <span class="floater">🍳</span>
+    <span class="floater">🌿</span>
+    <span class="floater">🍰</span>
+    <span class="floater">🥗</span>
+    <span class="floater">🫕</span>
+    <span class="floater">🍜</span>
+  </div>
+  <span class="hero-eyebrow">Our story</span>
+  <h1>Made with 🧡</h1>
+  <p>CopyCook started as a school project and turned into something we're genuinely proud of: a cozy little corner of the internet where food lovers can save, discover, and cook what they crave.</p>
+</section>
+
+<!-- Story -->
+<section class="story">
+  <div class="story-inner">
+    <div class="story-text">
+      <span class="label">The origin</span>
+      <h2>Why CopyCook?</h2>
+      <p>Ever crave your favourite restaurant dish but wince at the price tag? CopyCook was built to fix that. It's a recipe discovery platform where you can find copycat recipes from popular chain restaurants and see exactly how much you save by making it at home instead.</p>
+      <p>With rising food prices and shrinkflation hitting everyone's wallets, we wanted to make home cooking feel accessible, affordable, and genuinely fun. Browse recipes, compare homemade costs against dine-in prices, save your favourites into personal folders, and build your own little cookbook, all in one cozy corner of the internet.</p>
+    </div>
+    <div class="story-visual">
+      <div class="stat-pill">
+        <span class="emoji"></span>
+        <div class="stat-info">
+          <strong>300+ Recipes</strong>
+          <span>From TheMealDB & CopyKat</span>
+        </div>
+      </div>
+      <div class="stat-pill">
+        <span class="emoji"></span>
+        <div class="stat-info">
+          <strong>Personal Folders</strong>
+          <span>Save & organize your favourites</span>
+        </div>
+      </div>
+      <div class="stat-pill">
+        <span class="emoji"></span>
+        <div class="stat-info">
+          <strong>Store Finder</strong>
+          <span>Explore nearby grocery stores</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Team -->
+<section class="team">
+  <span class="section-label">The people behind the plates</span>
+  <h2 class="section-title" style="text-align:center; margin-bottom:44px;">Meet the team </h2>
+  <div class="team-grid">
+
+    <div class="team-card">
+      <div class="avatar"><img src="pic1.jpg" alt="Teammate 1"></div>
+      <h3>Neha</h3>
+      <span class="role">UI, UX & Full Stack</span>
+      <p class="bio">Designed and built the entire UI/UX experience from scratch, crafted the frontend, and handled Firebase integration to bring CopyCook to life.</p>
+      <span class="fav"> Fave dish: <strong>Shawarma</strong></span>
+    </div>
+
+    <div class="team-card">
+      <div class="avatar"><img src="pic2.jpg" alt="Teammate 2"></div>
+      <h3>Lochana</h3>
+      <span class="role"> Backend & Auth</span>
+      <p class="bio">Handled authentication, user management, and the behind-the-scenes plumbing that keeps everything secure and running smoothly.</p>
+      <span class="fav"> Fave dish: <strong>Pizza</strong></span>
+    </div>
+
+    <div class="team-card">
+      <div class="avatar"><img src="pic3.jpg" alt="Teammate 3"></div>
+      <h3>Grace</h3>
+      <span class="role">Backend & API</span>
+      <p class="bio">Built out the server-side logic and API integrations, connecting CopyCook to the outside world and making sure every recipe request comes back fast and clean.</p>
+      <span class="fav"> Fave dish: <strong>Tacos</strong></span>
+    </div>
+
+    <div class="team-card">
+      <div class="avatar"><img src="pic1.jpg" alt="Teammate 4"></div>
+      <h3>Aubrey</h3>
+      <span class="role">Database & Firebase</span>
+      <p class="bio">Architected the backend database structure, wired up all Firestore collections, and kept our data flowing smoothly so every save, like, and folder actually sticks.</p>
+      <span class="fav"> Fave dish: <strong>Cheesecake</strong></span>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider">built with love, caffeine & late nights</div>
+<p class="footer-note">© 2025 CopyCook</p>
+
+</body>
+</html>

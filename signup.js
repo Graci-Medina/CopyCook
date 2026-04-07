@@ -1,8 +1,9 @@
-import { auth } from './firebase-config.js';
+import { auth, db } from './firebase-config.js';
 import {
     createUserWithEmailAndPassword,
     updateProfile
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const signupForm = document.getElementById('signupForm');
 const nameInput = document.getElementById('name');
@@ -90,11 +91,21 @@ signupForm.addEventListener('submit', async function (e) {
         // Save display name to Firebase Auth profile
         await updateProfile(userCredential.user, { displayName: name });
 
-        // Save avatar info to localStorage for instant use on home page
+        // Write user doc to Firestore so they appear in messaging search
         const firstLetter = name.charAt(0).toUpperCase();
+        const avatarColor = getAvatarColor(firstLetter);
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+            uid:         userCredential.user.uid,
+            displayName: name,
+            email:       email,
+            avatarColor: avatarColor
+        });
+
+        // Save avatar info to localStorage for instant use on home page
         localStorage.setItem('userDisplayName', name);
         localStorage.setItem('userInitial', firstLetter);
-        localStorage.setItem('userAvatarColor', getAvatarColor(firstLetter));
+        localStorage.setItem('userAvatarColor', avatarColor);
+        localStorage.setItem('userUID', userCredential.user.uid);
 
         showMessage('Account created successfully! Redirecting...', 'success');
 

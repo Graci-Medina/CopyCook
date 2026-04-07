@@ -9,25 +9,62 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 // Firestore structure:
 //   users/{uid}/folders/{safeName}  →  { name, privacy, savedRecipes, coverImage, createdAt }
-//
 //   recipes/{mealId}/comments/{commentId}  →  { uid, displayName, text, createdAt }
 //   recipes/{mealId}/ratings/{uid}         →  { uid, stars, createdAt }
 //   recipes/{mealId}                       →  { ratingCount, ratingSum }  (aggregate)
+//   posts/{postId}  →  { uid, displayName, avatarColor, mealName, ingredients, instructions, postImg, createdAt }
+//   conversations/{uid_uid}/messages/{---} →  { sender, message, sentAt }
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function newUser(id, name, mail, color) {
-    const userData = { uid: id, displayName: name, email: mail, avatarColor: color };
-    setDoc(doc(db, 'users', id), userData);
+
+// ── Users ──────────────────────────────────────────────────────────────────
+
+export function newUser(id, name, mail, bio, color) {
+    const userData = {
+        uid: id,
+        displayName: name,
+        email: mail,
+        bio: bio || '',
+        avatarColor: color
+    };
+    const userRef = doc(db, 'users/' + id);
+    setDoc(userRef, userData);
 }
 
+export async function getUser(uid) {
+    const userRef = doc(db, 'users', uid);
+    const snapshot = await getDoc(userRef);
+    if (!snapshot.exists()) return null;
+    return {
+        uid:          snapshot.id,
+        displayName:  snapshot.data().displayName  || '',
+        email:        snapshot.data().email        || '',
+        bio:          snapshot.data().bio          || '',
+        dietaryPrefs: snapshot.data().dietaryPrefs || [],
+        avatarColor:  snapshot.data().avatarColor  || ''
+    };
+}
+
+export function updateUserProfile(id, name, bio, dietaryPrefs) {
+    const userRef = doc(db, 'users/' + id);
+    return updateDoc(userRef, { displayName: name, bio, dietaryPrefs });
+}
+
+export async function deleteUser(uid) {
+    await deleteDoc(doc(db, 'users', uid));
+}
+
+
 // ── Folders ──────────────────────────────────────────────────────────────────
+
 export async function createFolder(id, folderName, privacy = 'private') {
     const safeName = folderName.replace(/\//g, '_');
     const folderData = {
         name: folderName, privacy, savedRecipes: [], coverImage: null,
         createdAt: new Date().toISOString()
     };
-    await setDoc(doc(db, 'users', id, 'folders', safeName), folderData);
+    const folderRef = doc(db, 'users/' + id + '/folders/' + safeName);
+    await setDoc(folderRef, folderData);
 }
 
 export async function deleteFolder(uid, folderName) {
@@ -36,7 +73,8 @@ export async function deleteFolder(uid, folderName) {
 }
 
 export async function getFolders(uid) {
-    const snapshot = await getDocs(collection(db, 'users', uid, 'folders'));
+    const foldersRef = collection(db, 'users/' + uid + '/folders');
+    const snapshot = await getDocs(foldersRef);
     return snapshot.docs.map(docSnap => ({
         id:         docSnap.id,
         name:       docSnap.data().name,
@@ -49,7 +87,7 @@ export async function getFolders(uid) {
 
 export async function saveRecipe(uid, folderName, mealObj) {
     const safeName = folderName.replace(/\//g, '_');
-    const ref = doc(db, 'users', uid, 'folders', safeName);
+    const ref = doc(db, 'users/' + uid + '/folders/' + safeName);
     const canonical = {
         idMeal:       mealObj.idMeal       || mealObj.id,
         strMeal:      mealObj.strMeal      || mealObj.name,
@@ -64,7 +102,7 @@ export async function saveRecipe(uid, folderName, mealObj) {
 
 export async function unsaveRecipe(uid, folderName, mealObj) {
     const safeName = folderName.replace(/\//g, '_');
-    const ref = doc(db, 'users', uid, 'folders', safeName);
+    const ref = doc(db, 'users/' + uid + '/folders/' + safeName);
     const snap = await getDoc(ref);
     if (!snap.exists()) return;
     const targetId = mealObj.idMeal || mealObj.id;
@@ -77,13 +115,12 @@ export async function unsaveRecipe(uid, folderName, mealObj) {
 }
 
 export async function getSavedRecipes(id) {
-    const snap = await getDoc(doc(db, 'users', id));
+    const snap = await getDoc(doc(db, 'users/' + id));
     return snap.exists() ? snap.data() : null;
 }
 
+
 // ── Comments ──────────────────────────────────────────────────────────────────
-// Firestore: recipes/{mealId}/comments/{auto-id}
-//   { uid, displayName, avatarColor, text, createdAt (serverTimestamp) }
 
 export async function addComment(mealId, uid, displayName, avatarColor, text) {
     const commentsRef = collection(db, 'recipes', mealId, 'comments');
@@ -114,34 +151,30 @@ export async function deleteComment(mealId, commentId) {
     await deleteDoc(doc(db, 'recipes', mealId, 'comments', commentId));
 }
 
+
 // ── Ratings ───────────────────────────────────────────────────────────────────
-// Firestore: recipes/{mealId}/ratings/{uid}  →  { uid, stars, createdAt }
-//            recipes/{mealId}                →  { ratingCount, ratingSum }  (aggregate doc)
 
 export async function submitRating(mealId, uid, stars) {
-    const ratingRef  = doc(db, 'recipes', mealId, 'ratings', uid);
-    const recipeRef  = doc(db, 'recipes', mealId);
-    const existing   = await getDoc(ratingRef);
+    const ratingRef = doc(db, 'recipes', mealId, 'ratings', uid);
+    const recipeRef = doc(db, 'recipes', mealId);
+    const existing  = await getDoc(ratingRef);
 
     if (existing.exists()) {
         const oldStars = existing.data().stars;
-        // Update aggregate: subtract old, add new
         await setDoc(recipeRef, {
             ratingSum:   increment(stars - oldStars),
-            ratingCount: increment(0)           // count stays the same
+            ratingCount: increment(0)
         }, { merge: true });
-        await setDoc(ratingRef, { uid, stars, createdAt: serverTimestamp() });
     } else {
         await setDoc(recipeRef, {
             ratingSum:   increment(stars),
             ratingCount: increment(1)
         }, { merge: true });
-        await setDoc(ratingRef, { uid, stars, createdAt: serverTimestamp() });
     }
+    await setDoc(ratingRef, { uid, stars, createdAt: serverTimestamp() });
 }
 
 export async function getRatingData(mealId) {
-    // Returns { average, count, userStars (null if not rated) }
     const recipeSnap = await getDoc(doc(db, 'recipes', mealId));
     const data = recipeSnap.exists() ? recipeSnap.data() : {};
     const count = data.ratingCount || 0;
@@ -152,4 +185,72 @@ export async function getRatingData(mealId) {
 export async function getUserRating(mealId, uid) {
     const snap = await getDoc(doc(db, 'recipes', mealId, 'ratings', uid));
     return snap.exists() ? snap.data().stars : null;
+}
+
+
+// ── Messages ───────────────────────────────────────────────────────────────────
+
+export async function newConversation(uid1, uid2) {
+    const uids = [uid1, uid2].sort();
+    const conversationRef = doc(db, 'conversations/' + uids[0] + '_' + uids[1]);
+    await setDoc(conversationRef, {
+        uid1, uid2, messages: [], lastSentAt: new Date().toISOString()
+    });
+}
+
+export async function sendMessage(sender, recipient, message) {
+    const uids = [sender, recipient].sort();
+    const conversationRef = doc(db, 'conversations/' + uids[0] + '_' + uids[1]);
+    await updateDoc(conversationRef, {
+        messages: arrayUnion({ sender, message, sentAt: new Date().toISOString() }),
+        lastSentAt: new Date().toISOString()
+    });
+}
+
+export async function getConversation(uid1, uid2) {
+    const uids = [uid1, uid2].sort();
+    const snap = await getDoc(doc(db, 'conversations/' + uids[0] + '_' + uids[1]));
+    if (!snap.exists()) return { messages: [] };
+    return { uid1: snap.data().uid1, uid2: snap.data().uid2, messages: snap.data().messages || [] };
+}
+
+
+// ── Posts ──────────────────────────────────────────────────────────────────
+// Firestore: posts/{postId}
+//   { uid, displayName, avatarColor, mealName, ingredients, instructions, postImg, createdAt }
+
+export async function newPost(uid, displayName, avatarColor, mealName, ingredients, instructions, postImg) {
+    const postsRef = collection(db, 'posts');
+    const docRef = await addDoc(postsRef, {
+        uid,
+        displayName,
+        avatarColor: avatarColor || '#9FB19F',
+        mealName,
+        ingredients,
+        instructions,
+        postImg: postImg || null,
+        createdAt: serverTimestamp()
+    });
+    return docRef.id;
+}
+
+export async function getPosts() {
+    const postsRef = collection(db, 'posts');
+    const q = query(postsRef, orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(d => ({
+        id:           d.id,
+        uid:          d.data().uid,
+        displayName:  d.data().displayName  || 'Anonymous',
+        avatarColor:  d.data().avatarColor  || '#9FB19F',
+        mealName:     d.data().mealName,
+        ingredients:  d.data().ingredients  || [],
+        instructions: d.data().instructions || '',
+        postImg:      d.data().postImg      || null,
+        createdAt:    d.data().createdAt?.toDate?.() || new Date()
+    }));
+}
+
+export async function deletePost(postId) {
+    await deleteDoc(doc(db, 'posts', postId));
 }

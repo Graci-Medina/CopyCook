@@ -139,16 +139,60 @@
             transition: color 0.2s;
         }
         .modal-close:hover { color: #D4A5A5; }
+
+        /* Floating food */
+        .floaters {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .floater {
+            position: absolute;
+            font-size: 26px;
+            animation: float 7s ease-in-out infinite;
+            opacity: 0.45;
+        }
+        .floater:nth-child(1)  { top: 8%;  left: 4%;   font-size: 32px; animation-delay: 0s;   }
+        .floater:nth-child(2)  { top: 20%; left: 90%;  font-size: 24px; animation-delay: 1.2s; }
+        .floater:nth-child(3)  { top: 40%; left: 6%;   font-size: 28px; animation-delay: 0.7s; }
+        .floater:nth-child(4)  { top: 60%; left: 92%;  font-size: 22px; animation-delay: 2.1s; }
+        .floater:nth-child(5)  { top: 75%; left: 3%;   font-size: 20px; animation-delay: 1.5s; }
+        .floater:nth-child(6)  { top: 85%; left: 88%;  font-size: 28px; animation-delay: 3s;   }
+        .floater:nth-child(7)  { top: 50%; left: 95%;  font-size: 20px; animation-delay: 0.4s; }
+        .floater:nth-child(8)  { top: 92%; left: 20%;  font-size: 24px; animation-delay: 2.5s; }
+        .floater:nth-child(9)  { top: 5%;  left: 75%;  font-size: 22px; animation-delay: 1.8s; }
+        .floater:nth-child(10) { top: 30%; left: 2%;   font-size: 18px; animation-delay: 3.5s; }
+
+        @keyframes float {
+            0%,100% { transform: translateY(0) rotate(-4deg); }
+            50%      { transform: translateY(-16px) rotate(4deg); }
+        }
+
+        main { position: relative; z-index: 1; }
     </style>
 </head>
 <body>
+    <div class="floaters">
+        <span class="floater">🍳</span>
+        <span class="floater">🌿</span>
+        <span class="floater">🍰</span>
+        <span class="floater">🥗</span>
+        <span class="floater">🫕</span>
+        <span class="floater">🍜</span>
+        <span class="floater">🍕</span>
+        <span class="floater">🥐</span>
+        <span class="floater">🍣</span>
+        <span class="floater">🧁</span>
+    </div>
     <nav class="navbar">
         <div class="logo">
             <img src="logo.png" alt="CopyCook Logo">
         </div>
         <div class="nav-links">
-            <a href="#about">About</a>
-            <a href="#contact">Contact</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
             <button class="login-btn">Login</button>
         </div>
     </nav>

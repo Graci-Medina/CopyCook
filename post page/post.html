@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CopyCook - Share a Recipe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Shrikhand&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #F5EFE7;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 75px;
+            background-color: #F5EFE7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            border-right: 2px solid #E8B4B4;
+            flex-shrink: 0;
+        }
+
+        .logo { margin-bottom: 40px; }
+        .logo img { height: 50px; width: auto; cursor: pointer; }
+
+        .nav-icons {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            flex: 1;
+            margin-top: 150px;
+        }
+
+        .nav-icon {
+            position: relative;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+        }
+
+        .nav-icon:hover { transform: scale(1.1); }
+        .nav-icon img { width: 100%; height: 100%; border-radius: 50%; }
+        .nav-icon.active { box-shadow: 0 0 0 3px #E8B4B4; }
+
+        .notification-badge {
+            position: absolute;
+            top: -3px; right: -3px;
+            background-color: #D4A5A5;
+            color: white; font-size: 10px; font-weight: 700;
+            padding: 2px 5px; border-radius: 10px;
+            min-width: 18px; text-align: center;
+        }
+
+        .nav-bottom { margin-top: auto; padding-bottom: 20px; }
+
+        /* ── Main ── */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: #F5EFE7;
+        }
+
+        .post-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px 50px;
+        }
+
+        .post-body::-webkit-scrollbar { width: 8px; }
+        .post-body::-webkit-scrollbar-track { background: #F5EFE7; }
+        .post-body::-webkit-scrollbar-thumb { background: #D4A5A5; border-radius: 8px; }
+
+        /* ── Header ── */
+        .post-header { margin-bottom: 32px; }
+
+        .post-header h1 {
+            font-family: 'Shrikhand', cursive;
+            font-size: 2rem;
+            color: #C47C7C;
+            margin-bottom: 4px;
+        }
+
+        .post-header p { color: #8A7A7A; font-size: 0.9rem; }
+
+        /* ── Form grid ── */
+        .post-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            max-width: 860px;
+        }
+
+        .form-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(212,165,165,0.12);
+        }
+
+        .form-card label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.78rem;
+            color: #B08080;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .form-card input[type="text"],
+        .form-card textarea {
+            width: 100%;
+            border: 2px solid #F0DADA;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            color: #3A3A3A;
+            background: #FDF8F8;
+            outline: none;
+            transition: border-color 0.2s;
+            resize: none;
+        }
+
+        .form-card input[type="text"]:focus,
+        .form-card textarea:focus { border-color: #D4A5A5; }
+
+        /* ── Photo upload ── */
+        .photo-box {
+            border: 2px dashed #E8B4B4;
+            border-radius: 14px;
+            background: #FDF8F8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 190px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .photo-box:hover { border-color: #D4A5A5; background: #FAF0F0; }
+        .photo-box .upload-icon { font-size: 2.2rem; margin-bottom: 8px; }
+        .photo-box span { color: #B08080; font-size: 0.85rem; text-align: center; padding: 0 16px; }
+
+        .photo-box input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer;
+        }
+
+        #photoPreview {
+            width: 100%; height: 100%; object-fit: cover;
+            position: absolute; inset: 0; display: none; border-radius: 12px;
+        }
+
+        .photo-remove {
+            display: none;
+            position: absolute; top: 8px; right: 8px;
+            background: rgba(0,0,0,0.45); color: #fff; border: none;
+            border-radius: 50%; width: 26px; height: 26px;
+            font-size: 0.8rem; cursor: pointer;
+            align-items: center; justify-content: center; z-index: 2;
+        }
+
+        /* ── Ingredients ── */
+        .ing-list {
+            display: flex; flex-direction: column;
+            gap: 8px; margin-bottom: 12px;
+            max-height: 190px; overflow-y: auto;
+        }
+
+        .ing-row { display: flex; align-items: center; gap: 8px; }
+
+        .ing-row input {
+            flex: 1; border: 2px solid #F0DADA; border-radius: 10px;
+            padding: 9px 14px; font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem; background: #FDF8F8;
+            outline: none; transition: border-color 0.2s; color: #3A3A3A;
+        }
+
+        .ing-row input:focus { border-color: #D4A5A5; }
+
+        .ing-remove {
+            background: none; border: none; color: #D4A5A5;
+            font-size: 1.1rem; cursor: pointer; padding: 4px 6px;
+            line-height: 1; border-radius: 6px; transition: color 0.2s, background 0.2s;
+        }
+
+        .ing-remove:hover { color: #C47C7C; background: #FDF0F0; }
+
+        .add-ing-btn {
+            background: #F5EFE7; border: 2px solid #E8B4B4; border-radius: 10px;
+            padding: 8px 16px; font-family: 'Poppins', sans-serif;
+            font-size: 0.85rem; font-weight: 600; color: #9C6F6F;
+            cursor: pointer; transition: background 0.2s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+
+        .add-ing-btn:hover { background: #EFE4D6; }
+
+        .instructions-ta { height: 152px; }
+
+        /* ── Submit ── */
+        .submit-row {
+            grid-column: 1 / -1;
+            display: flex; justify-content: flex-end; gap: 12px; align-items: center;
+        }
+
+        .btn-cancel {
+            background: none; border: 2px solid #E8B4B4; border-radius: 14px;
+            padding: 12px 26px; font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem; font-weight: 600; color: #B08080;
+            cursor: pointer; transition: background 0.2s;
+        }
+
+        .btn-cancel:hover { background: #F5EFE7; }
+
+        .btn-post {
+            background: linear-gradient(135deg, #E8B4B4, #D4A5A5);
+            border: none; border-radius: 14px; padding: 12px 30px;
+            font-family: 'Poppins', sans-serif; font-size: 0.9rem; font-weight: 700;
+            color: #fff; cursor: pointer; box-shadow: 0 4px 14px rgba(212,165,165,0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-post:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212,165,165,0.5); }
+        .btn-post:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        /* ── Auth gate ── */
+        .auth-gate {
+            display: none; flex-direction: column; align-items: center;
+            justify-content: center; height: 60vh; text-align: center; gap: 16px;
+        }
+
+        .auth-gate .gate-emoji { font-size: 3rem; }
+        .auth-gate h2 { font-family: 'Shrikhand', cursive; color: #C47C7C; font-size: 1.6rem; }
+        .auth-gate p { color: #8A7A7A; }
+
+        .auth-gate a {
+            background: linear-gradient(135deg, #E8B4B4, #D4A5A5);
+            color: #fff; padding: 12px 28px; border-radius: 14px;
+            font-weight: 700; text-decoration: none;
+            box-shadow: 0 4px 14px rgba(212,165,165,0.4);
+        }
+
+        /* ── Logout popup ── */
+        .logout-popup {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 200;
+            align-items: center; justify-content: center;
+        }
+
+        .logout-popup.active { display: flex; }
+
+        .logout-content {
+            background: #FDFBF7; border: 3px solid #E8B4B4;
+            border-radius: 20px; padding: 40px 50px; text-align: center;
+        }
+
+        .logout-content h3 { color: #3A3A3A; font-size: 22px; margin-bottom: 24px; font-weight: 500; }
+
+        .logout-btn, .cancel-btn {
+            width: 100%; padding: 14px 30px; border: none; border-radius: 12px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+            font-family: 'Poppins', sans-serif; margin: 6px 0; transition: all 0.2s;
+        }
+
+        .logout-btn { background: #D4A5A5; color: white; }
+        .logout-btn:hover { background: #C49595; }
+        .cancel-btn { background: #9FB19F; color: white; }
+        .cancel-btn:hover { background: #8AA08A; }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed; bottom: 30px; left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #3A3A3A; color: #fff; padding: 10px 20px;
+            border-radius: 20px; font-size: 13px; opacity: 0;
+            transition: opacity 0.3s, transform 0.3s; z-index: 9999; pointer-events: none;
+        }
+
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #9FB19F; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .nav-icon { width: 28px; height: 28px; }
+            .post-body { padding: 24px 20px; }
+            .post-form { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar { width: 50px; padding: 15px 0; }
+            .nav-icon { width: 24px; height: 24px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="logo">
+            <img src="logo.png" alt="CopyCook Logo" onclick="window.location.href='../Home page/home.html'">
+        </div>
+        <nav class="nav-icons">
+            <a href="../Home page/home.html" class="nav-icon">
+                <img src="home-icon.png" alt="Home">
+            </a>
+            <a href="../Explore/explore.html" class="nav-icon">
+                <img src="explore-icon.png" alt="Explore">
+            </a>
+            <a href="../post page/post.html" class="nav-icon active">
+                <img src="plus-icon.png" alt="Post">
+            </a>
+            <a href="../Saved page/saved.html" class="nav-icon">
+                <img src="save-icon.png" alt="Saved">
+            </a>
+            <a href="../Messages page/Messages.html" class="nav-icon">
+                <img src="message.png" alt="Messages">
+            </a>
+        </nav>
+        <div class="nav-bottom">
+            <a href="#" class="nav-icon" onclick="toggleLogoutPopup(event)">
+                <img src="settings-icon.png" alt="Settings">
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="post-body">
+
+            <!-- Auth gate -->
+            <div class="auth-gate" id="authGate">
+                <div class="gate-emoji">🔒</div>
+                <h2>Sign in to share!</h2>
+                <p>You need an account to post your own recipes.</p>
+                <a href="../login.html">Log in / Sign up</a>
+            </div>
+
+            <!-- Post form -->
+            <div id="postContent" style="display:none;">
+                <div class="post-header">
+                    <h1>Share a Recipe </h1>
+                    <p>Show the community what you've been cooking up</p>
+                </div>
+
+                <div class="post-form">
+
+                    <div class="form-card">
+                        <label>Recipe Name</label>
+                        <input type="text" id="recipeName" placeholder="e.g. Spicy Mango Tacos" maxlength="80">
+                    </div>
+
+                    <div class="form-card">
+                        <label>Photo</label>
+                        <div class="photo-box" id="photoBox">
+                            <div class="upload-icon">📷</div>
+                            <span>Click to upload a photo</span>
+                            <input type="file" id="photoInput" accept="image/*">
+                            <img id="photoPreview" alt="Preview">
+                            <button class="photo-remove" id="photoRemove" title="Remove photo">✕</button>
+                        </div>
+                    </div>
+
+                    <div class="form-card">
+                        <label>Ingredients</label>
+                        <div class="ing-list" id="ingList"></div>
+                        <button class="add-ing-btn" id="addIngBtn">＋ Add ingredient</button>
+                    </div>
+
+                    <div class="form-card">
+                        <label>Instructions</label>
+                        <textarea id="instructions" class="instructions-ta"
+                            placeholder="Describe the steps to make your recipe..."></textarea>
+                    </div>
+
+                    <div class="submit-row">
+                        <button class="btn-cancel" onclick="window.location.href='../Home page/home.html'">Cancel</button>
+                        <button class="btn-post" id="postBtn">Post Recipe </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- Logout Popup -->
+<div id="logoutPopup" class="logout-popup">
+    <div class="logout-content">
+        <h3>Account Settings</h3>
+        <button class="logout-btn" onclick="handleLogout()">Log Out</button>
+        <button class="cancel-btn" onclick="closeLogoutPopup()">Cancel</button>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+    import { auth, db } from '../firebase-config.js';
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { newPost } from '../firebase-functions.js';
+
+    let currentUser = null;
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            currentUser = user;
+            document.getElementById('authGate').style.display = 'none';
+            document.getElementById('postContent').style.display = 'block';
+            addIngRow();
+        } else {
+            document.getElementById('authGate').style.display = 'flex';
+            document.getElementById('postContent').style.display = 'none';
+        }
+    });
+
+    function addIngRow(value = '') {
+        const list = document.getElementById('ingList');
+        const row = document.createElement('div');
+        row.className = 'ing-row';
+        row.innerHTML = `
+            <input type="text" placeholder="e.g. 2 cups flour" value="${value}">
+            <button class="ing-remove" title="Remove">✕</button>
+        `;
+        row.querySelector('.ing-remove').addEventListener('click', () => {
+            if (document.querySelectorAll('.ing-row').length > 1) row.remove();
+        });
+        list.appendChild(row);
+        if (value === '') row.querySelector('input').focus();
+    }
+
+    document.getElementById('addIngBtn').addEventListener('click', () => addIngRow());
+
+    let photoBase64 = null;
+    const photoInput   = document.getElementById('photoInput');
+    const photoPreview = document.getElementById('photoPreview');
+    const photoRemove  = document.getElementById('photoRemove');
+    const photoBox     = document.getElementById('photoBox');
+
+    photoInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            photoBase64 = ev.target.result;
+            photoPreview.src = photoBase64;
+            photoPreview.style.display = 'block';
+            photoRemove.style.display  = 'flex';
+            photoBox.querySelector('.upload-icon').style.display = 'none';
+            photoBox.querySelector('span').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    });
+
+    photoRemove.addEventListener('click', (e) => {
+        e.stopPropagation();
+        photoBase64 = null;
+        photoPreview.style.display = 'none';
+        photoRemove.style.display  = 'none';
+        photoBox.querySelector('.upload-icon').style.display = '';
+        photoBox.querySelector('span').style.display = '';
+        photoInput.value = '';
+    });
+
+    document.getElementById('postBtn').addEventListener('click', async () => {
+        if (!currentUser) return;
+
+        const name         = document.getElementById('recipeName').value.trim();
+        const instructions = document.getElementById('instructions').value.trim();
+        const ingredients  = [...document.querySelectorAll('.ing-row input')]
+            .map(i => i.value.trim()).filter(Boolean);
+
+        if (!name)               { showToast('Please add a recipe name 🍽️');       return; }
+        if (!ingredients.length) { showToast('Add at least one ingredient 🌿');    return; }
+        if (!instructions)       { showToast("Don't forget the instructions! 📝"); return; }
+
+        const btn = document.getElementById('postBtn');
+        btn.disabled = true;
+        btn.textContent = 'Posting...';
+
+        try {
+            const userSnap    = await getDoc(doc(db, 'users', currentUser.uid));
+            const displayName = userSnap.exists() ? (userSnap.data().displayName || 'Chef') : 'Chef';
+            const avatarColor = userSnap.exists() ? (userSnap.data().avatarColor  || '#9FB19F') : '#9FB19F';
+
+            await newPost(currentUser.uid, displayName, avatarColor, name, ingredients, instructions, photoBase64);
+
+            showToast('Recipe posted! 🎉', true);
+            setTimeout(() => window.location.href = '../Home page/home.html', 1600);
+        } catch (err) {
+            console.error(err);
+            showToast('Something went wrong. Try again.');
+            btn.disabled = false;
+            btn.textContent = 'Post Recipe 🚀';
+        }
+    });
+
+    function showToast(msg, success = false) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'toast' + (success ? ' success' : '');
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2600);
+    }
+
+    window.toggleLogoutPopup = function(e) {
+        e.preventDefault();
+        document.getElementById('logoutPopup').classList.toggle('active');
+    };
+
+    window.closeLogoutPopup = function() {
+        document.getElementById('logoutPopup').classList.remove('active');
+    };
+
+    window.handleLogout = async function() {
+        await signOut(auth);
+        window.location.href = '../login.html';
+    };
+</script>
+</body>
+</html>

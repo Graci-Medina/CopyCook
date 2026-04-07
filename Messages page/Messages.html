@@ -72,6 +72,7 @@
             border-radius: 10px;
             min-width: 18px;
             text-align: center;
+            display: none;
         }
 
         .nav-bottom { margin-top: auto; padding-bottom: 20px; }
@@ -245,6 +246,16 @@
             text-transform: uppercase;
             padding: 12px 12px 6px;
         }
+
+        /* Empty conversations */
+        .conv-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9A9A9A;
+            font-size: 13px;
+        }
+
+        .conv-empty svg { opacity: 0.3; margin-bottom: 10px; }
 
         /* ── Right Panel (Chat View) ── */
         .chat-panel {
@@ -452,6 +463,34 @@
             padding: 0 4px;
         }
 
+        /* Typing indicator */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 14px;
+            background: white;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .typing-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #D4A5A5;
+            animation: typingBounce 1.2s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+
         /* ── Input area ── */
         .chat-input-area {
             padding: 16px 28px 20px;
@@ -562,6 +601,153 @@
             font-weight: 500;
         }
 
+        /* ── New Message Modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 300;
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-box {
+            background: #FDFBF7;
+            border: 2px solid #E8B4B4;
+            border-radius: 24px;
+            padding: 32px;
+            width: 420px;
+            max-width: 92vw;
+        }
+
+        .modal-box h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2A2A2A;
+            margin-bottom: 20px;
+        }
+
+        .modal-search {
+            display: flex;
+            align-items: center;
+            background: #F0EBE3;
+            border-radius: 12px;
+            padding: 10px 14px;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .modal-search input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            color: #3A3A3A;
+        }
+
+        .modal-search input::placeholder { color: #9A9A9A; }
+
+        .user-results {
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        .user-result-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .user-result-item:hover { background: #F0EBE3; }
+
+        .user-result-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2A2A2A;
+        }
+
+        .user-result-email {
+            font-size: 12px;
+            color: #9A9A9A;
+        }
+
+        .modal-close-btn {
+            width: 100%;
+            margin-top: 16px;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: #F0EBE3;
+            color: #5A5A5A;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .modal-close-btn:hover { background: #E8B4B4; color: white; }
+
+        .modal-hint {
+            text-align: center;
+            color: #9A9A9A;
+            font-size: 13px;
+            padding: 20px 0;
+        }
+
+        /* ── Recipe Picker Modal ── */
+        .recipe-picker-list {
+            max-height: 280px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+
+        .recipe-picker-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .recipe-picker-item:hover { background: #F0EBE3; }
+
+        .recipe-picker-item img {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .recipe-picker-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2A2A2A;
+        }
+
+        .recipe-picker-folder {
+            font-size: 11px;
+            color: #9A9A9A;
+            margin-top: 2px;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            text-align: center;
+            padding: 30px;
+            color: #9A9A9A;
+            font-size: 13px;
+        }
+
         /* Responsive */
         @media (max-width: 900px) {
             .messages-panel { width: 260px; }
@@ -576,42 +762,40 @@
 <div class="container">
 
     <!-- Sidebar Navigation -->
-        <aside class="sidebar">
-            <div class="logo">
-                <img src="logo.png" alt="CopyCook Logo">
-            </div>
-            <nav class="nav-icons">
-                <a href="../Home page/home.html" class="nav-icon">
-                    <img src="home-icon.png" alt="Home">
-                </a>
-                <a href="../Explore/explore.html" class="nav-icon">
-                    <img src="explore-icon.png" alt="Explore">
-                </a>
-                <a href="#" class="nav-icon">
-                    <img src="plus-icon.png" alt="Add">
-                </a>
-                <a href="../Saved page/saved.html" class="nav-icon">
-                    <img src="save-icon.png" alt="Saved">
-                </a>
-                <a href="Messages.html" class="nav-icon active">
-                    <img src="message.png" alt="Messages">
-                    <span class="notification-badge">10</span>
-                </a>
-            </nav>
-            <div class="nav-bottom">
-                <a href="#" class="nav-icon" onclick="toggleLogoutPopup(event)">
-                    <img src="settings-icon.png" alt="Settings">
-                </a>
-            </div>
-        </aside>
+    <aside class="sidebar">
+        <div class="logo">
+            <img src="logo.png" alt="CopyCook Logo">
+        </div>
+        <nav class="nav-icons">
+            <a href="../Home page/home.html" class="nav-icon">
+                <img src="home-icon.png" alt="Home">
+            </a>
+            <a href="../Explore/explore.html" class="nav-icon">
+                <img src="explore-icon.png" alt="Explore">
+            </a>
+            <a href="../post page/post.html" class="nav-icon">
+                <img src="plus-icon.png" alt="Add">
+            </a>
+            <a href="../Saved page/saved.html" class="nav-icon">
+                <img src="save-icon.png" alt="Saved">
+            </a>
+            <a href="Messages.html" class="nav-icon active">
+                <img src="message.png" alt="Messages">
+                <span class="notification-badge" id="sidebarBadge"></span>
+            </a>
+        </nav>
+        <div class="nav-bottom">
+            <a href="#" class="nav-icon" onclick="toggleLogoutPopup(event)">
+                <img src="settings-icon.png" alt="Settings">
+            </a>
+        </div>
+    </aside>
 
     <!-- Messages List Panel -->
     <div class="messages-panel">
         <div class="messages-header">
             <h2>Messages</h2>
-
-            <!-- New Message -->
-            <div class="new-message-btn" onclick="startNewMessage()">
+            <div class="new-message-btn" onclick="openNewMessageModal()">
                 <div class="new-msg-icon">
                     <svg viewBox="0 0 24 24" fill="none">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
@@ -633,9 +817,7 @@
 
         <!-- Conversation list -->
         <div class="conv-list" id="convList">
-            <div class="conv-section-label">Recent</div>
-
-            <!-- Conversations injected by JS -->
+            <div class="spinner">Loading conversations…</div>
         </div>
     </div>
 
@@ -650,29 +832,28 @@
             <p>Select a conversation to start chatting</p>
         </div>
 
-        <!-- Active chat (hidden until selected) -->
+        <!-- Active chat -->
         <div id="activeChatState" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
 
             <!-- Chat top bar -->
             <div class="chat-topbar">
                 <div class="chat-avatar" id="chatAvatar"></div>
                 <div class="chat-contact-info">
-                    <div class="chat-contact-name" id="chatName"></div>
-                    <div class="chat-contact-status" id="chatStatus">● Active now</div>
+                    <div class="chat-contact-name" id="chatName" onclick="openOtherProfile()" style="cursor:pointer;transition:color 0.2s;" onmouseover="this.style.color='#D4A5A5'" onmouseout="this.style.color='#2A2A2A'"></div>
                 </div>
                 <div class="chat-actions">
-                    <button class="icon-btn" title="Voice call">
+                    <button class="icon-btn" title="Voice call" onclick="showToast('Voice calls coming soon!')">
                         <svg viewBox="0 0 24 24" fill="none">
                             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke="#9FB19F" stroke-width="2" fill="none"/>
                         </svg>
                     </button>
-                    <button class="icon-btn" title="Video call">
+                    <button class="icon-btn" title="Video call" onclick="showToast('Video calls coming soon!')">
                         <svg viewBox="0 0 24 24" fill="none">
                             <polygon points="23 7 16 12 23 17 23 7" stroke="#D4A5A5" stroke-width="2" fill="none"/>
                             <rect x="1" y="5" width="15" height="14" rx="2" ry="2" stroke="#D4A5A5" stroke-width="2" fill="none"/>
                         </svg>
                     </button>
-                    <button class="icon-btn" title="Info">
+                    <button class="icon-btn" title="Info" onclick="showToast('Profile info coming soon!')">
                         <svg viewBox="0 0 24 24" fill="none">
                             <circle cx="12" cy="12" r="10" stroke="#A5B4D4" stroke-width="2" fill="none"/>
                             <line x1="12" y1="8" x2="12" y2="8" stroke="#A5B4D4" stroke-width="2" stroke-linecap="round"/>
@@ -688,16 +869,11 @@
             <!-- Input -->
             <div class="chat-input-area">
                 <div class="chat-input-row">
-                    <button class="input-icon-btn" title="Attach image" onclick="attachRecipe()">
+                    <button class="input-icon-btn" title="Share a recipe" onclick="openRecipePicker()">
                         <svg viewBox="0 0 24 24" fill="none">
                             <rect x="3" y="3" width="18" height="18" rx="2" stroke="#D4A5A5" stroke-width="2" fill="none"/>
                             <circle cx="8.5" cy="8.5" r="1.5" stroke="#D4A5A5" stroke-width="1.5" fill="none"/>
                             <polyline points="21 15 16 10 5 21" stroke="#D4A5A5" stroke-width="2" fill="none"/>
-                        </svg>
-                    </button>
-                    <button class="input-icon-btn" title="Share recipe" onclick="shareRecipe()">
-                        <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M3 6h18M3 12h18M3 18h18" stroke="#9FB19F" stroke-width="2" stroke-linecap="round"/>
                         </svg>
                     </button>
                     <textarea class="chat-input" id="chatInput" placeholder="Type a message…" rows="1"
@@ -724,134 +900,269 @@
     </div>
 </div>
 
-<script>
-// ── Avatar color palette ──
+<!-- New Message Modal -->
+<div id="newMsgModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3>New Message</h3>
+        <div class="modal-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke="#9A9A9A" stroke-width="2"/>
+                <path d="M16 16L20 20" stroke="#9A9A9A" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input type="text" id="userSearchInput" placeholder="Search by name…" oninput="searchUsers(this.value)">
+        </div>
+        <div class="user-results" id="userResults">
+            <div class="modal-hint">Start typing to find someone</div>
+        </div>
+        <button class="modal-close-btn" onclick="closeNewMessageModal()">Cancel</button>
+    </div>
+</div>
+
+<!-- Recipe Picker Modal -->
+<div id="recipePickerModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3>Share a Recipe</h3>
+        <div class="recipe-picker-list" id="recipePickerList">
+            <div class="spinner">Loading your saved recipes…</div>
+        </div>
+        <button class="modal-close-btn" onclick="closeRecipePicker()">Cancel</button>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="
+    position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:#2A2A2A; color:white; padding:12px 24px; border-radius:12px;
+    font-size:13px; font-weight:500; opacity:0; transition:all 0.3s; z-index:9999;
+    pointer-events:none; white-space:nowrap;
+"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
+    getFirestore, doc, setDoc, getDoc, getDocs, addDoc, updateDoc,
+    collection, query, orderBy, onSnapshot, serverTimestamp,
+    where
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// ── Firebase init ──
+const firebaseConfig = {
+    apiKey: "AIzaSyACkR3_vUNa7dzD-Y3pWmLeM4Iu-UlxuDw",
+    authDomain: "copycook-f596a.firebaseapp.com",
+    projectId: "copycook-f596a",
+    storageBucket: "copycook-f596a.firebasestorage.app",
+    messagingSenderId: "366122548728",
+    appId: "1:366122548728:web:b4300be3464e7e07822a0d",
+    measurementId: "G-P41J5BYDR0"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── State ──
+let currentUser    = null;
+let activeConvId   = null;
+let messagesUnsub  = null;   // active onSnapshot unsubscriber for messages
+let convsUnsub     = null;   // active onSnapshot for conversation list
+let allConversations = [];   // raw data for filter
+let userSearchTimeout = null;
+
+// ── Avatar colors ──
 const AVATAR_COLORS = ['#D4A5A5','#9FB19F','#A5B4D4','#D4C4A5','#B4A5D4','#A5D4C4','#D4A5B4','#C4D4A5'];
 
-function colorFor(name) {
+function colorFor(str) {
     let h = 0;
-    for (let c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+    for (const c of (str || 'X')) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
     return AVATAR_COLORS[h % AVATAR_COLORS.length];
 }
 
-// ── Conversations data ──
-const CONVERSATIONS = [
-    {
-        id: 1,
-        name: 'Alex Rivera',
-        initial: 'A',
-        time: 'Just now',
-        preview: '🍜 Check out this ramen recipe!',
-        unread: true,
-        status: '● Active now',
-        messages: [
-            { type: 'received', text: 'Hey! Did you try that ramen spot?', time: '2:10 PM' },
-            { type: 'sent',     text: 'Not yet but I found a copycat recipe 👀', time: '2:11 PM' },
-            { type: 'received', recipe: { name: 'Tonkotsu Ramen', img: 'https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg' }, time: '2:12 PM' },
-            { type: 'sent',     text: 'OMG this looks amazing, saving it!', time: '2:13 PM' },
-            { type: 'received', text: '🍜 Check out this ramen recipe!', time: '2:14 PM' },
-        ]
-    },
-    {
-        id: 2,
-        name: 'Jordan Kim',
-        initial: 'J',
-        time: '14m',
-        preview: 'Can you send that pasta recipe?',
-        unread: true,
-        status: '● Active 5m ago',
-        messages: [
-            { type: 'received', text: 'Hey! Can you send that pasta recipe from yesterday?', time: '1:50 PM' },
-            { type: 'sent',     text: 'Sure! One sec', time: '1:51 PM' },
-            { type: 'sent',     recipe: { name: 'Spaghetti Carbonara', img: 'https://www.themealdb.com/images/media/meals/uquqtu1511178042.jpg' }, time: '1:52 PM' },
-            { type: 'received', text: 'Can you send that pasta recipe?', time: '1:53 PM' },
-        ]
-    },
-    {
-        id: 3,
-        name: 'Sam Patel',
-        initial: 'S',
-        time: '1h',
-        preview: 'The chicken tikka was perfect 🔥',
-        unread: false,
-        status: '● Active 1h ago',
-        messages: [
-            { type: 'sent',     text: 'Made the tikka masala last night!', time: '12:30 PM' },
-            { type: 'received', text: 'How did it turn out??', time: '12:32 PM' },
-            { type: 'sent',     text: 'The chicken tikka was perfect 🔥', time: '12:33 PM' },
-            { type: 'received', text: 'You have to teach me the technique!', time: '12:34 PM' },
-        ]
-    },
-    {
-        id: 4,
-        name: 'Morgan Lee',
-        initial: 'M',
-        time: '2h',
-        preview: 'Same time next week for the cook-off?',
-        unread: false,
-        status: '● Active 2h ago',
-        messages: [
-            { type: 'received', text: 'That was such a fun cook-off!', time: '10:00 AM' },
-            { type: 'sent',     text: 'My bibimbap definitely won 😄', time: '10:02 AM' },
-            { type: 'received', text: 'Haha debatable! Same time next week for the cook-off?', time: '10:04 AM' },
-        ]
-    },
-    {
-        id: 5,
-        name: 'Taylor Brooks',
-        initial: 'T',
-        time: '2d',
-        preview: 'Hey!',
-        unread: false,
-        status: '● Active 2d ago',
-        messages: [
-            { type: 'received', text: 'Hey!', time: 'Mon' },
-        ]
-    },
-    {
-        id: 6,
-        name: 'Casey Nguyen',
-        initial: 'C',
-        time: '3d',
-        preview: 'Which folder did you save that in?',
-        unread: false,
-        status: '● Active 3d ago',
-        messages: [
-            { type: 'sent',     text: 'I found that amazing sushi recipe we talked about!', time: 'Sun' },
-            { type: 'received', text: 'Which folder did you save that in?', time: 'Sun' },
-        ]
-    },
-];
-
-let activeConvId = null;
-let allConvs = [...CONVERSATIONS];
-
-// ── Build avatar HTML ──
-function makeAvatarEl(name, initial, size = 48) {
-    const color = colorFor(name);
-    return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.38)}px;font-weight:700;color:white;">${initial}</div>`;
+function makeInitial(name) {
+    return (name || '?').charAt(0).toUpperCase();
 }
 
-// ── Render conversation list ──
+function avatarStyle(name, size = 48) {
+    return `width:${size}px;height:${size}px;border-radius:50%;background:${colorFor(name)};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.38)}px;font-weight:700;color:white;flex-shrink:0;`;
+}
+
+function timeLabel(ts) {
+    if (!ts) return '';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    const now = new Date();
+    const diffMs = now - d;
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffH   = Math.floor(diffMs / 3600000);
+    const diffD   = Math.floor(diffMs / 86400000);
+    if (diffMin < 1)  return 'Just now';
+    if (diffMin < 60) return `${diffMin}m`;
+    if (diffH < 24)   return `${diffH}h`;
+    if (diffD < 7)    return `${diffD}d`;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function msgTimeLabel(ts) {
+    if (!ts) return '';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+// ── Toast ──
+window.showToast = function(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.opacity = '1';
+    t.style.transform = 'translateX(-50%) translateY(0)';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateX(-50%) translateY(20px)';
+    }, 2500);
+};
+
+// ── Auth guard ──
+onAuthStateChanged(auth, async user => {
+    if (!user) {
+        window.location.href = '../login.html';
+        return;
+    }
+    currentUser = user;
+
+    // Derive name + color from Auth (signup.js only writes to Auth, not Firestore)
+    const displayName = user.displayName || localStorage.getItem('userDisplayName') || user.email;
+    const initial     = makeInitial(displayName);
+    const avatarColor = localStorage.getItem('userAvatarColor') || colorFor(user.uid);
+
+    // Always upsert user doc so the users collection is populated for search
+    try {
+        await setDoc(doc(db, 'users', user.uid), {
+            uid:         user.uid,
+            displayName: displayName,
+            email:       user.email || '',
+            avatarColor: avatarColor
+        }, { merge: true });
+    } catch(e) {
+        console.warn('Could not upsert user doc:', e);
+    }
+
+    localStorage.setItem('userInitial',     initial);
+    localStorage.setItem('userAvatarColor', avatarColor);
+    localStorage.setItem('userName',        displayName);
+    localStorage.setItem('userUID',         user.uid);
+
+    // Bust the users cache so search picks up freshly written docs
+    _usersCache = null;
+
+    loadConversations();
+});
+
+// ══════════════════════════════════════════════
+// CONVERSATION LIST
+// ══════════════════════════════════════════════
+
+/*
+  Firestore schema:
+  conversations/{convId}
+    participants: [uid1, uid2]
+    participantNames: { uid1: "Alice", uid2: "Bob" }
+    lastMessage: "Hey!"
+    lastMessageAt: Timestamp
+    unreadCount: { uid1: 0, uid2: 2 }
+
+  conversations/{convId}/messages/{msgId}
+    senderId: uid
+    senderName: string
+    text: string (or null)
+    recipe: { name, img, id } (or null)
+    createdAt: Timestamp
+*/
+
+function loadConversations() {
+    if (convsUnsub) convsUnsub();
+
+    const q = query(
+        collection(db, 'conversations'),
+        where('participants', 'array-contains', currentUser.uid),
+        orderBy('lastMessageAt', 'desc')
+    );
+
+    convsUnsub = onSnapshot(q, snapshot => {
+        allConversations = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderConvList(allConversations);
+        updateUnreadBadge(allConversations);
+    }, err => {
+        console.error('Conversations listener error:', err);
+        // If index not built yet, fall back to simple query
+        const fallback = query(
+            collection(db, 'conversations'),
+            where('participants', 'array-contains', currentUser.uid)
+        );
+        convsUnsub = onSnapshot(fallback, snapshot => {
+            allConversations = snapshot.docs
+                .map(d => ({ id: d.id, ...d.data() }))
+                .sort((a, b) => {
+                    const ta = a.lastMessageAt?.toMillis?.() || 0;
+                    const tb = b.lastMessageAt?.toMillis?.() || 0;
+                    return tb - ta;
+                });
+            renderConvList(allConversations);
+            updateUnreadBadge(allConversations);
+        });
+    });
+}
+
+function updateUnreadBadge(convs) {
+    let total = 0;
+    convs.forEach(c => {
+        total += (c.unreadCount?.[currentUser.uid] || 0);
+    });
+    const badge = document.getElementById('sidebarBadge');
+    if (total > 0) {
+        badge.textContent = total > 99 ? '99+' : total;
+        badge.style.display = 'block';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
 function renderConvList(convs) {
     const list = document.getElementById('convList');
+
+    if (!convs.length) {
+        list.innerHTML = `
+            <div class="conv-empty">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#D4A5A5" stroke-width="1.5" fill="none"/>
+                </svg>
+                <p>No conversations yet.<br>Start one with the button above!</p>
+            </div>`;
+        return;
+    }
+
     list.innerHTML = '<div class="conv-section-label">Recent</div>';
 
-    convs.forEach(c => {
+    convs.forEach(conv => {
+        const otherUid  = conv.participants.find(p => p !== currentUser.uid);
+        const otherName = conv.participantNames?.[otherUid] || 'Unknown User';
+        const unread    = conv.unreadCount?.[currentUser.uid] || 0;
+        const preview   = conv.lastMessage || 'Start a conversation';
+        const timeStr   = conv.lastMessageAt ? timeLabel(conv.lastMessageAt) : '';
+        const isActive  = conv.id === activeConvId;
+
         const item = document.createElement('div');
-        item.className = 'conv-item' + (c.id === activeConvId ? ' active' : '');
-        item.dataset.id = c.id;
-        item.onclick = () => openConversation(c.id);
+        item.className = 'conv-item' + (isActive ? ' active' : '');
+        item.dataset.id = conv.id;
+        item.onclick = () => openConversation(conv.id, otherName, otherUid);
 
         item.innerHTML = `
-            ${makeAvatarEl(c.name, c.initial, 48).replace('<div ', '<div class="conv-avatar" ')}
+            <div class="conv-avatar" style="${avatarStyle(otherName, 48)}">${makeInitial(otherName)}</div>
             <div class="conv-info">
-                <div class="conv-name">${c.name}</div>
-                <div class="conv-preview">${c.preview}</div>
+                <div class="conv-name">${escHtml(otherName)}</div>
+                <div class="conv-preview">${escHtml(preview)}</div>
             </div>
             <div class="conv-meta">
-                <span class="conv-time">${c.time}</span>
-                ${c.unread ? '<div class="unread-dot"></div>' : ''}
+                <span class="conv-time">${timeStr}</span>
+                ${unread > 0 ? '<div class="unread-dot"></div>' : ''}
             </div>
         `;
 
@@ -859,57 +1170,130 @@ function renderConvList(convs) {
     });
 }
 
-// ── Open a conversation ──
-function openConversation(id) {
-    activeConvId = id;
-    const conv = CONVERSATIONS.find(c => c.id === id);
-    if (!conv) return;
+function filterConversations(query) {
+    const q = query.trim().toLowerCase();
+    if (!q) {
+        renderConvList(allConversations);
+        return;
+    }
+    const filtered = allConversations.filter(conv => {
+        const otherUid  = conv.participants.find(p => p !== currentUser.uid);
+        const otherName = (conv.participantNames?.[otherUid] || '').toLowerCase();
+        const preview   = (conv.lastMessage || '').toLowerCase();
+        return otherName.includes(q) || preview.includes(q);
+    });
+    renderConvList(filtered);
+}
 
-    // Mark as read
-    conv.unread = false;
-    renderConvList(allConvs);
+// Expose to inline handlers
+window.filterConversations = filterConversations;
 
-    // Show active state
+// ══════════════════════════════════════════════
+// OPEN CONVERSATION
+// ══════════════════════════════════════════════
+
+async function openConversation(convId, otherName, otherUid) {
+    activeConvId = convId;
+
+    // Update sidebar active state
+    document.querySelectorAll('.conv-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.id === convId);
+    });
+
+    // Show chat panel
     document.getElementById('noChatState').style.display = 'none';
-    const activeChat = document.getElementById('activeChatState');
-    activeChat.style.display = 'flex';
+    const chatState = document.getElementById('activeChatState');
+    chatState.style.display = 'flex';
 
     // Set header
     const avatarEl = document.getElementById('chatAvatar');
-    avatarEl.style.cssText = `width:44px;height:44px;border-radius:50%;background:${colorFor(conv.name)};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;border:2px solid #E8B4B4;flex-shrink:0;`;
-    avatarEl.textContent = conv.initial;
-    document.getElementById('chatName').textContent = conv.name;
-    document.getElementById('chatStatus').textContent = conv.status;
+    avatarEl.style.cssText = `${avatarStyle(otherName, 44)}border:2px solid #E8B4B4;`;
+    avatarEl.textContent = makeInitial(otherName);
+    document.getElementById('chatName').textContent = otherName;
 
-    // Render messages
-    renderMessages(conv.messages);
+
+    // Store for send
+    chatState.dataset.convId   = convId;
+    chatState.dataset.otherUid  = otherUid || '';
+    chatState.dataset.otherName = otherName;
+
+    // Mark unread as 0
+    await markAsRead(convId);
+
+    // Subscribe to messages
+    subscribeMessages(convId, otherName);
 }
 
-// ── Render messages ──
-function renderMessages(messages) {
+async function markAsRead(convId) {
+    try {
+        const convRef = doc(db, 'conversations', convId);
+        await updateDoc(convRef, {
+            [`unreadCount.${currentUser.uid}`]: 0
+        });
+    } catch (e) { /* ignore */ }
+}
+
+function subscribeMessages(convId, otherName) {
+    if (messagesUnsub) messagesUnsub();
+
+    const msgsRef = query(
+        collection(db, 'conversations', convId, 'messages'),
+        orderBy('createdAt', 'asc')
+    );
+
+    messagesUnsub = onSnapshot(msgsRef, snapshot => {
+        if (activeConvId !== convId) return;
+        renderMessages(snapshot.docs.map(d => ({ id: d.id, ...d.data() })), otherName);
+    });
+}
+
+// ══════════════════════════════════════════════
+// RENDER MESSAGES
+// ══════════════════════════════════════════════
+
+function renderMessages(messages, otherName) {
     const container = document.getElementById('chatMessages');
     container.innerHTML = '';
 
-    // Add date divider
-    const divider = document.createElement('div');
-    divider.className = 'date-divider';
-    divider.textContent = 'Today';
-    container.appendChild(divider);
+    if (!messages.length) {
+        const hint = document.createElement('div');
+        hint.style.cssText = 'text-align:center;color:#9A9A9A;font-size:13px;padding:40px 20px;';
+        hint.textContent = `Say hi to ${otherName}! 👋`;
+        container.appendChild(hint);
+        return;
+    }
 
-    const myInitial = localStorage.getItem('userInitial') || 'Y';
-    const myColor   = localStorage.getItem('userAvatarColor') || '#9FB19F';
-    const conv      = CONVERSATIONS.find(c => c.id === activeConvId);
+    const myInitial = localStorage.getItem('userInitial') || makeInitial(currentUser.displayName);
+    const myColor   = localStorage.getItem('userAvatarColor') || colorFor(currentUser.uid);
+
+    let lastDateStr = null;
 
     messages.forEach(msg => {
-        const row = document.createElement('div');
-        row.className = 'msg-row ' + msg.type;
+        const isSent = msg.senderId === currentUser.uid;
+        const ts = msg.createdAt;
 
-        if (msg.type === 'received') {
-            // Their avatar
+        // Date divider
+        if (ts) {
+            const d = ts.toDate ? ts.toDate() : new Date(ts);
+            const dateStr = d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+            if (dateStr !== lastDateStr) {
+                lastDateStr = dateStr;
+                const divider = document.createElement('div');
+                divider.className = 'date-divider';
+                divider.textContent = dateStr;
+                container.appendChild(divider);
+            }
+        }
+
+        const row = document.createElement('div');
+        row.className = 'msg-row ' + (isSent ? 'sent' : 'received');
+
+        // Avatar (other person only)
+        if (!isSent) {
             const avDiv = document.createElement('div');
             avDiv.className = 'msg-row-avatar';
-            avDiv.style.cssText = `background:${colorFor(conv.name)};`;
-            avDiv.textContent = conv.initial;
+            avDiv.style.cssText = `background:${colorFor(msg.senderName || otherName)};`;
+            avDiv.textContent = makeInitial(msg.senderName || otherName);
             row.appendChild(avDiv);
         }
 
@@ -917,32 +1301,53 @@ function renderMessages(messages) {
         wrap.className = 'bubble-wrap';
 
         if (msg.recipe) {
-            // Recipe card bubble
-            const recipeCard = document.createElement('div');
-            recipeCard.className = 'recipe-bubble';
-            recipeCard.innerHTML = `
-                <img src="${msg.recipe.img}" alt="${msg.recipe.name}" onerror="this.src='https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg'">
+            const card = document.createElement('div');
+            card.className = 'recipe-bubble';
+            card.innerHTML = `
+                <img src="${escHtml(msg.recipe.img)}" alt="${escHtml(msg.recipe.name)}"
+                    onerror="this.src='https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg'">
                 <div class="recipe-bubble-info">
-                    <div class="recipe-bubble-label">Shared Recipe</div>
-                    <div class="recipe-bubble-name">${msg.recipe.name}</div>
+                    <div class="recipe-bubble-label">Shared Recipe ↗</div>
+                    <div class="recipe-bubble-name">${escHtml(msg.recipe.name)}</div>
                 </div>
             `;
-            wrap.appendChild(recipeCard);
+            // Click opens the recipe page if we have an id, otherwise search by name
+            card.addEventListener('click', () => {
+                const id = msg.recipe.id;
+                if (id) {
+                    window.location.href = `../Home page/recipe.html?id=${encodeURIComponent(id)}`;
+                } else {
+                    // fallback: search MealDB by name and go to first result
+                    fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(msg.recipe.name)}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            const meal = data.meals?.[0];
+                            if (meal) {
+                                window.location.href = `../Home page/recipe.html?id=${meal.idMeal}`;
+                            } else {
+                                showToast('Recipe not found.');
+                            }
+                        })
+                        .catch(() => showToast('Could not open recipe.'));
+                }
+            });
+            wrap.appendChild(card);
         } else {
             const bubble = document.createElement('div');
-            bubble.className = 'bubble ' + msg.type;
-            bubble.textContent = msg.text;
+            bubble.className = 'bubble ' + (isSent ? 'sent' : 'received');
+            bubble.textContent = msg.text || '';
             wrap.appendChild(bubble);
         }
 
         const timeEl = document.createElement('div');
         timeEl.className = 'msg-time';
-        timeEl.textContent = msg.time;
+        timeEl.textContent = ts ? msgTimeLabel(ts) : '';
         wrap.appendChild(timeEl);
 
         row.appendChild(wrap);
 
-        if (msg.type === 'sent') {
+        // My avatar
+        if (isSent) {
             const avDiv = document.createElement('div');
             avDiv.className = 'msg-row-avatar';
             avDiv.style.cssText = `background:${myColor};`;
@@ -953,131 +1358,306 @@ function renderMessages(messages) {
         container.appendChild(row);
     });
 
-    // Scroll to bottom
-    setTimeout(() => container.scrollTop = container.scrollHeight, 50);
+    setTimeout(() => { container.scrollTop = container.scrollHeight; }, 50);
 }
 
-// ── Send message ──
-function sendMessage() {
+// ══════════════════════════════════════════════
+// SEND MESSAGE
+// ══════════════════════════════════════════════
+
+async function sendMessage(recipePayload = null) {
+    if (!activeConvId || !currentUser) return;
+
     const input = document.getElementById('chatInput');
     const text  = input.value.trim();
-    if (!text || !activeConvId) return;
+    if (!text && !recipePayload) return;
 
-    const conv = CONVERSATIONS.find(c => c.id === activeConvId);
-    if (!conv) return;
+    const chatState = document.getElementById('activeChatState');
+    const otherUid  = chatState.dataset.otherUid;
+    const otherName = chatState.dataset.otherName;
+    const myName    = localStorage.getItem('userName') || currentUser.displayName || currentUser.email;
 
-    const now = new Date();
-    const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const msgData = {
+        senderId:   currentUser.uid,
+        senderName: myName,
+        text:       recipePayload ? null : text,
+        recipe:     recipePayload || null,
+        createdAt:  serverTimestamp()
+    };
 
-    conv.messages.push({ type: 'sent', text, time });
-    conv.preview = text;
-    conv.time    = 'Just now';
+    try {
+        // Add message doc
+        await addDoc(collection(db, 'conversations', activeConvId, 'messages'), msgData);
 
-    input.value = '';
-    input.style.height = 'auto';
+        // Update conversation metadata
+        const convRef = doc(db, 'conversations', activeConvId);
+        await updateDoc(convRef, {
+            lastMessage:    recipePayload ? `📷 Shared: ${recipePayload.name}` : text,
+            lastMessageAt:  serverTimestamp(),
+            [`unreadCount.${otherUid}`]: (await getDoc(convRef)).data()?.unreadCount?.[otherUid] + 1 || 1
+        });
 
-    renderMessages(conv.messages);
-    renderConvList(allConvs);
-
-    // Simulate a reply after 1.5s
-    setTimeout(() => simulateReply(conv), 1500);
+        // Clear input
+        if (!recipePayload) {
+            input.value = '';
+            input.style.height = 'auto';
+        }
+    } catch (e) {
+        console.error('Send error:', e);
+        showToast('Failed to send message.');
+    }
 }
 
-const AUTO_REPLIES = [
-    'That sounds delicious! 😋',
-    'I need to try this recipe!',
-    'CopyCook is the best for finding recipes 🍳',
-    'You always find the best dishes!',
-    'OMG yes, let\'s make it together!',
-    '🔥🔥🔥',
-    'Saving this for the weekend!',
-];
+window.sendMessage = sendMessage;
 
-function simulateReply(conv) {
-    if (conv.id !== activeConvId) return;
-    const reply = AUTO_REPLIES[Math.floor(Math.random() * AUTO_REPLIES.length)];
-    const now   = new Date();
-    const time  = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-
-    conv.messages.push({ type: 'received', text: reply, time });
-    conv.preview = reply;
-    conv.time    = 'Just now';
-
-    renderMessages(conv.messages);
-    renderConvList(allConvs);
-}
-
-function handleInputKey(e) {
+window.handleInputKey = function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
     }
-}
+};
 
-function autoResize(el) {
+window.autoResize = function(el) {
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+};
+
+// ══════════════════════════════════════════════
+// NEW MESSAGE MODAL — find user by name
+// ══════════════════════════════════════════════
+
+window.openNewMessageModal = function() {
+    document.getElementById('userSearchInput').value = '';
+    document.getElementById('userResults').innerHTML = '<div class="modal-hint">Start typing to find someone</div>';
+    document.getElementById('newMsgModal').classList.add('active');
+};
+
+window.closeNewMessageModal = function() {
+    document.getElementById('newMsgModal').classList.remove('active');
+};
+
+window.searchUsers = function(value) {
+    clearTimeout(userSearchTimeout);
+    const q = value.trim();
+    if (!q || q.length < 2) {
+        document.getElementById('userResults').innerHTML = '<div class="modal-hint">Start typing to find someone</div>';
+        return;
+    }
+    userSearchTimeout = setTimeout(() => doUserSearch(q), 300);
+};
+
+// Cache all users once so repeated keystrokes don't re-fetch
+let _usersCache = null;
+
+async function doUserSearch(searchQ) {
+    const resultsEl = document.getElementById('userResults');
+    resultsEl.innerHTML = '<div class="spinner">Searching…</div>';
+
+    try {
+        // Fetch all users once and cache — avoids needing a Firestore index
+        if (!_usersCache) {
+            const snap = await getDocs(collection(db, 'users'));
+            _usersCache = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+        }
+
+        const q = searchQ.toLowerCase();
+        const matches = _usersCache.filter(u => {
+            if (u.uid === currentUser.uid) return false;
+            const name  = (u.displayName || '').toLowerCase();
+            const email = (u.email || '').toLowerCase();
+            return name.includes(q) || email.includes(q);
+        }).slice(0, 10);
+
+        if (!matches.length) {
+            resultsEl.innerHTML = '<div class="modal-hint">No users found</div>';
+            return;
+        }
+
+        resultsEl.innerHTML = '';
+        matches.forEach(u => {
+            const item = document.createElement('div');
+            item.className = 'user-result-item';
+            item.innerHTML = `
+                <div style="${avatarStyle(u.displayName, 40)}">${makeInitial(u.displayName)}</div>
+                <div>
+                    <div class="user-result-name">${escHtml(u.displayName || 'Unknown')}</div>
+                    <div class="user-result-email">${escHtml(u.email || '')}</div>
+                </div>
+            `;
+            item.onclick = () => startConversationWith(u);
+            resultsEl.appendChild(item);
+        });
+    } catch (e) {
+        console.error('User search error:', e.code, e.message, e);
+        resultsEl.innerHTML = `<div class="modal-hint">Search failed: ${e.code || e.message || 'unknown error'}</div>`;
+    }
 }
 
-// ── Share recipe (demo) ──
-function shareRecipe() {
+async function startConversationWith(otherUser) {
+    closeNewMessageModal();
+
+    try {
+        const myName    = localStorage.getItem('userName') || currentUser.displayName || currentUser.email;
+        const otherName = otherUser.displayName || 'Unknown';
+
+        const convId = [currentUser.uid, otherUser.uid].sort().join('_');
+        const convRef = doc(db, 'conversations', convId);
+
+        console.log('🔍 convId:', convId);
+        console.log('🔍 currentUser.uid:', currentUser.uid);
+        console.log('🔍 otherUser.uid:', otherUser.uid);
+
+        // Try getDoc first
+        let convSnap;
+        try {
+            convSnap = await getDoc(convRef);
+            console.log('✅ getDoc succeeded, exists:', convSnap.exists());
+        } catch(e) {
+            console.error('❌ getDoc failed:', e.code, e.message);
+            throw e;
+        }
+
+        if (!convSnap.exists()) {
+            const convData = {
+                participants: [currentUser.uid, otherUser.uid],
+                participantNames: {
+                    [currentUser.uid]: myName,
+                    [otherUser.uid]:   otherName
+                },
+                lastMessage:   '',
+                lastMessageAt: serverTimestamp(),
+                unreadCount:   { [currentUser.uid]: 0, [otherUser.uid]: 0 },
+                createdAt:     serverTimestamp()
+            };
+            console.log('📝 Creating conv doc with data:', JSON.stringify(convData));
+            try {
+                await setDoc(convRef, convData);
+                console.log('✅ setDoc succeeded');
+            } catch(e) {
+                console.error('❌ setDoc failed:', e.code, e.message);
+                throw e;
+            }
+            showToast(`Started a conversation with ${otherName}!`);
+        }
+
+        openConversation(convId, otherName, otherUser.uid);
+    } catch (e) {
+        console.error('Start conversation error:', e.code, e.message, e);
+        showToast(`Error: ${e.code || e.message || 'unknown'}`);
+    }
+}
+
+// ══════════════════════════════════════════════
+// RECIPE PICKER
+// ══════════════════════════════════════════════
+
+window.openRecipePicker = async function() {
     if (!activeConvId) return;
-    const conv = CONVERSATIONS.find(c => c.id === activeConvId);
-    if (!conv) return;
+    document.getElementById('recipePickerModal').classList.add('active');
+    const listEl = document.getElementById('recipePickerList');
+    listEl.innerHTML = '<div class="spinner">Loading your saved recipes…</div>';
 
-    const recipes = [
-        { name: 'Chicken Tikka Masala', img: 'https://www.themealdb.com/images/media/meals/1tikk1d1574863350.jpg' },
-        { name: 'Spaghetti Carbonara',  img: 'https://www.themealdb.com/images/media/meals/uquqtu1511178042.jpg' },
-        { name: 'Beef Bibimbap',        img: 'https://www.themealdb.com/images/media/meals/1529446352.jpg' },
-        { name: 'Pad Thai',             img: 'https://www.themealdb.com/images/media/meals/uuuspp1511297945.jpg' },
-    ];
-    const recipe = recipes[Math.floor(Math.random() * recipes.length)];
-    const now    = new Date();
-    const time   = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    try {
+        const foldersSnap = await getDocs(collection(db, 'users', currentUser.uid, 'folders'));
+        const allRecipes = [];
 
-    conv.messages.push({ type: 'sent', recipe, time });
-    conv.preview = `Shared: ${recipe.name}`;
-    conv.time    = 'Just now';
+        foldersSnap.docs.forEach(folderDoc => {
+            const data = folderDoc.data();
+            const saved = data.savedRecipes || [];
+            saved.forEach(r => {
+                allRecipes.push({
+                    name:   r.strMeal || r.name || 'Unknown',
+                    img:    r.strMealThumb || r.thumb || r.img || '',
+                    id:     r.idMeal || r.id || '',
+                    folder: data.name || folderDoc.id
+                });
+            });
+        });
 
-    renderMessages(conv.messages);
-    renderConvList(allConvs);
-}
+        if (!allRecipes.length) {
+            listEl.innerHTML = '<div class="modal-hint">No saved recipes yet. Save some first!</div>';
+            return;
+        }
 
-function attachRecipe() {
-    shareRecipe(); // same demo behavior
-}
+        listEl.innerHTML = '';
+        allRecipes.forEach(r => {
+            const item = document.createElement('div');
+            item.className = 'recipe-picker-item';
+            item.innerHTML = `
+                <img src="${escHtml(r.img)}" alt="${escHtml(r.name)}"
+                    onerror="this.src='https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg'">
+                <div>
+                    <div class="recipe-picker-name">${escHtml(r.name)}</div>
+                    <div class="recipe-picker-folder">📁 ${escHtml(r.folder)}</div>
+                </div>
+            `;
+            item.onclick = () => {
+                closeRecipePicker();
+                sendMessage({ name: r.name, img: r.img, id: r.id });
+            };
+            listEl.appendChild(item);
+        });
+    } catch (e) {
+        console.error('Recipe picker error:', e);
+        listEl.innerHTML = '<div class="modal-hint">Failed to load recipes.</div>';
+    }
+};
 
-// ── Search ──
-function filterConversations(query) {
-    const q = query.trim().toLowerCase();
-    allConvs = q
-        ? CONVERSATIONS.filter(c => c.name.toLowerCase().includes(q) || c.preview.toLowerCase().includes(q))
-        : [...CONVERSATIONS];
-    renderConvList(allConvs);
-}
+window.closeRecipePicker = function() {
+    document.getElementById('recipePickerModal').classList.remove('active');
+};
 
-// ── New message (demo) ──
-function startNewMessage() {
-    alert('New message composer coming soon!');
-}
+// ══════════════════════════════════════════════
+// LOGOUT
+// ══════════════════════════════════════════════
 
-// ── Logout ──
-function toggleLogoutPopup(e) { e.preventDefault(); document.getElementById('logoutPopup').classList.toggle('active'); }
-function closeLogoutPopup() { document.getElementById('logoutPopup').classList.remove('active'); }
-function handleLogout() { localStorage.clear(); sessionStorage.clear(); window.location.href = '/login.html'; }
-document.getElementById('logoutPopup').addEventListener('click', e => { if (e.target === e.currentTarget) closeLogoutPopup(); });
+window.toggleLogoutPopup = function(e) {
+    e.preventDefault();
+    document.getElementById('logoutPopup').classList.toggle('active');
+};
 
-// ── Init ──
-document.addEventListener('DOMContentLoaded', () => {
-    // Load profile avatar in sidebar if stored
-    const initial = localStorage.getItem('userInitial');
-    const color   = localStorage.getItem('userAvatarColor');
+window.closeLogoutPopup = function() {
+    document.getElementById('logoutPopup').classList.remove('active');
+};
 
-    renderConvList(CONVERSATIONS);
+window.handleLogout = function() {
+    auth.signOut().then(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = '../login.html';
+    });
+};
 
-    // Auto-open first conversation
-    openConversation(1);
+document.getElementById('logoutPopup').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeLogoutPopup();
 });
+
+// Close modals on backdrop click
+document.getElementById('newMsgModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeNewMessageModal();
+});
+document.getElementById('recipePickerModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeRecipePicker();
+});
+
+// ── View other user's profile ──
+function openOtherProfile() {
+    const chatState = document.getElementById('activeChatState');
+    const otherUid  = chatState.dataset.otherUid;
+    const otherName = chatState.dataset.otherName;
+    if (!otherUid) return;
+    // Store in sessionStorage so profile.html can read it
+    sessionStorage.setItem('viewProfileUid',  otherUid);
+    sessionStorage.setItem('viewProfileName', otherName);
+    window.location.href = '../Saved page/profile.html?uid=' + encodeURIComponent(otherUid);
+}
+window.openOtherProfile = openOtherProfile;
+
+// ── Utility ──
+function escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 </script>
 </body>
 </html>
