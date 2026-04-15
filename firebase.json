@@ -1,4 +1,10 @@
 {
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "functions": {
+    "source": "functions"
+  },
   "hosting": {
     "public": ".",
     "ignore": [
@@ -11,7 +17,8 @@
       "authMiddleware.js",
       "firebaseAdmin.js",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      "firestore.rules"
     ]
   }
 }

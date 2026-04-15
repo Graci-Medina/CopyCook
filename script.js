@@ -1,10 +1,11 @@
-import { auth } from './firebase-config.js';
+import { auth, db } from './firebase-config.js';
 import {
     signInWithEmailAndPassword,
     onAuthStateChanged,
     signOut,
     sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const loginForm = document.getElementById('loginForm');
 const emailInput = document.getElementById('email');
@@ -61,12 +62,23 @@ loginForm.addEventListener('submit', async function (e) {
         // Save avatar data and UID from Firebase profile to localStorage
         saveAvatarToLocalStorage(userCredential.user);
 
-        showMessage('Login successful! Welcome back!', 'success');
+        let nextUrl = 'Home page/home.html';
+        try {
+            const snap = await getDoc(doc(db, 'users', userCredential.user.uid));
+            if (snap.exists() && snap.data().onboardingComplete === false) {
+                nextUrl = 'onboarding.html';
+            }
+        } catch (_) { /* stay on home */ }
+
+        showMessage(
+            nextUrl.includes('onboarding') ? 'Welcome! Let’s set up your feed…' : 'Login successful! Welcome back!',
+            'success'
+        );
         loginForm.reset();
 
         setTimeout(() => {
-            window.location.href = 'Home page/home.html';
-        }, 1500);
+            window.location.href = nextUrl;
+        }, 1200);
 
     } catch (error) {
         console.error('Authentication error:', error);

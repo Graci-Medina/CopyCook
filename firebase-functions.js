@@ -2,8 +2,8 @@ import { db } from './firebase-config.js';
 
 import {
     doc, setDoc, updateDoc, getDoc, getDocs, deleteDoc, collection,
-    arrayUnion, arrayRemove, addDoc, query, orderBy, serverTimestamp,
-    increment
+    arrayUnion, arrayRemove, addDoc, query, where, orderBy, serverTimestamp,
+    increment, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -13,9 +13,157 @@ import {
 //   recipes/{mealId}/ratings/{uid}         →  { uid, stars, createdAt }
 //   recipes/{mealId}                       →  { ratingCount, ratingSum }  (aggregate)
 //   posts/{postId}  →  { uid, displayName, avatarColor, mealName, ingredients, instructions, postImg, createdAt }
-//   conversations/{uid_uid}/messages/{---} →  { sender, message, sentAt }
+//   conversations/{convId}  →  participants[], messages in subcollection
+//   conversations/{convId}/messages/{msgId}
 // ─────────────────────────────────────────────────────────────────────────────
 
+const BATCH_MAX = 400;
+
+/** Delete one conversation document and all messages in its subcollection. */
+export async function deleteConversationCompletely(convId) {
+    if (!convId) return;
+    const msgSnap = await getDocs(collection(db, 'conversations', convId, 'messages'));
+    let batch = writeBatch(db);
+    let n = 0;
+    for (const m of msgSnap.docs) {
+        batch.delete(m.ref);
+        n++;
+        if (n >= BATCH_MAX) {
+            await batch.commit();
+            batch = writeBatch(db);
+            n = 0;
+        }
+    }
+    if (n > 0) await batch.commit();
+    await deleteDoc(doc(db, 'conversations', convId));
+}
+
+/**
+ * Removes conversations where any participant no longer has a users/{uid} doc.
+ * Fixes orphaned threads when Auth (or user doc) was removed without deleting the conversation
+ * (e.g. Cloud Functions not deployed).
+ */
+export async function pruneConversationsWithDeletedParticipants(myUid) {
+    if (!myUid) return;
+    let convSnap;
+    try {
+        convSnap = await getDocs(
+            query(collection(db, 'conversations'), where('participants', 'array-contains', myUid))
+        );
+    } catch (e) {
+        console.warn('pruneConversationsWithDeletedParticipants query failed:', e);
+        return;
+    }
+    for (const convDoc of convSnap.docs) {
+        const parts = convDoc.data().participants || [];
+        let remove = false;
+        for (const p of parts) {
+            const uSnap = await getDoc(doc(db, 'users', p));
+            if (!uSnap.exists()) {
+                remove = true;
+                break;
+            }
+        }
+        if (remove) {
+            try {
+                await deleteConversationCompletely(convDoc.id);
+            } catch (err) {
+                console.warn('Failed to prune conversation', convDoc.id, err);
+            }
+        }
+    }
+}
+
+/** Remove every conversation this user is in (and all messages). Call before deleting Auth user. */
+export async function deleteConversationsForUser(uid) {
+    if (!uid) return;
+    let convSnap;
+    try {
+        convSnap = await getDocs(
+            query(collection(db, 'conversations'), where('participants', 'array-contains', uid))
+        );
+    } catch (e) {
+        console.warn('deleteConversationsForUser query failed:', e);
+        return;
+    }
+    for (const convDoc of convSnap.docs) {
+        await deleteConversationCompletely(convDoc.id);
+    }
+}
+
+async function deleteUserSubcollections(uid) {
+    const foldersSnap = await getDocs(collection(db, 'users', uid, 'folders'));
+    for (const d of foldersSnap.docs) {
+        await deleteDoc(d.ref);
+    }
+    const likesSnap = await getDocs(collection(db, 'users', uid, 'likes'));
+    for (const d of likesSnap.docs) {
+        await deleteDoc(d.ref);
+    }
+    const likedRecipesSnap = await getDocs(collection(db, 'users', uid, 'likedRecipes'));
+    for (const d of likedRecipesSnap.docs) {
+        await deleteDoc(d.ref);
+    }
+}
+
+/**
+ * Full Firestore cleanup for an account (conversations, folders, likes, user doc).
+ * Run while the user is still signed in, then call Auth deleteUser().
+ */
+export async function deleteUserFirestoreData(uid) {
+    await deleteConversationsForUser(uid);
+    await deleteUserSubcollections(uid);
+    await deleteDoc(doc(db, 'users', uid));
+}
+
+/** Lowercase trimmed email, or null if none (dedupe falls back to per-uid key). */
+export function normalizeEmailForDedupe(email) {
+    const s = (email || '').trim().toLowerCase();
+    return s || null;
+}
+
+function userProfileRecencyMs(u) {
+    const ts = u.profileUpdatedAt;
+    if (ts && typeof ts.toMillis === 'function') return ts.toMillis();
+    if (ts && typeof ts.seconds === 'number') return ts.seconds * 1000;
+    const iso = u.preferencesUpdatedAt;
+    if (iso && typeof iso === 'string') {
+        const t = Date.parse(iso);
+        if (!Number.isNaN(t)) return t;
+    }
+    return 0;
+}
+
+/** Positive if b should replace a as the canonical row for the same email. */
+function compareUserDuplicates(a, b) {
+    const mb = userProfileRecencyMs(b);
+    const ma = userProfileRecencyMs(a);
+    if (mb !== ma) return mb - ma;
+    const ob = b.onboardingComplete ? 1 : 0;
+    const oa = a.onboardingComplete ? 1 : 0;
+    if (ob !== oa) return ob - oa;
+    return String(b.uid || '').localeCompare(String(a.uid || ''));
+}
+
+/**
+ * Collapse multiple users/{uid} docs that share the same email (e.g. re-signup) to one row for search UIs.
+ */
+export function dedupeUsersByEmail(users) {
+    const map = new Map();
+    for (const u of users) {
+        const emailKey = normalizeEmailForDedupe(u.email);
+        const key = emailKey || `__noemail__${u.uid}`;
+        const prev = map.get(key);
+        if (!prev) {
+            map.set(key, u);
+            continue;
+        }
+        if (compareUserDuplicates(prev, u) > 0) {
+            map.set(key, u);
+        }
+    }
+    return Array.from(map.values());
+}
 
 // ── Users ──────────────────────────────────────────────────────────────────
 
@@ -50,8 +198,9 @@ export function updateUserProfile(id, name, bio, dietaryPrefs) {
     return updateDoc(userRef, { displayName: name, bio, dietaryPrefs });
 }
 
+/** @deprecated Use deleteUserFirestoreData — this now removes conversations and subcollections too. */
 export async function deleteUser(uid) {
-    await deleteDoc(doc(db, 'users', uid));
+    await deleteUserFirestoreData(uid);
 }
 
 
@@ -91,7 +240,8 @@ export async function saveRecipe(uid, folderName, mealObj) {
     const canonical = {
         idMeal:       mealObj.idMeal       || mealObj.id,
         strMeal:      mealObj.strMeal      || mealObj.name,
-        strMealThumb: mealObj.strMealThumb || mealObj.thumb
+        strMealThumb: mealObj.strMealThumb || mealObj.thumb,
+        savedAt:      mealObj.savedAt      || new Date().toISOString()
     };
     await setDoc(ref, { savedRecipes: arrayUnion(canonical) }, { merge: true });
     const snap = await getDoc(ref);

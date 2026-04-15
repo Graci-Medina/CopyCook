@@ -50,7 +50,8 @@ exports.saveRecipe = async (req, res) => {
         const canonical = {
             idMeal:       meal.idMeal       || meal.id,
             strMeal:      meal.strMeal      || meal.name,
-            strMealThumb: meal.strMealThumb || meal.thumb
+            strMealThumb: meal.strMealThumb || meal.thumb,
+            savedAt:      meal.savedAt      || new Date().toISOString()
         };
 
         const ref = folderRef(req.user.uid, folderName);

@@ -57,18 +57,13 @@
         .nav-icon img { width: 100%; height: 100%; border-radius: 50%; }
         .nav-icon.active { box-shadow: 0 0 0 3px #E8B4B4; }
 
-        .notification-badge {
-            position: absolute;
-            top: -3px; right: -3px;
-            background-color: #D4A5A5;
-            color: white;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 2px 5px;
-            border-radius: 10px;
-            min-width: 18px;
-            text-align: center;
+        .messages-unread-dot {
+            position: absolute; top: 0; right: 0;
+            width: 10px; height: 10px; border-radius: 50%;
+            background: #F06292; border: 2px solid #F5EFE7; box-sizing: border-box;
+            display: none; pointer-events: none;
         }
+        .messages-unread-dot.is-visible { display: block; }
 
         .nav-bottom { margin-top: auto; padding-bottom: 20px; }
 
@@ -490,9 +485,9 @@
             <a href="saved.html" class="nav-icon active">
                 <img src="save-icon.png" alt="Saved">
             </a>
-            <a href="../Messages page/Messages.html" class="nav-icon">
-                <img src="message.png" alt="Messages">
-                <span class="notification-badge">10</span>
+            <a href="../Messages page/Messages.html" class="nav-icon" aria-label="Messages">
+                <img src="message.png" alt="">
+                <span class="messages-unread-dot" aria-hidden="true"></span>
             </a>
         </nav>
         <div class="nav-bottom">
@@ -556,14 +551,24 @@
                     </button>
 
                     <div class="sort-dropdown" id="sortDropdown">
-                        <button class="sort-option selected" data-sort="date">
+                        <button class="sort-option selected" data-sort="added-later">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                 <rect x="3" y="4" width="18" height="18" rx="2" stroke="#9FB19F" stroke-width="2" fill="none"/>
                                 <line x1="3" y1="9" x2="21" y2="9" stroke="#9FB19F" stroke-width="2"/>
                                 <line x1="8" y1="2" x2="8" y2="6" stroke="#9FB19F" stroke-width="2" stroke-linecap="round"/>
                                 <line x1="16" y1="2" x2="16" y2="6" stroke="#9FB19F" stroke-width="2" stroke-linecap="round"/>
                             </svg>
-                            Date added
+                            Added later (newest)
+                            <span class="sort-check">✓</span>
+                        </button>
+                        <button class="sort-option" data-sort="added-first">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <rect x="3" y="4" width="18" height="18" rx="2" stroke="#9FB19F" stroke-width="2" fill="none"/>
+                                <line x1="3" y1="9" x2="21" y2="9" stroke="#9FB19F" stroke-width="2"/>
+                                <line x1="8" y1="2" x2="8" y2="6" stroke="#9FB19F" stroke-width="2" stroke-linecap="round"/>
+                                <line x1="16" y1="2" x2="16" y2="6" stroke="#9FB19F" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            Added first (oldest)
                             <span class="sort-check">✓</span>
                         </button>
                         <button class="sort-option" data-sort="az">
@@ -623,25 +628,81 @@
 </div>
 
 <script type="module">
+import { db } from '../firebase-config.js';
+import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 import { getFolders, unsaveRecipe } from '../firebase-functions.js';
 
 // ── URL params ────────────────────────────────────────────────────────────────
 const params   = new URLSearchParams(window.location.search);
 const folderId = params.get('id');
+const ownerUidParam = params.get('uid'); // folder owner's uid when opened from their profile
+const sourceParam = params.get('source') || '';
+const profileSourceParam = params.get('profileSource') || '';
+const openConvParam = params.get('openConv') || '';
+const otherUidParam = params.get('otherUid') || '';
+const otherNameParam = params.get('otherName') || '';
 
 if (!folderId) window.location.href = 'saved.html';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let allRecipes        = [];
-let currentSort       = 'date';
+let currentSort       = 'added-later';
 let currentFolderName = '';
 let currentFolderDocId = '';
+/** Viewing someone else's folder (from Messages → profile → public folder) */
+let isReadOnlyView    = false;
+let folderOwnerUid    = '';
+
+const PLACEHOLDER_THUMB = 'https://www.themealdb.com/images/media/meals/llcbn01574260722.jpg';
 
 // ── Sort helpers ──────────────────────────────────────────────────────────────
+function mealTitle(m) {
+    return m.strMeal || m.name || '';
+}
+
+function stripRecipeSortMeta(r) {
+    if (!r || typeof r !== 'object') return r;
+    const { _ccIdx, ...rest } = r;
+    return rest;
+}
+
+/** Preserve Firestore order as fallback when savedAt is missing (older recipes). */
+function attachRecipeSortMeta(recipes) {
+    return (recipes || []).map((r, idx) => ({ ...stripRecipeSortMeta(r), _ccIdx: idx }));
+}
+
+function normalizeRecipesForSort(list) {
+    return attachRecipeSortMeta((list || []).map(stripRecipeSortMeta));
+}
+
+function recipeSavedMs(m) {
+    if (m.savedAt) {
+        const ms = new Date(m.savedAt).getTime();
+        if (!Number.isNaN(ms)) return ms;
+    }
+    return m._ccIdx != null ? m._ccIdx : 0;
+}
+
 function getSorted() {
     const copy = [...allRecipes];
-    if (currentSort === 'az') copy.sort((a, b) => a.strMeal.localeCompare(b.strMeal));
-    if (currentSort === 'za') copy.sort((a, b) => b.strMeal.localeCompare(a.strMeal));
+    if (currentSort === 'added-later') {
+        copy.sort((a, b) => {
+            const ta = recipeSavedMs(a);
+            const tb = recipeSavedMs(b);
+            if (tb !== ta) return tb - ta;
+            return (b._ccIdx ?? 0) - (a._ccIdx ?? 0);
+        });
+    }
+    if (currentSort === 'added-first') {
+        copy.sort((a, b) => {
+            const ta = recipeSavedMs(a);
+            const tb = recipeSavedMs(b);
+            if (ta !== tb) return ta - tb;
+            return (a._ccIdx ?? 0) - (b._ccIdx ?? 0);
+        });
+    }
+    if (currentSort === 'az') copy.sort((a, b) => mealTitle(a).localeCompare(mealTitle(b)));
+    if (currentSort === 'za') copy.sort((a, b) => mealTitle(b).localeCompare(mealTitle(a)));
     return copy;
 }
 
@@ -689,6 +750,29 @@ function loadAvatar() {
 
 // ── Render folder header ──────────────────────────────────────────────────────
 function renderHeader(folder) {
+    const backBtn = document.querySelector('.folder-header .back-btn');
+    if (backBtn) {
+        if (sourceParam === 'ownProfile') {
+            const q = new URLSearchParams();
+            if (profileSourceParam) q.set('source', profileSourceParam);
+            backBtn.href = 'profile.html' + (q.toString() ? '?' + q.toString() : '');
+            backBtn.title = 'Back to profile';
+        } else if (isReadOnlyView && folderOwnerUid) {
+            const q = new URLSearchParams({ uid: folderOwnerUid });
+            if (sourceParam === 'messages') {
+                q.set('source', 'messages');
+                if (openConvParam) q.set('openConv', openConvParam);
+                if (otherUidParam) q.set('otherUid', otherUidParam);
+                if (otherNameParam) q.set('otherName', otherNameParam);
+            }
+            backBtn.href = 'profile.html?' + q.toString();
+            backBtn.title = 'Back to profile';
+        } else {
+            backBtn.href = 'saved.html';
+            backBtn.title = 'Back to saved folders';
+        }
+    }
+
     document.title = 'CopyCook - ' + folder.name;
     document.getElementById('folderTitle').textContent = folder.name;
 
@@ -725,34 +809,55 @@ function renderRecipes(recipes, folderDocId, folderName) {
 
     if (!recipes || recipes.length === 0) {
         empty.style.display = 'flex';
+        const pEl = empty.querySelector('p');
+        if (pEl) {
+            pEl.innerHTML = isReadOnlyView
+                ? 'This folder is empty.'
+                : 'This folder is empty.<br>Save recipes from the ' +
+                  '<a href="../Home page/home.html" style="color:#9FB19F;font-weight:600;">Home</a> page!';
+        }
         return;
     }
 
     empty.style.display = 'none';
 
     recipes.forEach(function(meal) {
+        const title = (meal.strMeal || meal.name || 'Recipe').replace(/"/g, '&quot;');
+        const thumb = (meal.strMealThumb || meal.thumb || PLACEHOLDER_THUMB).replace(/"/g, '&quot;');
+
         const card = document.createElement('div');
         card.className = 'recipe-card';
 
-        card.innerHTML =
-            '<img src="' + meal.strMealThumb + '" alt="' + meal.strMeal + '" loading="lazy">' +
+        const removeBtn = isReadOnlyView ? '' :
             '<button class="unsave-btn" title="Remove from folder">' +
             '  <svg viewBox="0 0 24 24" fill="none">' +
             '    <path d="M18 6L6 18M6 6l12 12" stroke="#5A5A5A" stroke-width="2" stroke-linecap="round"/>' +
             '  </svg>' +
-            '</button>' +
+            '</button>';
+
+        card.innerHTML =
+            '<img src="' + thumb + '" alt="' + title + '" loading="lazy">' +
+            removeBtn +
             '<div class="recipe-card-info">' +
-            '  <div class="recipe-card-name">' + meal.strMeal + '</div>' +
+            '  <div class="recipe-card-name">' + (meal.strMeal || meal.name || 'Recipe') + '</div>' +
             '</div>';
 
         card.addEventListener('click', function() {
-            window.location.href = '../Home page/recipe.html?id=' + meal.idMeal;
+            const recipeId = String(meal.idMeal || meal.id || '');
+            if (recipeId.startsWith('post-')) {
+                const postId = recipeId.replace(/^post-/, '');
+                window.location.href = '../Home page/community-recipe.html?id=' + encodeURIComponent(postId);
+                return;
+            }
+            window.location.href = '../Home page/recipe.html?id=' + encodeURIComponent(recipeId);
         });
 
-        card.querySelector('.unsave-btn').addEventListener('click', function(e) {
-            e.stopPropagation();
-            openConfirm(meal, folderDocId, folderName, card);
-        });
+        if (!isReadOnlyView) {
+            card.querySelector('.unsave-btn').addEventListener('click', function(e) {
+                e.stopPropagation();
+                openConfirm(meal, folderDocId, folderName, card);
+            });
+        }
 
         grid.appendChild(card);
     });
@@ -785,7 +890,7 @@ document.getElementById('btnConfirmRemove').addEventListener('click', async func
     cardEl.style.transform  = 'scale(0.9)';
     setTimeout(function() { cardEl.remove(); }, 300);
 
-    allRecipes = allRecipes.filter(r => r.idMeal !== meal.idMeal);
+    allRecipes = normalizeRecipesForSort(allRecipes.filter(r => (r.idMeal || r.id) !== (meal.idMeal || meal.id)));
     const countEl = document.getElementById('recipeCount');
     countEl.textContent = allRecipes.length + ' recipe' + (allRecipes.length !== 1 ? 's' : '');
     if (allRecipes.length === 0) document.getElementById('emptyState').style.display = 'flex';
@@ -807,7 +912,7 @@ document.getElementById('btnConfirmRemove').addEventListener('click', async func
         }
     } catch (err) {
         console.error('❌ Firestore remove failed:', err);
-        allRecipes.push(meal);
+        allRecipes = normalizeRecipesForSort([...allRecipes, meal]);
         renderRecipes(getSorted(), folderDocId, folderName);
         countEl.textContent = allRecipes.length + ' recipe' + (allRecipes.length !== 1 ? 's' : '');
         document.getElementById('emptyState').style.display = 'none';
@@ -841,26 +946,56 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     if (!folderId) return;
 
-    const uid = localStorage.getItem('userUID');
-    if (!uid) {
+    const currentUid = localStorage.getItem('userUID');
+    if (!currentUid) {
         document.getElementById('recipesGrid').innerHTML =
             '<p class="state-message" style="color:#D4A5A5;">' +
             'Please <a href="../login.html" style="color:#9FB19F;font-weight:600;">log in</a> to view saved recipes.</p>';
         return;
     }
 
+    folderOwnerUid = ownerUidParam || currentUid;
+    isReadOnlyView = !!(ownerUidParam && ownerUidParam !== currentUid);
+
     try {
-        const folders = await getFolders(uid);
-        const folder  = folders.find(f => f.id === folderId);
+        let folder = null;
+
+        if (isReadOnlyView) {
+            // Single-doc read works with rules like: read if owner || resource.data.privacy == 'public'
+            // Listing the whole folders collection for another user often fails (permission-denied).
+            const snap = await getDoc(doc(db, 'users', folderOwnerUid, 'folders', folderId));
+            if (snap.exists()) {
+                const data = snap.data();
+                const raw = data.savedRecipes || data.recipes || [];
+                folder = {
+                    id: snap.id,
+                    name: data.name || 'Folder',
+                    privacy: (data.privacy || 'private').toString().toLowerCase().trim(),
+                    recipes: Array.isArray(raw) ? raw : [],
+                    coverImage: data.coverImage || null
+                };
+            }
+        } else {
+            const folders = await getFolders(folderOwnerUid);
+            folder = folders.find(f => f.id === folderId);
+        }
 
         if (!folder) {
             document.getElementById('folderTitle').textContent = 'Folder not found';
             document.getElementById('recipesGrid').innerHTML =
-                '<p class="state-message">This folder doesn\'t exist or was deleted.</p>';
+                '<p class="state-message">This folder doesn\'t exist, was deleted, or is private.</p>';
             return;
         }
 
-        allRecipes         = folder.recipes || [];
+        const folderPrivacy = (folder.privacy || 'private').toString().toLowerCase().trim();
+        if (isReadOnlyView && folderPrivacy !== 'public') {
+            document.getElementById('folderTitle').textContent = 'Folder not available';
+            document.getElementById('recipesGrid').innerHTML =
+                '<p class="state-message">This folder is private.</p>';
+            return;
+        }
+
+        allRecipes         = attachRecipeSortMeta(folder.recipes || []);
         currentFolderName  = folder.name;
         currentFolderDocId = folder.id;
 
@@ -875,5 +1010,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 </script>
+<script type="module" src="../messages-unread-nav.js"></script>
 </body>
 </html>

@@ -1,0 +1,13 @@
+{
+  "name": "copycook-functions",
+  "description": "Cleans Firestore when a Firebase Auth user is deleted (e.g. from console).",
+  "engines": {
+    "node": "18"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^5.1.1"
+  },
+  "private": true
+}

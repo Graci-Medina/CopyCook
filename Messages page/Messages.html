@@ -61,19 +61,13 @@
         .nav-icon img { width: 100%; height: 100%; border-radius: 50%; }
         .nav-icon.active { box-shadow: 0 0 0 3px #E8B4B4; }
 
-        .notification-badge {
-            position: absolute;
-            top: -5px; right: -5px;
-            background-color: #D4A5A5;
-            color: white;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 2px 5px;
-            border-radius: 10px;
-            min-width: 18px;
-            text-align: center;
-            display: none;
+        .messages-unread-dot {
+            position: absolute; top: 0; right: 0;
+            width: 10px; height: 10px; border-radius: 50%;
+            background: #F06292; border: 2px solid #F5EFE7; box-sizing: border-box;
+            display: none; pointer-events: none;
         }
+        .messages-unread-dot.is-visible { display: block; }
 
         .nav-bottom { margin-top: auto; padding-bottom: 20px; }
 
@@ -580,6 +574,16 @@
         }
         .logout-btn { background: #D4A5A5; color: white; }
         .logout-btn:hover { background: #C49595; }
+        .delete-account-btn {
+            width: 100%; padding: 12px 30px; margin: 8px 0;
+            border: 1.5px solid #D4A5A5; border-radius: 12px;
+            font-size: 14px; font-weight: 600; font-family: 'Poppins', sans-serif;
+            cursor: pointer; background: transparent; color: #9a6060;
+            transition: background 0.2s, color 0.2s;
+        }
+        .delete-account-btn:hover {
+            background: rgba(212, 165, 165, 0.15); color: #7a4040;
+        }
         .cancel-btn { background: #9FB19F; color: white; }
         .cancel-btn:hover { background: #8AA08A; }
 
@@ -779,9 +783,9 @@
             <a href="../Saved page/saved.html" class="nav-icon">
                 <img src="save-icon.png" alt="Saved">
             </a>
-            <a href="Messages.html" class="nav-icon active">
-                <img src="message.png" alt="Messages">
-                <span class="notification-badge" id="sidebarBadge"></span>
+            <a href="Messages.html" class="nav-icon active" aria-label="Messages">
+                <img src="message.png" alt="">
+                <span class="messages-unread-dot" aria-hidden="true"></span>
             </a>
         </nav>
         <div class="nav-bottom">
@@ -896,6 +900,7 @@
     <div class="logout-content">
         <h3>Account Settings</h3>
         <button class="logout-btn" onclick="handleLogout()">Log Out</button>
+        <button type="button" class="delete-account-btn" onclick="deleteAccount()">Delete account</button>
         <button class="cancel-btn" onclick="closeLogoutPopup()">Cancel</button>
     </div>
 </div>
@@ -938,8 +943,13 @@
 "></div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, deleteUser as firebaseAuthDeleteUser } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
+    deleteUserFirestoreData,
+    pruneConversationsWithDeletedParticipants,
+    dedupeUsersByEmail
+} from '../firebase-functions.js';
 import {
     getFirestore, doc, setDoc, getDoc, getDocs, addDoc, updateDoc,
     collection, query, orderBy, onSnapshot, serverTimestamp,
@@ -957,9 +967,40 @@ const firebaseConfig = {
     measurementId: "G-P41J5BYDR0"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
+const navParams = new URLSearchParams(window.location.search);
+const openConvParam = navParams.get('openConv') || '';
+const openOtherUidParam = navParams.get('otherUid') || '';
+const openOtherNameParam = navParams.get('otherName') || '';
+let pendingConversationRestore = !!(openConvParam || openOtherUidParam);
+
+window.deleteAccount = async function () {
+    if (!confirm(
+        'Delete your account permanently? This removes your profile, saved folders, likes, and all conversations (for you and people you chatted with). This cannot be undone.'
+    )) return;
+    const user = auth.currentUser;
+    if (!user) {
+        alert('You are not signed in.');
+        return;
+    }
+    try {
+        await deleteUserFirestoreData(user.uid);
+        await firebaseAuthDeleteUser(user);
+        localStorage.clear();
+        sessionStorage.clear();
+        closeLogoutPopup();
+        window.location.href = '../login.html';
+    } catch (e) {
+        console.error('deleteAccount:', e);
+        const code = e && e.code ? e.code : '';
+        const msg = code === 'auth/requires-recent-login'
+            ? 'For security, log out, sign in again, then delete your account.'
+            : (e.message || 'Could not delete account. Try again.');
+        alert(msg);
+    }
+};
 
 // ── State ──
 let currentUser    = null;
@@ -1039,7 +1080,8 @@ onAuthStateChanged(auth, async user => {
             uid:         user.uid,
             displayName: displayName,
             email:       user.email || '',
-            avatarColor: avatarColor
+            avatarColor: avatarColor,
+            profileUpdatedAt: serverTimestamp()
         }, { merge: true });
     } catch(e) {
         console.warn('Could not upsert user doc:', e);
@@ -1053,6 +1095,11 @@ onAuthStateChanged(auth, async user => {
     // Bust the users cache so search picks up freshly written docs
     _usersCache = null;
 
+    try {
+        await pruneConversationsWithDeletedParticipants(user.uid);
+    } catch (e) {
+        console.warn('prune orphaned conversations:', e);
+    }
     loadConversations();
 });
 
@@ -1090,6 +1137,7 @@ function loadConversations() {
         allConversations = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
         renderConvList(allConversations);
         updateUnreadBadge(allConversations);
+        tryRestoreConversationFromNav(allConversations);
     }, err => {
         console.error('Conversations listener error:', err);
         // If index not built yet, fall back to simple query
@@ -1107,8 +1155,25 @@ function loadConversations() {
                 });
             renderConvList(allConversations);
             updateUnreadBadge(allConversations);
+            tryRestoreConversationFromNav(allConversations);
         });
     });
+}
+
+function tryRestoreConversationFromNav(convs) {
+    if (!pendingConversationRestore || !Array.isArray(convs) || !convs.length) return;
+    const match = convs.find((conv) => {
+        if (openConvParam && conv.id === openConvParam) return true;
+        if (openOtherUidParam && Array.isArray(conv.participants)) {
+            return conv.participants.includes(openOtherUidParam);
+        }
+        return false;
+    });
+    if (!match) return;
+    const otherUid = match.participants.find((p) => p !== currentUser.uid) || openOtherUidParam;
+    const otherName = match.participantNames?.[otherUid] || openOtherNameParam || 'Unknown User';
+    pendingConversationRestore = false;
+    openConversation(match.id, otherName, otherUid);
 }
 
 function updateUnreadBadge(convs) {
@@ -1116,13 +1181,11 @@ function updateUnreadBadge(convs) {
     convs.forEach(c => {
         total += (c.unreadCount?.[currentUser.uid] || 0);
     });
-    const badge = document.getElementById('sidebarBadge');
-    if (total > 0) {
-        badge.textContent = total > 99 ? '99+' : total;
-        badge.style.display = 'block';
-    } else {
-        badge.style.display = 'none';
-    }
+    const visible = total > 0;
+    document.querySelectorAll('.messages-unread-dot').forEach((el) => {
+        el.classList.toggle('is-visible', visible);
+        el.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    });
 }
 
 function renderConvList(convs) {
@@ -1315,7 +1378,13 @@ function renderMessages(messages, otherName) {
             card.addEventListener('click', () => {
                 const id = msg.recipe.id;
                 if (id) {
-                    window.location.href = `../Home page/recipe.html?id=${encodeURIComponent(id)}`;
+                    const rawId = String(id);
+                    if (rawId.startsWith('post-')) {
+                        const postId = rawId.replace(/^post-/, '');
+                        window.location.href = `../Home page/community-recipe.html?id=${encodeURIComponent(postId)}`;
+                    } else {
+                        window.location.href = `../Home page/recipe.html?id=${encodeURIComponent(rawId)}`;
+                    }
                 } else {
                     // fallback: search MealDB by name and go to first result
                     fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(msg.recipe.name)}`)
@@ -1457,7 +1526,8 @@ async function doUserSearch(searchQ) {
         // Fetch all users once and cache — avoids needing a Firestore index
         if (!_usersCache) {
             const snap = await getDocs(collection(db, 'users'));
-            _usersCache = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+            const raw = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+            _usersCache = dedupeUsersByEmail(raw);
         }
 
         const q = searchQ.toLowerCase();
@@ -1645,11 +1715,19 @@ function openOtherProfile() {
     const chatState = document.getElementById('activeChatState');
     const otherUid  = chatState.dataset.otherUid;
     const otherName = chatState.dataset.otherName;
+    const convId    = chatState.dataset.convId;
     if (!otherUid) return;
     // Store in sessionStorage so profile.html can read it
     sessionStorage.setItem('viewProfileUid',  otherUid);
     sessionStorage.setItem('viewProfileName', otherName);
-    window.location.href = '../Saved page/profile.html?uid=' + encodeURIComponent(otherUid);
+    const q = new URLSearchParams({
+        uid: otherUid,
+        source: 'messages',
+        openConv: convId || '',
+        otherUid: otherUid,
+        otherName: otherName || ''
+    });
+    window.location.href = '../Saved page/profile.html?' + q.toString();
 }
 window.openOtherProfile = openOtherProfile;
 

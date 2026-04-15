@@ -54,16 +54,13 @@
         .nav-icon img { width: 100%; height: 100%; border-radius: 50%; }
         .nav-icon.active { box-shadow: 0 0 0 3px #E8B4B4; }
 
-        .notification-badge {
-            position: absolute;
-            top: -3px; right: -3px;
-            background-color: #D4A5A5;
-            color: white;
-            font-size: 10px; font-weight: 700;
-            padding: 2px 5px;
-            border-radius: 10px;
-            min-width: 18px; text-align: center;
+        .messages-unread-dot {
+            position: absolute; top: 0; right: 0;
+            width: 10px; height: 10px; border-radius: 50%;
+            background: #F06292; border: 2px solid #F5EFE7; box-sizing: border-box;
+            display: none; pointer-events: none;
         }
+        .messages-unread-dot.is-visible { display: block; }
 
         .nav-bottom { margin-top: auto; padding-bottom: 20px; }
 
@@ -153,6 +150,15 @@
 
         .hero-handle {
             font-size: 13px; color: #a07878; margin-top: -4px;
+        }
+
+        .hero-bio {
+            max-width: 520px;
+            text-align: center;
+            font-size: 13px;
+            color: #7f6666;
+            line-height: 1.5;
+            margin-top: 2px;
         }
 
         .hero-stats {
@@ -291,6 +297,7 @@
         .recipe-card-title {
             font-size: 12px; font-weight: 600; color: #3a2e2e; line-height: 1.4;
             display: -webkit-box;
+            line-clamp: 2;
             -webkit-line-clamp: 2; -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -299,10 +306,16 @@
 
         .heart-badge {
             position: absolute; top: 8px; right: 8px;
-            background: rgba(255,255,255,0.88);
+            background: rgba(255,255,255,0.92);
             border-radius: 50%; width: 30px; height: 30px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            pointer-events: none;
+        }
+        .heart-badge svg {
+            display: block;
+            width: 16px;
+            height: 16px;
         }
 
         /* ── Empty / loading state ── */
@@ -342,6 +355,90 @@
         .cancel-btn { background: #9FB19F; color: white; }
         .cancel-btn:hover { background: #8AA08A; }
 
+        /* ── Edit profile modal ── */
+        .edit-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 250;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .edit-modal-overlay.active { display: flex; }
+
+        .edit-modal {
+            background: #FDFBF7;
+            border: 3px solid #E8B4B4;
+            border-radius: 24px;
+            padding: 30px 34px;
+            width: 460px;
+            max-width: 92vw;
+        }
+
+        .edit-modal h3 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2A2A2A;
+            margin-bottom: 18px;
+        }
+
+        .edit-modal label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #9a7070;
+            margin-bottom: 6px;
+        }
+
+        .edit-modal input,
+        .edit-modal textarea {
+            width: 100%;
+            border: 2px solid transparent;
+            background: #E8E8E0;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            color: #3A3A3A;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .edit-modal textarea {
+            resize: vertical;
+            min-height: 90px;
+            max-height: 180px;
+            margin-bottom: 18px;
+        }
+
+        .edit-modal input:focus,
+        .edit-modal textarea:focus { border-color: #9FB19F; }
+
+        .edit-modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .edit-modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .edit-cancel-btn { background: #E8E8E0; color: #5A5A5A; }
+        .edit-cancel-btn:hover { background: #DDD; }
+        .edit-save-btn { background: #D4A5A5; color: #fff; }
+        .edit-save-btn:hover { background: #c48f8f; }
+
         @media (max-width: 768px) {
             .sidebar { width: 60px; }
             .page-body { padding: 0 16px 20px; }
@@ -371,9 +468,9 @@
             <a href="saved.html" class="nav-icon active">
                 <img src="save-icon.png" alt="Saved">
             </a>
-            <a href="../Messages page/Messages.html" class="nav-icon">
-                <img src="message.png" alt="Messages">
-                <span class="notification-badge">10</span>
+            <a href="../Messages page/Messages.html" class="nav-icon" aria-label="Messages">
+                <img src="message.png" alt="">
+                <span class="messages-unread-dot" aria-hidden="true"></span>
             </a>
         </nav>
         <div class="nav-bottom">
@@ -409,6 +506,7 @@
                 <div class="big-avatar" id="bigAvatar"></div>
                 <div class="hero-name" id="heroName">Loading…</div>
                 <div class="hero-handle" id="heroHandle"></div>
+                <div class="hero-bio" id="heroBio">No bio yet.</div>
                 <div class="hero-stats">
                     <div class="stat">
                         <div class="stat-num" id="statSaves">—</div>
@@ -419,14 +517,19 @@
                         <div class="stat-lbl">likes</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-num">0</div>
+                        <div class="stat-num" id="statFollowers">—</div>
+                        <div class="stat-lbl">followers</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-num" id="statFollowing">—</div>
                         <div class="stat-lbl">following</div>
                     </div>
                 </div>
                 <!-- Only shown when viewing own profile -->
                 <div class="hero-actions" id="heroActions">
-                    <button class="btn-outline">Share Profile</button>
-                    <button class="btn-solid">Edit Profile</button>
+                    <button class="btn-outline" id="shareProfileBtn">Share Profile</button>
+                    <button class="btn-solid" id="editProfileBtn">Edit Profile</button>
+                    <button class="btn-solid" id="followToggleBtn" style="display:none;" type="button" onclick="toggleFollowFromButton()">Follow</button>
                 </div>
             </div>
 
@@ -440,7 +543,7 @@
             <div class="tab-panel active" id="panel-saves">
                 <div class="folders-grid" id="foldersGrid">
                     <div class="empty-state">
-                        <div class="empty-icon">⏳</div>
+                        <div class="empty-icon"></div>
                         <p>Loading folders…</p>
                     </div>
                 </div>
@@ -450,7 +553,7 @@
             <div class="tab-panel" id="panel-likes">
                 <div class="recipe-grid" id="likesGrid">
                     <div class="empty-state">
-                        <div class="empty-icon">⏳</div>
+                        <div class="empty-icon"></div>
                         <p>Loading likes…</p>
                     </div>
                 </div>
@@ -458,6 +561,23 @@
 
         </div>
     </main>
+</div>
+
+<!-- Edit profile modal -->
+<div class="edit-modal-overlay" id="editProfileModal">
+    <div class="edit-modal">
+        <h3>Edit profile</h3>
+        <label for="firstNameInput">First name</label>
+        <input id="firstNameInput" type="text" maxlength="40" placeholder="Enter first name">
+        <label for="lastNameInput">Last name</label>
+        <input id="lastNameInput" type="text" maxlength="40" placeholder="Enter last name">
+        <label for="bioInput">Bio</label>
+        <textarea id="bioInput" maxlength="220" placeholder="Tell people about yourself"></textarea>
+        <div class="edit-modal-actions">
+            <button class="edit-cancel-btn" id="cancelEditProfileBtn">Cancel</button>
+            <button class="edit-save-btn" id="saveEditProfileBtn">Save</button>
+        </div>
+    </div>
 </div>
 
 <!-- Logout popup -->
@@ -470,12 +590,25 @@
 </div>
 
 <script type="module">
-    import { auth, db } from '../firebase-config.js';
-    import { getFolders } from '../firebase-functions.js';
-    import { onAuthStateChanged }
-        from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-    import { collection, getDocs, doc, getDoc, query, where }
-        from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import {
+        getFirestore, collection, getDocs, doc, getDoc, query, where,
+        collectionGroup, setDoc, deleteDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyACkR3_vUNa7dzD-Y3pWmLeM4Iu-UlxuDw",
+        authDomain: "copycook-f596a.firebaseapp.com",
+        projectId: "copycook-f596a",
+        storageBucket: "copycook-f596a.firebasestorage.app",
+        messagingSenderId: "366122548728",
+        appId: "1:366122548728:web:b4300be3464e7e07822a0d"
+    };
+
+    const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
 
     const PLACEHOLDER_IMAGES = [
         'https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg',
@@ -488,17 +621,19 @@
         'https://www.themealdb.com/images/media/meals/1525876468.jpg',
     ];
 
-    // ── Detect if viewing another user's profile ──────────────────────────────
-    const params       = new URLSearchParams(window.location.search);
-    const viewUid      = params.get('uid');   // set when coming from Messages
-    const isOwnProfile = !viewUid;
+    const params  = new URLSearchParams(window.location.search);
+    const viewUid = params.get('uid');
+    const sourceParam = params.get('source') || '';
+    const openConvParam = params.get('openConv') || '';
+    const otherUidParam = params.get('otherUid') || '';
+    const otherNameParam = params.get('otherName') || '';
+    /** Updated in onAuthStateChanged when we know the signed-in uid (handles ?uid=yourOwnUid). */
+    let isOwnProfile = !viewUid;
+    let signedInUid = null;
+    let currentProfileUid = viewUid || null;
+    let followBusy = false;
+    let profileModel = { firstName: '', lastName: '', bio: '' };
 
-    // Hide edit/share buttons when viewing someone else
-    if (!isOwnProfile) {
-        document.getElementById('heroActions').style.display = 'none';
-    }
-
-    // ── Avatar helper ─────────────────────────────────────────────────────────
     const AVATAR_COLORS = ['#D4A5A5','#9FB19F','#A5B4D4','#D4C4A5','#B4A5D4','#A5D4C4','#D4A5B4','#C4D4A5'];
     function colorFor(str) {
         let h = 0;
@@ -506,17 +641,48 @@
         return AVATAR_COLORS[h % AVATAR_COLORS.length];
     }
 
+    function initialsFromName(name) {
+        const trimmed = (name || '').trim();
+        return trimmed ? trimmed.charAt(0).toUpperCase() : '?';
+    }
+
+    function fullNameFromModel(model) {
+        return `${model.firstName || ''} ${model.lastName || ''}`.trim();
+    }
+
     // ── Load profile info ─────────────────────────────────────────────────────
     async function loadProfile(uid, isOwn) {
         if (isOwn) {
-            // Own profile: read from localStorage (fast)
-            const initial = localStorage.getItem('userInitial') || '?';
-            const color   = localStorage.getItem('userAvatarColor') || '#D4A5A5';
-            const name    = localStorage.getItem('userDisplayName') || 'Your Name';
-            const email   = localStorage.getItem('userEmail') || '';
-            applyProfileUI(initial, color, name, email);
+            try {
+                const snap = await getDoc(doc(db, 'users', uid));
+                const d = snap.exists() ? snap.data() : {};
+                const localFirst = localStorage.getItem('profileFirstName') || '';
+                const localLast = localStorage.getItem('profileLastName') || '';
+                const localBio = localStorage.getItem('profileBio') || '';
+                profileModel = {
+                    firstName: d.firstName || localFirst,
+                    lastName: d.lastName || localLast,
+                    bio: d.bio || localBio
+                };
+                const fullName = fullNameFromModel(profileModel);
+                const fallbackName = localStorage.getItem('userDisplayName') || 'Your Name';
+                const name = fullName || d.displayName || fallbackName;
+                const email = d.email || localStorage.getItem('userEmail') || '';
+                const color = d.avatarColor || localStorage.getItem('userAvatarColor') || colorFor(name);
+                applyProfileUI(initialsFromName(name), color, name, email, profileModel.bio || '');
+            } catch (e) {
+                const fallbackName = localStorage.getItem('userDisplayName') || 'Your Name';
+                const email = localStorage.getItem('userEmail') || '';
+                const color = localStorage.getItem('userAvatarColor') || colorFor(fallbackName);
+                profileModel = {
+                    firstName: localStorage.getItem('profileFirstName') || '',
+                    lastName: localStorage.getItem('profileLastName') || '',
+                    bio: localStorage.getItem('profileBio') || ''
+                };
+                const name = fullNameFromModel(profileModel) || fallbackName;
+                applyProfileUI(initialsFromName(name), color, name, email, profileModel.bio || '');
+            }
         } else {
-            // Other user: fetch from Firestore users collection
             try {
                 const snap = await getDoc(doc(db, 'users', uid));
                 if (snap.exists()) {
@@ -525,37 +691,286 @@
                     const email   = d.email || '';
                     const color   = d.avatarColor || colorFor(name);
                     const initial = name.charAt(0).toUpperCase();
-                    applyProfileUI(initial, color, name, email);
+                    applyProfileUI(initial, color, name, email, d.bio || '');
                 } else {
-                    // Fallback to sessionStorage name set by Messages.html
                     const name = sessionStorage.getItem('viewProfileName') || 'Unknown User';
-                    applyProfileUI(name.charAt(0).toUpperCase(), colorFor(name), name, '');
+                    applyProfileUI(name.charAt(0).toUpperCase(), colorFor(name), name, '', '');
                 }
             } catch(e) {
                 const name = sessionStorage.getItem('viewProfileName') || 'Unknown User';
-                applyProfileUI(name.charAt(0).toUpperCase(), colorFor(name), name, '');
+                applyProfileUI(name.charAt(0).toUpperCase(), colorFor(name), name, '', '');
             }
         }
     }
 
-    function applyProfileUI(initial, color, name, email) {
+    function applyProfileUI(initial, color, name, email, bio = '') {
         const handle = email ? '@' + email.split('@')[0] : '@' + name.toLowerCase().replace(/\s+/g, '');
 
-        // Own avatar in top bar
         const topAv = document.getElementById('profileAvatar');
         const myInitial = localStorage.getItem('userInitial') || initial;
         const myColor   = localStorage.getItem('userAvatarColor') || color;
         topAv.textContent = myInitial;
         topAv.style.backgroundColor = myColor;
 
-        // Big avatar for viewed profile
         const bigAv = document.getElementById('bigAvatar');
         bigAv.textContent = initial;
         bigAv.style.backgroundColor = color;
 
         document.getElementById('heroName').textContent   = name;
         document.getElementById('heroHandle').textContent = handle;
+        document.getElementById('heroBio').textContent = (bio || '').trim() || 'No bio yet.';
         document.title = isOwnProfile ? 'CopyCook - Profile' : name + ' - CopyCook';
+
+        if (isOwnProfile) {
+            localStorage.setItem('userDisplayName', name);
+            localStorage.setItem('userInitial', initial);
+            localStorage.setItem('userAvatarColor', color);
+            localStorage.setItem('profileFirstName', profileModel.firstName || '');
+            localStorage.setItem('profileLastName', profileModel.lastName || '');
+            localStorage.setItem('profileBio', bio || '');
+        }
+    }
+
+    function openEditProfileModal() {
+        document.getElementById('firstNameInput').value = profileModel.firstName || '';
+        document.getElementById('lastNameInput').value = profileModel.lastName || '';
+        document.getElementById('bioInput').value = profileModel.bio || '';
+        document.getElementById('editProfileModal').classList.add('active');
+    }
+
+    function closeEditProfileModal() {
+        document.getElementById('editProfileModal').classList.remove('active');
+    }
+
+    async function saveEditedProfile() {
+        const me = getSignedInUid();
+        if (!me) {
+            closeEditProfileModal();
+            return;
+        }
+        const firstName = document.getElementById('firstNameInput').value.trim();
+        const lastName = document.getElementById('lastNameInput').value.trim();
+        const bio = document.getElementById('bioInput').value.trim();
+        const nextModel = { firstName, lastName, bio };
+        const fullName = fullNameFromModel(nextModel) || localStorage.getItem('userDisplayName') || 'Your Name';
+        const email = localStorage.getItem('userEmail') || '';
+        const color = localStorage.getItem('userAvatarColor') || colorFor(fullName);
+
+        profileModel = nextModel;
+        applyProfileUI(initialsFromName(fullName), color, fullName, email, bio);
+        closeEditProfileModal();
+
+        try {
+            await setDoc(doc(db, 'users', me), {
+                firstName,
+                lastName,
+                bio,
+                displayName: fullName
+            }, { merge: true });
+        } catch (e) {
+            console.warn('Could not save profile to Firestore:', e);
+        }
+    }
+
+    function followingRef(userUid, targetUid) {
+        return doc(db, 'users', userUid, 'following', targetUid);
+    }
+
+    function updateFollowButton(isFollowing) {
+        const btn = document.getElementById('followToggleBtn');
+        if (!btn) return;
+        btn.textContent = isFollowing ? 'Following' : 'Follow';
+        btn.dataset.following = isFollowing ? 'true' : 'false';
+        btn.classList.toggle('btn-outline', isFollowing);
+        btn.classList.toggle('btn-solid', !isFollowing);
+    }
+
+    function applyFollowActionVisibility() {
+        const shareBtn = document.getElementById('shareProfileBtn');
+        const editBtn = document.getElementById('editProfileBtn');
+        const followBtn = document.getElementById('followToggleBtn');
+        if (shareBtn) shareBtn.style.display = isOwnProfile ? '' : 'none';
+        if (editBtn) editBtn.style.display = isOwnProfile ? '' : 'none';
+        if (followBtn) followBtn.style.display = isOwnProfile ? 'none' : '';
+        if (!isOwnProfile) closeEditProfileModal();
+    }
+
+    async function loadFollowStats(profileUid) {
+        try {
+            const [followersSnap, followingSnap] = await Promise.all([
+                getDocs(query(collectionGroup(db, 'following'), where('targetUid', '==', profileUid))),
+                getDocs(collection(db, 'users', profileUid, 'following'))
+            ]);
+
+            const followersCount = followersSnap.size;
+            const followingCount = followingSnap.size;
+            document.getElementById('statFollowers').textContent = String(followersCount);
+            document.getElementById('statFollowing').textContent = String(followingCount);
+
+            if (isOwnProfile) {
+                localStorage.setItem('ccFollowers', String(followersCount));
+                localStorage.setItem('ccFollowing', String(followingCount));
+            }
+        } catch (e) {
+            console.warn('Could not load follow stats:', e);
+            // Fallback when collectionGroup query/index is unavailable:
+            // scan users and count who has users/{uid}/following/{profileUid}.
+            try {
+                const usersSnap = await getDocs(collection(db, 'users'));
+                const checks = usersSnap.docs.map((u) => getDoc(doc(db, 'users', u.id, 'following', profileUid)));
+                const followDocs = await Promise.all(checks);
+                const followerCount = followDocs.filter((d) => d.exists()).length;
+                document.getElementById('statFollowers').textContent = String(followerCount);
+                if (isOwnProfile) localStorage.setItem('ccFollowers', String(followerCount));
+            } catch (scanErr) {
+                console.warn('Fallback follower scan failed:', scanErr);
+                const fallbackFollowers = isOwnProfile ? (localStorage.getItem('ccFollowers') || '0') : '0';
+                document.getElementById('statFollowers').textContent = fallbackFollowers;
+            }
+
+            try {
+                const myFollowingSnap = await getDocs(collection(db, 'users', profileUid, 'following'));
+                document.getElementById('statFollowing').textContent = String(myFollowingSnap.size);
+                if (isOwnProfile) localStorage.setItem('ccFollowing', String(myFollowingSnap.size));
+            } catch (_) {
+                const fallbackFollowing = isOwnProfile ? (localStorage.getItem('ccFollowing') || '0') : '0';
+                document.getElementById('statFollowing').textContent = fallbackFollowing;
+            }
+        }
+    }
+
+    function getSignedInUid() {
+        const authUid = auth.currentUser?.uid || null;
+        if (authUid) {
+            localStorage.setItem('userUID', authUid);
+            return authUid;
+        }
+        return null;
+    }
+
+    async function loadFollowState(viewedUid) {
+        const me = getSignedInUid();
+        if (isOwnProfile || !me) return;
+        const relSnap = await getDoc(followingRef(me, viewedUid));
+        updateFollowButton(relSnap.exists());
+    }
+
+    async function toggleFollow() {
+        const me = getSignedInUid();
+        if (followBusy || isOwnProfile || !currentProfileUid) return;
+        if (!me) {
+            window.alert('Please log in again to follow users.');
+            return;
+        }
+        const btn = document.getElementById('followToggleBtn');
+        followBusy = true;
+
+        try {
+            const currentlyFollowing = btn?.dataset.following === 'true';
+            const myUserSnap = await getDoc(doc(db, 'users', me));
+            const myData = myUserSnap.exists() ? myUserSnap.data() : {};
+            const myName = myData.displayName || localStorage.getItem('userDisplayName') || 'User';
+            const myEmail = myData.email || localStorage.getItem('userEmail') || '';
+            const myColor = myData.avatarColor || localStorage.getItem('userAvatarColor') || colorFor(myName);
+
+            const payload = {
+                uid: me,
+                displayName: myName,
+                email: myEmail,
+                avatarColor: myColor,
+                targetUid: currentProfileUid,
+                followedAt: serverTimestamp()
+            };
+            const followingDoc = followingRef(me, currentProfileUid);
+
+            if (currentlyFollowing) {
+                await deleteDoc(followingDoc);
+            } else {
+                await setDoc(followingDoc, payload, { merge: true });
+            }
+            updateFollowButton(!currentlyFollowing);
+            const followersEl = document.getElementById('statFollowers');
+            const currentFollowers = parseInt(followersEl?.textContent || '0', 10) || 0;
+            if (followersEl) followersEl.textContent = String(currentlyFollowing ? Math.max(0, currentFollowers - 1) : currentFollowers + 1);
+
+            const nextFollowing = currentlyFollowing
+                ? Math.max(0, parseInt(localStorage.getItem('ccFollowing') || '0', 10) - 1)
+                : parseInt(localStorage.getItem('ccFollowing') || '0', 10) + 1;
+            localStorage.setItem('ccFollowing', String(nextFollowing));
+
+            await loadFollowStats(currentProfileUid);
+            if (me) {
+                try {
+                    const myFollowingSnap = await getDocs(collection(db, 'users', me, 'following'));
+                    localStorage.setItem('ccFollowing', String(myFollowingSnap.size));
+                } catch (_) {
+                    // Keep optimistic count in localStorage.
+                }
+            }
+        } catch (e) {
+            console.warn('Could not update follow relationship:', e);
+            const authUid = auth.currentUser?.uid || 'none';
+            const localUid = localStorage.getItem('userUID') || 'none';
+            const msg = (e && e.code)
+                ? `Follow failed: ${e.code} (auth:${authUid}, local:${localUid})`
+                : 'Follow failed. Please try again.';
+            window.alert(msg);
+        } finally {
+            followBusy = false;
+        }
+    }
+
+    function mapFolderDoc(d) {
+        const data = d.data();
+        const raw = data.savedRecipes || data.recipes || [];
+        const privacy = (data.privacy || 'private').toString().toLowerCase().trim();
+        return {
+            id:         d.id,
+            name:       data.name || 'Folder',
+            privacy,
+            recipes:    Array.isArray(raw) ? raw : [],
+            coverImage: data.coverImage || null,
+        };
+    }
+
+    function isPublicFolder(f) {
+        return f.privacy === 'public';
+    }
+
+    /**
+     * Load another user's public folders. Must use where('privacy' == 'public') so Firestore
+     * can prove the query only returns readable docs (plain collection reads often fail with
+     * permission-denied when rules allow owner OR public per document).
+     */
+    async function fetchPublicFoldersForOtherUser(uid) {
+        const mergeSnaps = (snaps) => {
+            const seen = new Set();
+            const out = [];
+            snaps.forEach((snap) => {
+                snap.docs.forEach((d) => {
+                    if (seen.has(d.id)) return;
+                    seen.add(d.id);
+                    out.push(mapFolderDoc(d));
+                });
+            });
+            return out.filter(isPublicFolder);
+        };
+        try {
+            const q = query(
+                collection(db, 'users', uid, 'folders'),
+                where('privacy', 'in', ['public', 'Public'])
+            );
+            const snap = await getDocs(q);
+            return mergeSnaps([snap]);
+        } catch (e) {
+            if (e && e.code !== 'failed-precondition') throw e;
+            const out = [];
+            for (const p of ['public', 'Public']) {
+                const q = query(collection(db, 'users', uid, 'folders'), where('privacy', '==', p));
+                out.push(await getDocs(q));
+            }
+            return mergeSnaps(out);
+        }
     }
 
     // ── Load saves (public folders) ───────────────────────────────────────────
@@ -564,23 +979,12 @@
         try {
             let publicFolders;
             if (isOwnProfile) {
-                const allFolders = await getFolders(uid);
-                publicFolders = allFolders.filter(f => f.privacy === 'public');
+                const snap = await getDocs(collection(db, 'users', uid, 'folders'));
+                publicFolders = snap.docs.map(mapFolderDoc).filter(isPublicFolder);
             } else {
-                // Query only public folders directly from Firestore
-                const q = query(
-                    collection(db, 'users', uid, 'folders'),
-                    where('privacy', '==', 'public')
-                );
-                const snap = await getDocs(q);
-                publicFolders = snap.docs.map(d => ({
-                    id:         d.id,
-                    name:       d.data().name,
-                    privacy:    'public',
-                    recipes:    d.data().savedRecipes || [],
-                    coverImage: d.data().coverImage || null,
-                }));
+                publicFolders = await fetchPublicFoldersForOtherUser(uid);
             }
+
             const totalRecipes = publicFolders.reduce((sum, f) => sum + (f.recipes || []).length, 0);
             document.getElementById('statSaves').textContent = totalRecipes;
 
@@ -603,7 +1007,22 @@
 
                 const card = document.createElement('div');
                 card.className = 'folder-card';
-                card.onclick = () => window.location.href = `folder.html?id=${folder.id}${!isOwnProfile ? '&uid=' + encodeURIComponent(uid) : ''}`;
+                card.onclick = () => {
+                    const q = new URLSearchParams();
+                    q.set('id', folder.id);
+                    if (!isOwnProfile) q.set('uid', uid);
+                    if (!isOwnProfile && sourceParam === 'messages') {
+                        q.set('source', 'messages');
+                        if (openConvParam) q.set('openConv', openConvParam);
+                        if (otherUidParam) q.set('otherUid', otherUidParam);
+                        if (otherNameParam) q.set('otherName', otherNameParam);
+                    }
+                    if (isOwnProfile) {
+                        q.set('source', 'ownProfile');
+                        if (sourceParam) q.set('profileSource', sourceParam);
+                    }
+                    window.location.href = `folder.html?${q.toString()}`;
+                };
                 card.innerHTML = `
                     <div class="folder-thumb">
                         <img src="${thumb}" alt="${folder.name}" loading="lazy"
@@ -619,16 +1038,24 @@
         } catch (e) {
             console.warn('Could not load saves:', e);
             document.getElementById('statSaves').textContent = '0';
-            grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🔖</div><p>Couldn't load folders</p></div>`;
+            const code = e && e.code ? String(e.code) : '';
+            const extra = code === 'permission-denied'
+                ? '<span style="display:block;margin-top:8px;font-size:12px;color:#9A8A80;">Deploy updated <code>firestore.rules</code> (public folder read + <code>public</code> or <code>Public</code>), then run <code>firebase deploy --only firestore:rules</code>.</span>'
+                : (code === 'failed-precondition'
+                    ? '<span style="display:block;margin-top:8px;font-size:12px;color:#9A8A80;">If this mentions an index, open the link in the browser console to create it in Firebase.</span>'
+                    : '');
+            grid.innerHTML =
+                `<div class="empty-state"><div class="empty-icon">🔖</div><p>Couldn't load folders</p>${extra}</div>`;
         }
     }
 
-    // ── Load likes ────────────────────────────────────────────────────────────
+    // ── Load likes — reads from users/{uid}/likes subcollection ──────────────
     async function loadLikes(uid) {
+        const grid = document.getElementById('likesGrid');
         try {
-            const snap  = await getDocs(collection(db, 'users', uid, 'likedRecipes'));
-            const items = [];
-            snap.forEach(d => items.push(d.data()));
+            const snap  = await getDocs(collection(db, 'users', uid, 'likes'));
+            const items = snap.docs.map(d => d.data());
+
             document.getElementById('statLikes').textContent = items.length;
             renderLikeCards(items);
         } catch (e) {
@@ -653,23 +1080,35 @@
         }
 
         items.forEach(item => {
-            const title = item.strMeal || item.name || item.title || 'Recipe';
-            const thumb = item.strMealThumb || item.thumb || item.image
+            const title = item.strMeal || item.name || 'Recipe';
+            const thumb = item.strMealThumb || item.thumb
                 || 'https://www.themealdb.com/images/media/meals/llcbn01574260722.jpg';
-            const cat   = item.strCategory || item.category || '';
             const id    = item.idMeal || item.id;
 
             const card = document.createElement('div');
             card.className = 'recipe-card';
-            if (id) card.onclick = () => window.location.href = `../Home page/recipe.html?id=${id}`;
+            if (id) {
+                const rawId = String(id);
+                card.onclick = () => {
+                    if (rawId.startsWith('post-')) {
+                        const postId = rawId.replace(/^post-/, '');
+                        window.location.href = `../Home page/community-recipe.html?id=${encodeURIComponent(postId)}`;
+                        return;
+                    }
+                    window.location.href = `../Home page/recipe.html?id=${encodeURIComponent(rawId)}`;
+                };
+            }
 
             card.innerHTML = `
-                <div class="heart-badge">❤️</div>
+                <div class="heart-badge" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#F06292"/>
+                    </svg>
+                </div>
                 <img src="${thumb}" alt="${title}" loading="lazy"
                      onerror="this.src='https://www.themealdb.com/images/media/meals/llcbn01574260722.jpg'">
                 <div class="recipe-card-body">
                     <div class="recipe-card-title">${title}</div>
-                    ${cat ? `<div class="recipe-card-meta">${cat}</div>` : ''}
                 </div>`;
             grid.appendChild(card);
         });
@@ -708,10 +1147,68 @@
             return;
         }
 
+        if (user) localStorage.setItem('userUID', user.uid);
+        signedInUid = user ? user.uid : null;
+        currentProfileUid = targetUid;
+
+        isOwnProfile = !viewUid || (user && viewUid === user.uid);
+        applyFollowActionVisibility();
+
         await loadProfile(targetUid, isOwnProfile);
         await loadSaves(targetUid);
         await loadLikes(targetUid);
+        await loadFollowStats(targetUid);
+        await loadFollowState(targetUid);
     });
+
+    const editBtn = document.getElementById('editProfileBtn');
+    const cancelEditBtn = document.getElementById('cancelEditProfileBtn');
+    const saveEditBtn = document.getElementById('saveEditProfileBtn');
+    const editModal = document.getElementById('editProfileModal');
+    if (editBtn) editBtn.addEventListener('click', openEditProfileModal);
+    if (cancelEditBtn) cancelEditBtn.addEventListener('click', closeEditProfileModal);
+    if (saveEditBtn) {
+        saveEditBtn.addEventListener('click', () => {
+            void saveEditedProfile();
+        });
+    }
+    if (editModal) {
+        editModal.addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeEditProfileModal();
+        });
+    }
+
+    const followBtn = document.getElementById('followToggleBtn');
+    if (followBtn) {
+        followBtn.addEventListener('click', () => {
+            void toggleFollow();
+        });
+    }
+
+    window.toggleFollowFromButton = function() {
+        if (followBusy) return;
+        void toggleFollow();
+    };
+
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn && sourceParam === 'messages' && openConvParam) {
+        const q = new URLSearchParams({
+            openConv: openConvParam,
+            otherUid: otherUidParam || '',
+            otherName: otherNameParam || ''
+        });
+        backBtn.onclick = null;
+        backBtn.addEventListener('click', () => {
+            window.location.href = '../Messages page/Messages.html?' + q.toString();
+        });
+    }
+    if (backBtn && isOwnProfile && sourceParam === 'saved') {
+        backBtn.onclick = null;
+        backBtn.addEventListener('click', () => {
+            window.location.href = 'saved.html';
+        });
+    }
 </script>
+<script type="module" src="../messages-unread-nav.js"></script>
 </body>
 </html>

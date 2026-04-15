@@ -27,12 +27,13 @@
         .nav-icon:hover { transform: scale(1.1); }
         .nav-icon img { width: 100%; height: 100%; border-radius: 50%; }
         .nav-icon.active { box-shadow: 0 0 0 3px #E8B4B4; }
-        .notification-badge {
-            position: absolute; top: -5px; right: -5px;
-            background-color: #D4A5A5; color: white;
-            font-size: 10px; font-weight: bold; padding: 2px 6px;
-            border-radius: 10px; min-width: 18px; text-align: center;
+        .messages-unread-dot {
+            position: absolute; top: 0; right: 0;
+            width: 10px; height: 10px; border-radius: 50%;
+            background: #F06292; border: 2px solid #F5EFE7; box-sizing: border-box;
+            display: none; pointer-events: none;
         }
+        .messages-unread-dot.is-visible { display: block; }
         .nav-bottom { margin-top: auto; padding-bottom: 20px; }
 
         /* ── Main ── */
@@ -85,6 +86,13 @@
             display: flex; align-items: center; justify-content: center;
         }
         .action-btn:hover { background: rgba(212,165,165,0.15); transform: scale(1.1); }
+        .save-action-btn {
+            margin-left: auto; background-color: #9FB19F; color: white;
+            border: none; padding: 10px 28px; border-radius: 12px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            font-family: 'Poppins', sans-serif; transition: background 0.2s, transform 0.2s;
+        }
+        .save-action-btn:hover { background-color: #8AA08A; transform: scale(1.03); }
         .recipe-image-wrap {
             border-radius: 20px; overflow: hidden;
             flex: 1; min-height: 420px;
@@ -203,6 +211,148 @@
         .no-comments { text-align: center; color: #ABABAB; font-size: 14px; padding: 20px 0; }
         .comments-loading { text-align: center; color: #9FB19F; font-size: 13px; padding: 16px 0; }
 
+        /* ── Save popup ── */
+        .save-popup-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.4); z-index: 1100;
+            align-items: center; justify-content: center;
+        }
+        .save-popup-overlay.active { display: flex; }
+
+        .save-popup {
+            background: #fff; border: 2px solid #E8B4B4;
+            border-radius: 24px; padding: 28px 28px 24px;
+            width: 420px; max-width: 95vw; max-height: 90vh;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.18);
+            display: flex; flex-direction: column; gap: 18px;
+            overflow: hidden; overflow-y: auto;
+            animation: popIn 0.22s cubic-bezier(.34,1.56,.64,1);
+        }
+        @keyframes popIn { from { transform: scale(0.88); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .save-popup-header { display: flex; align-items: center; justify-content: space-between; }
+        .save-popup-title { font-size: 20px; font-weight: 700; color: #2A2A2A; }
+        .save-popup-close {
+            background: none; border: none; cursor: pointer;
+            font-size: 20px; color: #9A9A9A; line-height: 1;
+            padding: 2px 6px; border-radius: 6px; transition: color 0.2s;
+        }
+        .save-popup-close:hover { color: #D4A5A5; }
+        .save-folders-list {
+            display: flex; flex-direction: column; gap: 8px;
+            max-height: 260px; overflow-y: auto;
+        }
+        .save-folders-list::-webkit-scrollbar { width: 5px; }
+        .save-folders-list::-webkit-scrollbar-thumb { background: #E8B4B4; border-radius: 5px; }
+        .save-folder-item {
+            display: flex; align-items: center; gap: 14px;
+            padding: 10px 12px; border-radius: 14px;
+            border: 1.5px solid #F0E4E4;
+            cursor: pointer; transition: background 0.18s, border-color 0.18s;
+            background: #fff;
+        }
+        .save-folder-item:hover { background: #FDF5F5; border-color: #E8B4B4; }
+        .save-folder-item.selected { background: #FDF5F5; border-color: #D4A5A5; }
+        .save-folder-thumb {
+            width: 46px; height: 46px; border-radius: 10px;
+            overflow: hidden; flex-shrink: 0; background: #F0E4E4;
+        }
+        .save-folder-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .save-folder-info { flex: 1; }
+        .save-folder-name { font-size: 14px; font-weight: 700; color: #2A2A2A; }
+        .save-folder-count { font-size: 12px; color: #A08080; margin-top: 1px; }
+        .save-folder-radio {
+            width: 22px; height: 22px; border-radius: 50%;
+            border: 2px solid #D4A5A5; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.18s;
+        }
+        .save-folder-item.selected .save-folder-radio { background: #D4A5A5; }
+        .save-folder-item.selected .save-folder-radio::after {
+            content: ''; width: 8px; height: 8px; border-radius: 50%; background: white;
+        }
+        .new-folder-row {
+            display: flex; gap: 10px; align-items: center;
+            flex-wrap: nowrap; width: 100%;
+        }
+        .new-folder-input {
+            flex: 1; min-width: 0; border: 1.5px solid #E8B4B4; border-radius: 12px;
+            padding: 11px 14px; font-size: 14px;
+            font-family: 'Poppins', sans-serif; color: #2A2A2A;
+            outline: none; background: white; transition: border-color 0.2s;
+        }
+        .new-folder-input:focus { border-color: #D4A5A5; }
+        .new-folder-input::placeholder { color: #C4A8A8; }
+        .create-folder-btn {
+            background: #9FB19F; color: white;
+            border: none; border-radius: 12px;
+            padding: 11px 18px; font-size: 14px; font-weight: 600;
+            font-family: 'Poppins', sans-serif; cursor: pointer;
+            white-space: nowrap; transition: background 0.2s;
+        }
+        .create-folder-btn:hover { background: #8AA08A; }
+        .privacy-row { display: flex; gap: 10px; }
+        .privacy-btn {
+            flex: 1; padding: 10px; border-radius: 12px;
+            border: 1.5px solid #E8B4B4; background: white;
+            font-size: 13px; font-weight: 600;
+            font-family: 'Poppins', sans-serif; color: #9A9A9A;
+            cursor: pointer; transition: all 0.18s;
+        }
+        .privacy-btn.active { background: #9FB19F; border-color: #9FB19F; color: white; }
+        .save-popup-actions { display: flex; gap: 10px; }
+        .sp-cancel-btn, .sp-save-btn {
+            flex: 1; padding: 13px; border-radius: 14px; border: none;
+            font-size: 14px; font-weight: 600;
+            font-family: 'Poppins', sans-serif; cursor: pointer; transition: all 0.18s;
+        }
+        .sp-cancel-btn { background: #F0EAE0; color: #5A5A5A; }
+        .sp-cancel-btn:hover { background: #E8E0D4; }
+        .sp-save-btn { background: #D4A5A5; color: white; }
+        .sp-save-btn:hover { background: #c49090; }
+        .sp-save-btn:disabled { background: #E0C8C8; cursor: not-allowed; }
+
+        /* Share modal */
+        .share-modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); z-index: 1200;
+            align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            width: 420px; max-width: 92vw;
+            background: #FDFBF7; border: 2px solid #E8B4B4; border-radius: 22px;
+            padding: 22px;
+        }
+        .share-title { font-size: 19px; font-weight: 700; color: #2A2A2A; margin-bottom: 12px; }
+        .share-search {
+            display: flex; align-items: center; gap: 8px;
+            background: #F0EBE3; border-radius: 12px; padding: 10px 12px; margin-bottom: 12px;
+        }
+        .share-search input {
+            flex: 1; border: none; background: transparent; outline: none;
+            font-size: 14px; font-family: 'Poppins', sans-serif; color: #3A3A3A;
+        }
+        .share-results { max-height: 260px; overflow-y: auto; }
+        .share-user {
+            display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 12px; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .share-user:hover { background: #F0EBE3; }
+        .share-avatar {
+            width: 38px; height: 38px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 14px; flex-shrink: 0;
+        }
+        .share-name { font-size: 14px; font-weight: 600; color: #2A2A2A; }
+        .share-sub { font-size: 12px; color: #9A9A9A; }
+        .share-empty { text-align: center; font-size: 13px; color: #9A9A9A; padding: 18px 10px; }
+        .share-actions { margin-top: 12px; }
+        .share-close-btn {
+            width: 100%; border: none; border-radius: 12px; padding: 11px;
+            background: #F0EBE3; color: #5A5A5A; font-size: 14px; font-weight: 600;
+            font-family: 'Poppins', sans-serif; cursor: pointer;
+        }
+
         /* ── Logout popup ── */
         .logout-popup {
             display: none; position: fixed; top: 0; left: 0;
@@ -273,9 +423,9 @@
             <a href="../Saved page/saved.html" class="nav-icon">
                 <img src="save-icon.png" alt="Saved">
             </a>
-            <a href="../Messages page/Messages.html" class="nav-icon">
-                <img src="message.png" alt="Messages">
-                <span class="notification-badge">10</span>
+            <a href="../Messages page/Messages.html" class="nav-icon" aria-label="Messages">
+                <img src="message.png" alt="">
+                <span class="messages-unread-dot" aria-hidden="true"></span>
             </a>
         </nav>
         <div class="nav-bottom">
@@ -325,7 +475,7 @@
 <div class="comment-drawer-overlay" id="commentDrawerOverlay" onclick="closeCommentDrawer()"></div>
 <div class="comment-drawer" id="commentDrawer">
     <div class="drawer-header">
-        <span class="drawer-title">💬 Comments <span id="drawerCommentCount" style="font-size:14px;color:#9A9A9A;font-weight:500"></span></span>
+        <span class="drawer-title"> Comments <span id="drawerCommentCount" style="font-size:14px;color:#9A9A9A;font-weight:500"></span></span>
         <button class="drawer-close" onclick="closeCommentDrawer()">&#x2715;</button>
     </div>
     <div class="drawer-body" id="drawerBody">
@@ -336,14 +486,60 @@
     </div>
 </div>
 
+<!-- Save to Folder Popup -->
+<div id="savePopupOverlay" class="save-popup-overlay" onclick="closeSavePopup(event)">
+    <div class="save-popup">
+        <div class="save-popup-header">
+            <span class="save-popup-title">Save to folder</span>
+            <button class="save-popup-close" onclick="closeSavePopup()">✕</button>
+        </div>
+        <div class="save-folders-list" id="saveFoldersList">
+            <p style="font-size:13px;color:#9A9A9A;padding:4px 0;">Loading folders…</p>
+        </div>
+        <div class="new-folder-row">
+            <input type="text" class="new-folder-input" id="newFolderNameInput" placeholder="New folder name…" maxlength="40">
+            <button class="create-folder-btn" onclick="confirmCreateFolder()">+ Create</button>
+        </div>
+        <div class="privacy-row">
+            <button class="privacy-btn active" id="privBtnPrivate" onclick="selectSavePrivacy('private')">Private</button>
+            <button class="privacy-btn" id="privBtnPublic" onclick="selectSavePrivacy('public')">Public</button>
+        </div>
+        <div class="save-popup-actions">
+            <button class="sp-cancel-btn" onclick="closeSavePopup()">Cancel</button>
+            <button class="sp-save-btn" id="spSaveBtn" onclick="confirmSaveToFolder()">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Share modal -->
+<div id="shareModalOverlay" class="share-modal-overlay" onclick="closeShareModal(event)">
+    <div class="share-modal">
+        <div class="share-title">Send recipe to</div>
+        <div class="share-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke="#9A9A9A" stroke-width="2"/>
+                <path d="M16 16L20 20" stroke="#9A9A9A" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input id="shareUserSearch" type="text" placeholder="Search users by name or email">
+        </div>
+        <div id="shareUserResults" class="share-results">
+            <div class="share-empty">Loading suggestions…</div>
+        </div>
+        <div class="share-actions">
+            <button class="share-close-btn" onclick="closeShareModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script type="module">
 import { db, auth } from '../firebase-config.js';
+import { getFolders, createFolder, saveRecipe, dedupeUsersByEmail } from '../firebase-functions.js';
 import {
-    doc, getDoc, collection, addDoc, getDocs, deleteDoc,
-    query, orderBy, serverTimestamp
+    doc, getDoc, setDoc, collection, addDoc, getDocs, deleteDoc,
+    query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // ── User state ────────────────────────────────────────────────────────────────
@@ -353,6 +549,10 @@ const avatarColor = localStorage.getItem('userAvatarColor') || '#9FB19F';
 const userInitial = localStorage.getItem('userInitial') || displayName[0]?.toUpperCase() || '?';
 
 let currentPostId = null;
+let currentPostData = null;
+let selectedFolderId = null;
+let savePrivacy = 'private';
+let shareUsersCache = null;
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
 (function() {
@@ -381,19 +581,278 @@ window.closeLogoutPopup  = ()  => { document.getElementById('logoutPopup').class
 window.handleLogout      = ()  => { localStorage.clear(); sessionStorage.clear(); window.location.href = '../login.html'; };
 
 // ── Like ──────────────────────────────────────────────────────────────────────
-window.toggleLike = function(btn) {
-    const path  = btn.querySelector('#likePathEl');
-    const liked = path.getAttribute('fill') === '#D4A5A5';
-    path.setAttribute('fill', liked ? 'none' : '#D4A5A5');
+function likeRef(userId, recipeId) {
+    return doc(db, 'users', userId, 'likes', String(recipeId));
+}
+
+async function likeCommunityRecipe(userId, post) {
+    await setDoc(likeRef(userId, `post-${post.id}`), {
+        idMeal: `post-${post.id}`,
+        strMeal: post.mealName || 'Community Recipe',
+        strMealThumb: post.postImg || PLACEHOLDER_IMAGES[0],
+        likedAt: new Date().toISOString()
+    });
+}
+
+async function unlikeCommunityRecipe(userId, postId) {
+    await deleteDoc(likeRef(userId, `post-${postId}`));
+}
+
+async function isCommunityRecipeLiked(userId, postId) {
+    return (await getDoc(likeRef(userId, `post-${postId}`))).exists();
+}
+
+window.toggleLike = async function(btn) {
+    if (!uid || !currentPostData) {
+        showToast('Log in to like recipes.', 'error');
+        return;
+    }
+    const path = btn.querySelector('#likePathEl');
+    const wasLiked = btn.classList.contains('liked');
+    btn.classList.toggle('liked', !wasLiked);
+    path.setAttribute('fill', wasLiked ? 'none' : '#D4A5A5');
+
+    try {
+        if (wasLiked) await unlikeCommunityRecipe(uid, currentPostData.id);
+        else await likeCommunityRecipe(uid, currentPostData);
+    } catch (err) {
+        console.error('Like toggle failed:', err);
+        btn.classList.toggle('liked', wasLiked);
+        path.setAttribute('fill', wasLiked ? '#D4A5A5' : 'none');
+        showToast('Could not update like.', 'error');
+    }
 };
 
-// ── Share ─────────────────────────────────────────────────────────────────────
-window.shareRecipe = function() {
-    if (navigator.share) {
-        navigator.share({ title: document.title, url: window.location.href });
-    } else {
-        navigator.clipboard.writeText(window.location.href).then(() => showToast('Link copied ✓'));
+async function applyLikeState(postId) {
+    if (!uid) return;
+    try {
+        const liked = await isCommunityRecipeLiked(uid, postId);
+        const btn = document.getElementById('likeBtn');
+        const path = document.getElementById('likePathEl');
+        if (!btn || !path) return;
+        btn.classList.toggle('liked', liked);
+        path.setAttribute('fill', liked ? '#D4A5A5' : 'none');
+    } catch (err) {
+        console.error('applyLikeState error:', err);
     }
+}
+
+// ── Share ─────────────────────────────────────────────────────────────────────
+function avatarColorForName(name) {
+    const colors = ['#D4A5A5','#9FB19F','#A5B4D4','#D4C4A5','#B4A5D4','#A5D4C4','#D4A5B4','#C4D4A5'];
+    let h = 0;
+    for (const c of (name || 'U')) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+    return colors[h % colors.length];
+}
+
+// ── Save popup ──────────────────────────────────────────────────────────────
+async function openSavePopup() {
+    if (!currentPostData) return;
+    selectedFolderId = null;
+    document.getElementById('newFolderNameInput').value = '';
+    selectSavePrivacy('private');
+    document.getElementById('savePopupOverlay').classList.add('active');
+    await renderSaveFolders();
+}
+window.openSavePopup = openSavePopup;
+
+window.closeSavePopup = (e) => {
+    const overlay = document.getElementById('savePopupOverlay');
+    if (!e || e.target === overlay || (typeof e === 'object' && e.target === e.currentTarget)) {
+        overlay.classList.remove('active');
+    }
+};
+
+window.selectSavePrivacy = (p) => {
+    savePrivacy = p;
+    document.getElementById('privBtnPrivate').className = `privacy-btn${p === 'private' ? ' active' : ''}`;
+    document.getElementById('privBtnPublic').className = `privacy-btn${p === 'public' ? ' active' : ''}`;
+};
+
+async function renderSaveFolders() {
+    const list = document.getElementById('saveFoldersList');
+    list.innerHTML = '<p style="font-size:13px;color:#9A9A9A;padding:4px 0;">Loading…</p>';
+    if (!uid) {
+        list.innerHTML = '<p style="font-size:13px;color:#9A9A9A;padding:4px 0;">Log in to save recipes.</p>';
+        return;
+    }
+
+    let folders = [];
+    try {
+        folders = await getFolders(uid);
+    } catch (err) {
+        console.error('Could not load folders:', err);
+    }
+    list.innerHTML = '';
+
+    if (!folders.length) {
+        list.innerHTML = '<p style="font-size:13px;color:#9A9A9A;padding:4px 0;">No folders yet — create one below!</p>';
+        return;
+    }
+
+    folders.forEach((folder, idx) => {
+        const thumb = folder.coverImage || PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
+        const recipeCount = (folder.recipes || []).length;
+        const countLabel = `${recipeCount} recipe${recipeCount !== 1 ? 's' : ''}`;
+        const isSelected = selectedFolderId === folder.id;
+
+        const item = document.createElement('div');
+        item.className = `save-folder-item${isSelected ? ' selected' : ''}`;
+        item.innerHTML = `
+            <div class="save-folder-thumb">
+                <img src="${thumb}" alt="${folder.name}" loading="lazy">
+            </div>
+            <div class="save-folder-info">
+                <div class="save-folder-name">${folder.name}</div>
+                <div class="save-folder-count">${countLabel}</div>
+            </div>
+            <div class="save-folder-radio"></div>`;
+
+        item.addEventListener('click', () => {
+            selectedFolderId = folder.id;
+            renderSaveFolders();
+        });
+        list.appendChild(item);
+    });
+}
+
+window.confirmCreateFolder = async () => {
+    const name = document.getElementById('newFolderNameInput').value.trim();
+    if (!name || !uid) return;
+    try {
+        await createFolder(uid, name, savePrivacy);
+        document.getElementById('newFolderNameInput').value = '';
+        await renderSaveFolders();
+    } catch (err) {
+        console.error('Create folder error:', err);
+    }
+};
+
+window.confirmSaveToFolder = async () => {
+    if (!uid || !currentPostData || !selectedFolderId) return;
+
+    const saveBtn = document.getElementById('spSaveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+
+    try {
+        await saveRecipe(uid, selectedFolderId, {
+            id: `post-${currentPostData.id}`,
+            name: currentPostData.mealName || 'Community Recipe',
+            thumb: currentPostData.postImg || PLACEHOLDER_IMAGES[0]
+        });
+        document.getElementById('savePopupOverlay').classList.remove('active');
+        showToast('Saved to folder ✓');
+    } catch (err) {
+        console.error('Save to folder error:', err);
+        showToast('Could not save recipe.', 'error');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save';
+    }
+};
+
+// ── Share to users ──────────────────────────────────────────────────────────
+function buildShareRecipePayload() {
+    if (!currentPostData) return null;
+    return {
+        id: `post-${currentPostData.id}`,
+        name: currentPostData.mealName || 'Community Recipe',
+        img: currentPostData.postImg || PLACEHOLDER_IMAGES[0]
+    };
+}
+
+async function getSuggestedUsers() {
+    if (!uid) return [];
+    try {
+        const q = query(collection(db, 'conversations'), where('participants', 'array-contains', uid));
+        const snap = await getDocs(q);
+        const ids = new Set();
+        snap.docs.forEach((d) => (d.data().participants || []).forEach((id) => { if (id !== uid) ids.add(id); }));
+        const suggested = await Promise.all(Array.from(ids).slice(0, 10).map(async (id) => {
+            const u = await getDoc(doc(db, 'users', id));
+            return u.exists() ? { uid: id, ...u.data() } : null;
+        }));
+        return dedupeUsersByEmail(suggested.filter(Boolean));
+    } catch (_) { return []; }
+}
+
+async function ensureShareUsersCache() {
+    if (shareUsersCache) return shareUsersCache;
+    const snap = await getDocs(collection(db, 'users'));
+    const raw = snap.docs.map((d) => ({ uid: d.id, ...d.data() }));
+    shareUsersCache = dedupeUsersByEmail(raw);
+    return shareUsersCache;
+}
+
+function renderShareUsers(users) {
+    const box = document.getElementById('shareUserResults');
+    if (!users.length) {
+        box.innerHTML = '<div class="share-empty">No users found.</div>';
+        return;
+    }
+    box.innerHTML = '';
+    users.forEach((u) => {
+        const item = document.createElement('div');
+        item.className = 'share-user';
+        const name = u.displayName || 'Unknown';
+        const initial = (name || 'U').charAt(0).toUpperCase();
+        item.innerHTML = `
+            <div class="share-avatar" style="background:${avatarColorForName(name)}">${initial}</div>
+            <div>
+                <div class="share-name">${name}</div>
+                <div class="share-sub">${u.email || ''}</div>
+            </div>`;
+        item.addEventListener('click', () => sendRecipeShareToUser(u));
+        box.appendChild(item);
+    });
+}
+
+async function sendRecipeShareToUser(user) {
+    if (!uid) return;
+    const payload = buildShareRecipePayload();
+    if (!payload) return;
+    const myName = displayName || 'User';
+    const otherName = user.displayName || 'User';
+    const convId = [uid, user.uid].sort().join('_');
+    const convRef = doc(db, 'conversations', convId);
+    const convSnap = await getDoc(convRef);
+    const oldUnread = convSnap.exists() ? (convSnap.data().unreadCount || {}) : {};
+    const nextUnread = (oldUnread[user.uid] || 0) + 1;
+
+    await setDoc(convRef, {
+        participants: [uid, user.uid],
+        participantNames: { [uid]: myName, [user.uid]: otherName },
+        lastMessage: `📷 Shared: ${payload.name}`,
+        lastMessageAt: serverTimestamp(),
+        unreadCount: { ...oldUnread, [uid]: 0, [user.uid]: nextUnread },
+        createdAt: convSnap.exists() ? (convSnap.data().createdAt || serverTimestamp()) : serverTimestamp()
+    }, { merge: true });
+
+    await addDoc(collection(db, 'conversations', convId, 'messages'), {
+        senderId: uid,
+        senderName: myName,
+        text: null,
+        recipe: payload,
+        createdAt: serverTimestamp()
+    });
+    closeShareModal();
+    showToast('Recipe shared ✓');
+}
+
+window.openShareModal = async () => {
+    if (!uid) {
+        showToast('Log in to share recipes.', 'error');
+        return;
+    }
+    document.getElementById('shareModalOverlay').classList.add('active');
+    document.getElementById('shareUserSearch').value = '';
+    renderShareUsers(await getSuggestedUsers());
+};
+
+window.closeShareModal = (e) => {
+    const overlay = document.getElementById('shareModalOverlay');
+    if (!e || e.target === overlay) overlay.classList.remove('active');
 };
 
 // ── Comment helpers ───────────────────────────────────────────────────────────
@@ -555,7 +1014,11 @@ window.closeCommentDrawer = function() {
 // ── Render post ───────────────────────────────────────────────────────────────
 function renderPost(post) {
     currentPostId = post.id;
+    currentPostData = post;
     const initials = (post.displayName || 'C').charAt(0).toUpperCase();
+    const authorTagAttrs = post.uid
+        ? `onclick="window.location.href='../Saved page/profile.html?uid=${encodeURIComponent(post.uid)}'" style="cursor:pointer"`
+        : `style="cursor:default"`;
 
     const ingredientRows = (post.ingredients || []).map(ing => `
         <div class="ingredient-row">
@@ -601,13 +1064,14 @@ function renderPost(post) {
                             stroke="#9FB19F" stroke-width="2" fill="none"/>
                     </svg>
                 </button>
-                <button class="action-btn" title="Share" onclick="shareRecipe()">
+                <button class="action-btn" title="Share" onclick="openShareModal()">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                         <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" stroke="#A5B4D4" stroke-width="2" fill="none"/>
                         <polyline points="16 6 12 2 8 6" stroke="#A5B4D4" stroke-width="2" fill="none"/>
                         <line x1="12" y1="2" x2="12" y2="15" stroke="#A5B4D4" stroke-width="2"/>
                     </svg>
                 </button>
+                <button class="save-action-btn" onclick="openSavePopup()">Save</button>
                 ${uid === post.uid ? `
                 <button class="delete-post-btn" onclick="deletePost()">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -627,7 +1091,7 @@ function renderPost(post) {
         <div class="right-panel">
             <h1 class="recipe-title">${post.mealName}</h1>
             <div>
-                <div class="author-tag">
+                <div class="author-tag" ${authorTagAttrs}>
                     <div class="author-avatar" style="background:${post.avatarColor || '#9FB19F'}">${initials}</div>
                     <span class="author-name">by ${post.displayName || 'Anonymous'}</span>
                 </div>
@@ -644,6 +1108,7 @@ function renderPost(post) {
     `;
 
     document.title = `CopyCook - ${post.mealName}`;
+    applyLikeState(post.id);
 }
 
 // ── Load from Firestore ───────────────────────────────────────────────────────
@@ -674,6 +1139,27 @@ async function loadPost() {
 }
 
 document.addEventListener('DOMContentLoaded', loadPost);
+document.getElementById('newFolderNameInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') window.confirmCreateFolder();
+});
+document.getElementById('savePopupOverlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('savePopupOverlay')) {
+        document.getElementById('savePopupOverlay').classList.remove('active');
+    }
+});
+document.getElementById('shareUserSearch').addEventListener('input', async function() {
+    const q = this.value.trim().toLowerCase();
+    if (!q) {
+        renderShareUsers(await getSuggestedUsers());
+        return;
+    }
+    const users = (await ensureShareUsersCache())
+        .filter((u) => u.uid !== uid)
+        .filter((u) => (u.displayName || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q))
+        .slice(0, 12);
+    renderShareUsers(users);
+});
 </script>
+<script type="module" src="../messages-unread-nav.js"></script>
 </body>
 </html>

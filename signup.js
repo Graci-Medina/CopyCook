@@ -3,7 +3,7 @@ import {
     createUserWithEmailAndPassword,
     updateProfile
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const signupForm = document.getElementById('signupForm');
 const nameInput = document.getElementById('name');
@@ -98,7 +98,9 @@ signupForm.addEventListener('submit', async function (e) {
             uid:         userCredential.user.uid,
             displayName: name,
             email:       email,
-            avatarColor: avatarColor
+            avatarColor: avatarColor,
+            onboardingComplete: false,
+            profileUpdatedAt: serverTimestamp()
         });
 
         // Save avatar info to localStorage for instant use on home page
@@ -107,15 +109,15 @@ signupForm.addEventListener('submit', async function (e) {
         localStorage.setItem('userAvatarColor', avatarColor);
         localStorage.setItem('userUID', userCredential.user.uid);
 
-        showMessage('Account created successfully! Redirecting...', 'success');
+        showMessage('Account created! Let’s personalize your feed…', 'success');
 
         signupForm.reset();
         confirmPasswordInput.classList.remove('password-match', 'password-mismatch');
         passwordWarning.classList.remove('show');
 
         setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 2000);
+            window.location.href = 'onboarding.html';
+        }, 1200);
 
     } catch (error) {
         console.error('Signup error:', error);

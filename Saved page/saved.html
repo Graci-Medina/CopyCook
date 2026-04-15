@@ -54,16 +54,13 @@
         .nav-icon img { width: 100%; height: 100%; border-radius: 50%; }
         .nav-icon.active { box-shadow: 0 0 0 3px #E8B4B4; }
 
-        .notification-badge {
-            position: absolute;
-            top: -3px; right: -3px;
-            background-color: #D4A5A5;
-            color: white;
-            font-size: 10px; font-weight: 700;
-            padding: 2px 5px;
-            border-radius: 10px;
-            min-width: 18px; text-align: center;
+        .messages-unread-dot {
+            position: absolute; top: 0; right: 0;
+            width: 10px; height: 10px; border-radius: 50%;
+            background: #F06292; border: 2px solid #F5EFE7; box-sizing: border-box;
+            display: none; pointer-events: none;
         }
+        .messages-unread-dot.is-visible { display: block; }
 
         .nav-bottom { margin-top: auto; padding-bottom: 20px; }
 
@@ -429,7 +426,7 @@
         @media (max-width: 480px) {
             .sidebar { width: 50px; padding: 15px 0; }
             .nav-icon { width: 24px; height: 24px; }
-            .notification-badge { font-size: 8px; padding: 1px 4px; }
+            .messages-unread-dot { width: 8px; height: 8px; border-width: 1.5px; }
             .folders-grid { gap: 8px; }
         }
     </style>
@@ -454,9 +451,9 @@
             <a href="../Saved page/saved.html" class="nav-icon active">
                 <img src="save-icon.png" alt="Saved">
             </a>
-            <a href="../Messages page/Messages.html" class="nav-icon">
-                <img src="message.png" alt="Messages">
-                <span class="notification-badge">10</span>
+            <a href="../Messages page/Messages.html" class="nav-icon" aria-label="Messages">
+                <img src="message.png" alt="">
+                <span class="messages-unread-dot" aria-hidden="true"></span>
             </a>
         </nav>
         <div class="nav-bottom">
@@ -496,7 +493,7 @@
                     </div>
                 </div>
                 <div class="profile-card-avatar initials" id="profileCardAvatar"></div>
-<button class="view-profile-btn" onclick="window.location.href='profile.html'">View Profile</button>            </div>
+<button class="view-profile-btn" onclick="window.location.href='profile.html?source=saved'">View Profile</button>            </div>
 
             <div class="section-header">
                 <h2 class="section-title">Your saved folders</h2>
@@ -512,14 +509,24 @@
                             Sort
                         </button>
                         <div class="sort-dropdown" id="sortDropdown">
-                            <button class="sort-option selected" data-sort="date">
+                            <button class="sort-option selected" data-sort="added-later">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                     <rect x="3" y="4" width="18" height="18" rx="2" stroke="#9FB19F" stroke-width="2" fill="none"/>
                                     <line x1="3" y1="9" x2="21" y2="9" stroke="#9FB19F" stroke-width="2"/>
                                     <line x1="8" y1="2" x2="8" y2="6" stroke="#9FB19F" stroke-width="2" stroke-linecap="round"/>
                                     <line x1="16" y1="2" x2="16" y2="6" stroke="#9FB19F" stroke-width="2" stroke-linecap="round"/>
                                 </svg>
-                                Date created
+                                Added later (newest)
+                                <span class="sort-check">✓</span>
+                            </button>
+                            <button class="sort-option" data-sort="added-first">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="#9FB19F" stroke-width="2" fill="none"/>
+                                    <line x1="3" y1="9" x2="21" y2="9" stroke="#9FB19F" stroke-width="2"/>
+                                    <line x1="8" y1="2" x2="8" y2="6" stroke="#9FB19F" stroke-width="2" stroke-linecap="round"/>
+                                    <line x1="16" y1="2" x2="16" y2="6" stroke="#9FB19F" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                                Added first (oldest)
                                 <span class="sort-check">✓</span>
                             </button>
                             <button class="sort-option" data-sort="az">
@@ -538,7 +545,7 @@
                             </button>
                         </div>
                     </div>
-                    <button class="create-btn" onclick="openCreateModal()">Create</button>
+                    <button type="button" class="create-btn" id="btnOpenCreateFolder">Create</button>
                 </div>
             </div>
 
@@ -569,12 +576,12 @@
         <h3>Create a folder</h3>
         <input type="text" id="folderNameInput" placeholder="Folder name (e.g. Quick Meals)">
         <div class="modal-privacy">
-            <button class="privacy-btn selected" id="btnPrivate" onclick="selectPrivacy('private')"> Private</button>
-            <button class="privacy-btn" id="btnPublic" onclick="selectPrivacy('public')"> Public</button>
+            <button type="button" class="privacy-btn selected" id="btnPrivate"> Private</button>
+            <button type="button" class="privacy-btn" id="btnPublic"> Public</button>
         </div>
         <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeCreateModal()">Cancel</button>
-            <button class="btn-create-confirm" onclick="createFolder()">Create</button>
+            <button type="button" class="btn-cancel" id="btnCloseCreateModal">Cancel</button>
+            <button type="button" class="btn-create-confirm" id="btnConfirmCreateFolder">Create</button>
         </div>
     </div>
 </div>
@@ -602,6 +609,8 @@
 
 <script type="module">
 import { createFolder as createFolderFS, getFolders as getFoldersFS, deleteFolder as deleteFolderFS } from '../firebase-functions.js';
+import { db } from '../firebase-config.js';
+import { collection, collectionGroup, getDocs, query, where, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // ── Constants ──
 const PLACEHOLDER_IMAGES = [
@@ -618,18 +627,35 @@ const PLACEHOLDER_IMAGES = [
 // ── State ──
 let currentTab      = 'private';
 let selectedPrivacy = 'private';
-let currentSort     = 'date';
+let currentSort     = 'added-later';
 let folders         = [];
 
 function saveFolders() { localStorage.setItem('ccFolders', JSON.stringify(folders)); }
 
 // ── Sort helper ──────────────────────────────────────────────────────────────
+function folderCreatedMs(f) {
+    const t = f.createdAt;
+    if (!t) return 0;
+    const ms = new Date(t).getTime();
+    return Number.isNaN(ms) ? 0 : ms;
+}
+
 function getSortedFolders(list) {
     const copy = [...list];
+    if (currentSort === 'added-later') {
+        copy.sort((a, b) => folderCreatedMs(b) - folderCreatedMs(a) || a.name.localeCompare(b.name));
+    }
+    if (currentSort === 'added-first') {
+        copy.sort((a, b) => folderCreatedMs(a) - folderCreatedMs(b) || a.name.localeCompare(b.name));
+    }
     if (currentSort === 'az') copy.sort((a, b) => a.name.localeCompare(b.name));
     if (currentSort === 'za') copy.sort((a, b) => b.name.localeCompare(a.name));
-    // 'date' keeps Firestore/creation order (already sorted by createdAt desc from Firestore)
     return copy;
+}
+
+function normalizeFolderPrivacy(p) {
+    const s = (p || 'private').toString().toLowerCase().trim();
+    return s === 'public' ? 'public' : 'private';
 }
 
 // ── Sort button ──────────────────────────────────────────────────────────────
@@ -687,11 +713,40 @@ function loadProfile() {
     document.getElementById('followingCount').textContent = localStorage.getItem('ccFollowing')  || '0';
 }
 
+async function loadFollowCounts(uid) {
+    if (!uid) return;
+    try {
+        const [followersSnap, followingSnap] = await Promise.all([
+            getDocs(query(collectionGroup(db, 'following'), where('targetUid', '==', uid))),
+            getDocs(collection(db, 'users', uid, 'following'))
+        ]);
+        const followerCount = String(followersSnap.size);
+        const followingCount = String(followingSnap.size);
+        document.getElementById('followerCount').textContent = followerCount;
+        document.getElementById('followingCount').textContent = followingCount;
+        localStorage.setItem('ccFollowers', followerCount);
+        localStorage.setItem('ccFollowing', followingCount);
+    } catch (err) {
+        console.warn('Could not load follow counts:', err);
+        // Fallback when collectionGroup query/index is unavailable.
+        try {
+            const usersSnap = await getDocs(collection(db, 'users'));
+            const checks = usersSnap.docs.map((u) => getDoc(doc(db, 'users', u.id, 'following', uid)));
+            const docs = await Promise.all(checks);
+            const followerCount = String(docs.filter((d) => d.exists()).length);
+            document.getElementById('followerCount').textContent = followerCount;
+            localStorage.setItem('ccFollowers', followerCount);
+        } catch (scanErr) {
+            console.warn('Fallback follower scan failed:', scanErr);
+        }
+    }
+}
+
 // ── Render folders ────────────────────────────────────────────────────────────
 function renderFolders() {
     const grid     = document.getElementById('foldersGrid');
     const empty    = document.getElementById('emptyState');
-    const filtered = getSortedFolders(folders.filter(f => f.privacy === currentTab));
+    const filtered = getSortedFolders(folders.filter(f => normalizeFolderPrivacy(f.privacy) === currentTab));
 
     grid.innerHTML = '';
 
@@ -708,7 +763,7 @@ function renderFolders() {
         card.onclick = () => openFolder(folder.id);
 
         const thumb    = folder.coverImage || PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
-        const lockIcon = folder.privacy === 'private' ? `
+        const lockIcon = normalizeFolderPrivacy(folder.privacy) === 'private' ? `
             <div class="lock-badge">
                 <svg viewBox="0 0 24 24" fill="none">
                     <rect x="5" y="11" width="14" height="10" rx="2" stroke="#5A5A5A" stroke-width="2" fill="none"/>
@@ -750,32 +805,36 @@ function renderFolders() {
 }
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
-window.setTab = function(tab) {
+function setTab(tab) {
     currentTab = tab;
     document.getElementById('tabPrivate').className = `filter-tab ${tab === 'private' ? 'active' : 'inactive'}`;
     document.getElementById('tabPublic').className  = `filter-tab ${tab === 'public'  ? 'active' : 'inactive'}`;
     renderFolders();
-};
+}
+window.setTab = setTab;
 
 // ── Create folder modal ───────────────────────────────────────────────────────
-window.openCreateModal = function() {
+function openCreateModal() {
     document.getElementById('folderNameInput').value = '';
     selectPrivacy('private');
     document.getElementById('createModal').classList.add('active');
     setTimeout(() => document.getElementById('folderNameInput').focus(), 100);
-};
+}
+window.openCreateModal = openCreateModal;
 
-window.closeCreateModal = function() {
+function closeCreateModal() {
     document.getElementById('createModal').classList.remove('active');
-};
+}
+window.closeCreateModal = closeCreateModal;
 
-window.selectPrivacy = function(p) {
+function selectPrivacy(p) {
     selectedPrivacy = p;
     document.getElementById('btnPrivate').className = `privacy-btn ${p === 'private' ? 'selected' : ''}`;
     document.getElementById('btnPublic').className  = `privacy-btn ${p === 'public'  ? 'selected' : ''}`;
-};
+}
+window.selectPrivacy = selectPrivacy;
 
-window.createFolder = async function() {
+async function createFolder() {
     const name = document.getElementById('folderNameInput').value.trim();
     if (!name) {
         document.getElementById('folderNameInput').style.borderColor = '#D4A5A5';
@@ -783,25 +842,36 @@ window.createFolder = async function() {
         return;
     }
 
+    const privacy = normalizeFolderPrivacy(selectedPrivacy);
     const newFolder = {
         id: name.replace(/\//g, '_'), name,
-        privacy: selectedPrivacy, recipes: [], coverImage: null,
+        privacy, recipes: [], coverImage: null,
         createdAt: new Date().toISOString()
     };
 
     folders.push(newFolder);
     saveFolders();
     closeCreateModal();
-    setTab(selectedPrivacy);
+    setTab(privacy);
 
     const uid = localStorage.getItem('userUID');
     if (uid) {
         try {
-            await createFolderFS(uid, name, selectedPrivacy);
+            await createFolderFS(uid, name, privacy);
             console.log('✅ Folder saved to Firestore:', name);
         } catch (err) { console.error('❌ Firestore folder save failed:', err); }
     }
-};
+}
+window.createFolder = createFolder;
+
+function wireCreateFolderControls() {
+    document.getElementById('btnOpenCreateFolder')?.addEventListener('click', openCreateModal);
+    document.getElementById('btnConfirmCreateFolder')?.addEventListener('click', () => { void createFolder(); });
+    document.getElementById('btnCloseCreateModal')?.addEventListener('click', closeCreateModal);
+    document.getElementById('btnPrivate')?.addEventListener('click', () => selectPrivacy('private'));
+    document.getElementById('btnPublic')?.addEventListener('click', () => selectPrivacy('public'));
+}
+wireCreateFolderControls();
 
 // ── Delete folder ─────────────────────────────────────────────────────────────
 let pendingDelete = null;
@@ -831,7 +901,7 @@ document.getElementById('btnConfirmDelete').addEventListener('click', async () =
     folders = folders.filter(f => f.id !== folder.id);
     saveFolders();
 
-    if (folders.filter(f => f.privacy === currentTab).length === 0) {
+    if (folders.filter(f => normalizeFolderPrivacy(f.privacy) === currentTab).length === 0) {
         document.getElementById('emptyState').style.display = 'flex';
     }
 
@@ -863,7 +933,10 @@ document.getElementById('createModal').addEventListener('click', function(e) {
 });
 
 document.getElementById('folderNameInput').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') createFolder();
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        void createFolder();
+    }
 });
 
 // ── Logout ────────────────────────────────────────────────────────────────────
@@ -887,6 +960,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadProfile();
 
     const uid = localStorage.getItem('userUID');
+    await loadFollowCounts(uid);
     if (uid) {
         try {
             folders = await getFoldersFS(uid);
@@ -903,5 +977,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     renderFolders();
 });
 </script>
+<script type="module" src="../messages-unread-nav.js"></script>
 </body>
 </html>

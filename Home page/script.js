@@ -23,6 +23,64 @@ window.toggleLogoutPopup = toggleLogoutPopup;
 window.closeLogoutPopup  = closeLogoutPopup;
 window.handleLogout      = handleLogout;
 
+// ─── VOICE SEARCH (Web Speech API) ───────────────────────────────────────────
+function initVoiceSearch() {
+    const micBtn = document.querySelector('.mic-icon');
+    if (!micBtn) return;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        micBtn.style.opacity = '0.4';
+        micBtn.title = 'Voice search not supported in this browser';
+        return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    let listening = false;
+
+    micBtn.style.cursor = 'pointer';
+    micBtn.title = 'Click to search by voice';
+
+    micBtn.addEventListener('click', () => {
+        if (listening) {
+            recognition.stop();
+            return;
+        }
+        recognition.start();
+    });
+
+    recognition.addEventListener('start', () => {
+        listening = true;
+        micBtn.style.opacity = '0.5';
+        micBtn.title = 'Listening…';
+    });
+
+    recognition.addEventListener('result', (e) => {
+        const transcript = e.results[0][0].transcript;
+        const input = document.getElementById('mainSearchInput');
+        if (input) {
+            input.value = transcript;
+            searchRecipes(transcript);
+        }
+    });
+
+    recognition.addEventListener('end', () => {
+        listening = false;
+        micBtn.style.opacity = '1';
+        micBtn.title = 'Click to search by voice';
+    });
+
+    recognition.addEventListener('error', (e) => {
+        listening = false;
+        micBtn.style.opacity = '1';
+        console.warn('Voice search error:', e.error);
+    });
+}
+
 // ─── AREAS LIST ───────────────────────────────────────────────────────────────
 let knownAreas = new Map();
 const AREA_ALIASES = {
@@ -123,14 +181,271 @@ function restoreAllRecipes(grid) {
     });
 }
 
+// ─── ONBOARDING PREFERENCES → HOME FEED ───────────────────────────────────────
+function normalizePrefsObject(p) {
+    if (!p || typeof p !== 'object') return null;
+    return {
+        cuisines: Array.isArray(p.cuisines) ? p.cuisines : [],
+        diet: Array.isArray(p.diet) ? p.diet : [],
+        skill: p.skill || null,
+        feed: Array.isArray(p.feed) ? p.feed : []
+    };
+}
+
+function parseCcPrefs() {
+    try {
+        const raw = localStorage.getItem('cc_prefs');
+        if (!raw) return null;
+        return normalizePrefsObject(JSON.parse(raw));
+    } catch (_) { return null; }
+}
+
+function prefsHaveSurveySignal(prefs) {
+    if (!prefs) return false;
+    const hasCuisines = prefs.cuisines.some(c => c && c !== 'Other');
+    const hasFeed = prefs.feed.length > 0;
+    const hasDiet = prefs.diet.some(d => d && d !== 'None');
+    return hasCuisines || hasFeed || hasDiet || !!prefs.skill;
+}
+
+/** Use personalized home after onboarding, or when local prefs look like a survey (before cc_onboarded is set). */
+function shouldUsePersonalizedFeed(prefs) {
+    if (localStorage.getItem('cc_onboarded') === 'true') return true;
+    return prefsHaveSurveySignal(prefs);
+}
+
+function prefsForHomeFeed() {
+    const p = parseCcPrefs();
+    if (p) return p;
+    if (localStorage.getItem('cc_onboarded') === 'true') return normalizePrefsObject({});
+    return null;
+}
+
+function shuffleInPlace(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+}
+
+async function addMealsFromArea(area, seen, bucket) {
+    if (!area || area === 'Other') return;
+    try {
+        const res = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?a=${encodeURIComponent(area)}`);
+        const data = await res.json();
+        (data.meals || []).forEach(m => {
+            if (!seen.has(m.idMeal)) { seen.add(m.idMeal); bucket.push(m); }
+        });
+    } catch (_) {}
+}
+
+async function addMealsFromCategory(cat, seen, bucket) {
+    try {
+        const res = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${encodeURIComponent(cat)}`);
+        const data = await res.json();
+        (data.meals || []).forEach(m => {
+            if (!seen.has(m.idMeal)) { seen.add(m.idMeal); bucket.push(m); }
+        });
+    } catch (_) {}
+}
+
+async function supplementalRecipeFill(seen, bucket, minCount) {
+    try {
+        const catRes = await fetch('https://www.themealdb.com/api/json/v1/1/categories.php');
+        const catData = await catRes.json();
+        const categories = catData.categories.map(c => c.strCategory);
+        for (const cat of categories) {
+            if (bucket.length >= minCount) break;
+            await addMealsFromCategory(cat, seen, bucket);
+        }
+    } catch (_) {}
+}
+
+const FEED_OPTION_CATEGORIES = {
+    Quick: ['Chicken', 'Pasta', 'Seafood', 'Breakfast'],
+    Healthy: ['Vegetarian', 'Vegan', 'Seafood'],
+    Desserts: ['Dessert'],
+    Trending: ['Chicken', 'Beef', 'Dessert', 'Pasta', 'Seafood'],
+    World: []
+};
+
+async function loadPersonalizedRecipes(prefs) {
+    const grid = document.getElementById('foodGrid');
+    if (!grid) return;
+    allMealsLoading = true;
+    allMealsCache = [];
+    const seen = new Set();
+    showMessage(grid, 'Loading your personalized feed…');
+
+    for (const area of prefs.cuisines || []) {
+        await addMealsFromArea(area, seen, allMealsCache);
+    }
+
+    const dietCats = new Set();
+    for (const d of prefs.diet || []) {
+        if (d === 'Vegetarian') dietCats.add('Vegetarian');
+        if (d === 'Vegan') dietCats.add('Vegan');
+        if (d === 'Pescatarian') dietCats.add('Seafood');
+    }
+    for (const c of dietCats) {
+        await addMealsFromCategory(c, seen, allMealsCache);
+    }
+
+    for (const f of prefs.feed || []) {
+        const cats = FEED_OPTION_CATEGORIES[f];
+        if (cats && cats.length) {
+            for (const c of cats) {
+                await addMealsFromCategory(c, seen, allMealsCache);
+            }
+        }
+    }
+
+    if (prefs.skill === 'Beginner') {
+        for (const c of ['Chicken', 'Pasta']) {
+            await addMealsFromCategory(c, seen, allMealsCache);
+        }
+    } else if (prefs.skill === 'Advanced') {
+        for (const c of ['Beef', 'Lamb']) {
+            await addMealsFromCategory(c, seen, allMealsCache);
+        }
+    }
+
+    if (allMealsCache.length < 24) {
+        await supplementalRecipeFill(seen, allMealsCache, 32);
+    }
+
+    shuffleInPlace(allMealsCache);
+
+    allMealsLoading = false;
+    allMealsLoaded = true;
+
+    if (allMealsCache.length === 0) {
+        allMealsLoaded = false;
+        loadAllRecipes();
+        return;
+    }
+
+    grid.innerHTML = '';
+    allMealsCache.forEach(meal => grid.appendChild(createCard(meal)));
+}
+
+function applyFeedTabPreference(prefs) {
+    if (localStorage.getItem('cc_justOnboarded')) {
+        localStorage.removeItem('cc_justOnboarded');
+    }
+    if (!prefs || !prefs.feed || !prefs.feed.length) return;
+    if (prefs.feed[0] === 'Community' && typeof window.switchTab === 'function') {
+        requestAnimationFrame(() => window.switchTab('community'));
+    }
+}
+
+function startHomeFeed() {
+    const prefs = prefsForHomeFeed();
+    if (shouldUsePersonalizedFeed(prefs)) {
+        loadPersonalizedRecipes(prefs || normalizePrefsObject({}));
+    } else {
+        loadAllRecipes();
+    }
+    applyFeedTabPreference(prefs);
+}
+
+window.applyHomePersonalization = function () {
+    const grid = document.getElementById('foodGrid');
+    const input = document.getElementById('mainSearchInput');
+    if (!grid) return;
+    if (input && input.value.trim()) return;
+    const prefs = prefsForHomeFeed();
+    if (shouldUsePersonalizedFeed(prefs)) {
+        loadPersonalizedRecipes(prefs || normalizePrefsObject({}));
+    } else {
+        loadAllRecipes();
+    }
+};
+
 // ─── SMART SEARCH ─────────────────────────────────────────────────────────────
 let searchDebounceTimer = null, isSearchActive = false;
+const GENERIC_SEARCH_CATEGORY_MAP = {
+    dessert: ['Dessert'],
+    desserts: ['Dessert'],
+    sweet: ['Dessert'],
+    sweets: ['Dessert'],
+    breakfast: ['Breakfast'],
+    brunch: ['Breakfast'],
+    dinner: ['Beef', 'Chicken', 'Lamb', 'Pasta', 'Seafood', 'Pork', 'Goat'],
+    lunch: ['Chicken', 'Beef', 'Pasta', 'Seafood', 'Vegetarian'],
+    savory: ['Beef', 'Chicken', 'Lamb', 'Seafood', 'Pork', 'Goat', 'Vegetarian'],
+    healthy: ['Vegetarian', 'Vegan', 'Seafood'],
+    quick: ['Breakfast', 'Chicken', 'Pasta', 'Seafood'],
+    snack: ['Starter', 'Side'],
+    snacks: ['Starter', 'Side']
+};
+
+function genericSearchCategories(query) {
+    const normalized = (query || '').toLowerCase().trim();
+    if (!normalized) return [];
+    const categories = new Set();
+    const terms = normalized.split(/\s+/).filter(Boolean);
+    terms.forEach((term) => {
+        const mapped = GENERIC_SEARCH_CATEGORY_MAP[term];
+        if (mapped) mapped.forEach((c) => categories.add(c));
+    });
+    if (categories.size) return Array.from(categories);
+
+    // Fallback: substring matching for phrases like "savory dinner ideas"
+    Object.keys(GENERIC_SEARCH_CATEGORY_MAP).forEach((key) => {
+        if (normalized.includes(key)) {
+            GENERIC_SEARCH_CATEGORY_MAP[key].forEach((c) => categories.add(c));
+        }
+    });
+    return Array.from(categories);
+}
+
+async function searchByGenericFoodTerm(query, grid) {
+    const categories = genericSearchCategories(query);
+    if (!categories.length) return false;
+
+    const seen = new Set();
+    const matches = [];
+    await Promise.all(categories.map(async (cat) => {
+        try {
+            const res = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${encodeURIComponent(cat)}`);
+            const data = await res.json();
+            (data.meals || []).forEach((meal) => {
+                if (seen.has(meal.idMeal)) return;
+                seen.add(meal.idMeal);
+                matches.push(meal);
+            });
+        } catch (_) {}
+    }));
+
+    grid.innerHTML = '';
+    if (!matches.length) {
+        showMessage(grid, `No recipes found for "${query}".`);
+        return true;
+    }
+
+    const header = document.createElement('p');
+    header.textContent = `${query} — ${matches.length} recipes`;
+    header.style.cssText = 'grid-column:1/-1;font-weight:600;color:#5A5A5A;padding:4px 0 8px;';
+    grid.appendChild(header);
+    matches.forEach((meal) => grid.appendChild(createCard(meal)));
+    return true;
+}
 
 async function searchRecipes(query) {
+    const tabCommunity = document.getElementById('tabCommunity');
+    if (tabCommunity && tabCommunity.classList.contains('active') && typeof window.searchCommunityPosts === 'function') {
+        window.searchCommunityPosts(query);
+        return;
+    }
+
     const grid = document.getElementById('foodGrid');
     if (!grid) return;
     showMessage(grid, 'Searching…');
     try {
+        const handledGeneric = await searchByGenericFoodTerm(query, grid);
+        if (handledGeneric) return;
+
         const cuisineMatch = matchCuisine(query);
         if (cuisineMatch) {
             const res  = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?a=${encodeURIComponent(cuisineMatch)}`);
@@ -155,55 +470,12 @@ async function searchRecipes(query) {
     }
 }
 
-// ─── SAVE MODAL (home.html) ───────────────────────────────────────────────────
-let currentSaveMeal = null, createPrivacy = 'private', selectedFolderId = null;
+// ─── SAVE POPUP ───────────────────────────────────────────────────────────────
+let currentSaveMeal  = null;
+let savePrivacy      = 'private';
+let selectedFolderId = null;
 
-function getFolders() { return JSON.parse(localStorage.getItem('ccFolders') || '[]'); }
-function saveFoldersLocal(f) { localStorage.setItem('ccFolders', JSON.stringify(f)); }
-
-function showToast(msg) {
-    const t = document.getElementById('toast');
-    if (!t) return;
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-async function openSavePopup(meal) {
-    currentSaveMeal = meal;
-    selectedFolderId = null;
-    const saveBtn = document.getElementById('btnSaveToFolder');
-    if (saveBtn) saveBtn.disabled = true;
-
-    const modal = document.getElementById('saveModal');
-    if (!modal) return;
-    modal.classList.add('active');
-
-    // Reset new-folder input
-    const nfi = document.getElementById('newFolderInput');
-    if (nfi) nfi.value = '';
-    setCreatePrivacy('private');
-
-    // Refresh folders from Firebase if possible
-    const uid = localStorage.getItem('userUID');
-    if (uid && window.fbGetFolders) {
-        try { saveFoldersLocal(await window.fbGetFolders(uid)); }
-        catch (err) { console.warn('Could not refresh folders:', err); }
-    }
-    renderFolderList();
-}
-
-function closeSaveModal() {
-    const modal = document.getElementById('saveModal');
-    if (modal) modal.classList.remove('active');
-    selectedFolderId = null;
-}
-
-function handleSaveOverlayClick(e) {
-    if (e.target === document.getElementById('saveModal')) closeSaveModal();
-}
-
-const FOLDER_PLACEHOLDER_IMAGES = [
+const PLACEHOLDER_IMAGES = [
     'https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg',
     'https://www.themealdb.com/images/media/meals/wvpsxx1468256321.jpg',
     'https://www.themealdb.com/images/media/meals/58oia61564916529.jpg',
@@ -212,172 +484,130 @@ const FOLDER_PLACEHOLDER_IMAGES = [
     'https://www.themealdb.com/images/media/meals/tkxquw1628771028.jpg',
 ];
 
-function renderFolderList() {
-    const list = document.getElementById('folderList');
-    if (!list) return;
+function getFolders() { return JSON.parse(localStorage.getItem('ccFolders') || '[]'); }
+function saveFoldersLocal(f) { localStorage.setItem('ccFolders', JSON.stringify(f)); }
+
+async function openSavePopup(meal) {
+    currentSaveMeal  = meal;
+    selectedFolderId = null;
+    document.getElementById('newFolderNameInput').value = '';
+    selectSavePrivacy('private');
+    document.getElementById('savePopupOverlay').classList.add('active');
+
+    // Sync folders from Firestore into localStorage
+    const uid = localStorage.getItem('userUID');
+    if (uid && window.fbGetFolders) {
+        try { saveFoldersLocal(await window.fbGetFolders(uid)); }
+        catch (err) { console.warn('Could not refresh folders:', err); }
+    }
+    renderSaveFolders();
+}
+
+function closeSavePopup(e) {
+    if (!e || e.target === document.getElementById('savePopupOverlay'))
+        document.getElementById('savePopupOverlay').classList.remove('active');
+}
+
+function renderSaveFolders() {
+    const list    = document.getElementById('saveFoldersList');
     const folders = getFolders();
-    if (folders.length === 0) {
-        list.innerHTML = '<p class="no-folders-msg">No folders yet — create one below!</p>';
+    list.innerHTML = '';
+
+    if (!folders.length) {
+        list.innerHTML = '<p style="font-size:13px;color:#9A9A9A;padding:4px 0;">No folders yet — create one below!</p>';
         return;
     }
-    list.innerHTML = '';
+
     folders.forEach((folder, idx) => {
-        const isSelected   = folder.id === selectedFolderId;
-        const alreadySaved = currentSaveMeal && (folder.recipes || []).some(
-            r => (r.idMeal || r.id) === currentSaveMeal.id
-        );
-        const thumb    = folder.coverImage || FOLDER_PLACEHOLDER_IMAGES[idx % FOLDER_PLACEHOLDER_IMAGES.length];
-        const count    = (folder.recipes || []).length;
-        const subtitle = alreadySaved ? 'Already saved' : `${count} recipe${count !== 1 ? 's' : ''}`;
+        const thumb       = folder.coverImage || PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
+        const recipeCount = (folder.recipes || []).length;
+        const countLabel  = `${recipeCount} recipe${recipeCount !== 1 ? 's' : ''}`;
+        const isSelected  = selectedFolderId === folder.id;
 
         const item = document.createElement('div');
-        item.className = 'folder-list-item' +
-            (isSelected   ? ' selected'      : '') +
-            (alreadySaved ? ' already-saved' : '');
-        item.dataset.folderId = folder.id;
+        item.className = `save-folder-item${isSelected ? ' selected' : ''}`;
         item.innerHTML = `
-            <img class="folder-item-thumb" src="${thumb}" alt="${folder.name}" loading="lazy">
-            <div class="folder-item-info">
-                <div class="folder-item-name">${folder.name}</div>
-                <div class="folder-item-count">${subtitle}</div>
+            <div class="save-folder-thumb">
+                <img src="${thumb}" alt="${folder.name}" loading="lazy">
             </div>
-            <div class="folder-item-check">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                    <path d="M5 13l4 4L19 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>`;
+            <div class="save-folder-info">
+                <div class="save-folder-name">${folder.name}</div>
+                <div class="save-folder-count">${countLabel}</div>
+            </div>
+            <div class="save-folder-radio"></div>`;
 
-        if (!alreadySaved) {
-            item.addEventListener('click', () => {
-                selectedFolderId = folder.id;
-                const saveBtn = document.getElementById('btnSaveToFolder');
-                if (saveBtn) saveBtn.disabled = false;
-                renderFolderList();
-            });
-        }
+        item.addEventListener('click', () => {
+            selectedFolderId = folder.id;
+            renderSaveFolders();
+        });
         list.appendChild(item);
     });
 }
-function setCreatePrivacy(p) {
-    createPrivacy = p;
-    const btnPriv = document.getElementById('cpBtnPrivate');
-    const btnPub  = document.getElementById('cpBtnPublic');
-    if (btnPriv) btnPriv.classList.toggle('selected', p === 'private');
-    if (btnPub)  btnPub.classList.toggle('selected',  p === 'public');
+
+function selectSavePrivacy(p) {
+    savePrivacy = p;
+    document.getElementById('privBtnPrivate').className = `privacy-btn${p === 'private' ? ' active' : ''}`;
+    document.getElementById('privBtnPublic').className  = `privacy-btn${p === 'public'  ? ' active' : ''}`;
 }
 
-async function createAndSelect() {
-    const nfi  = document.getElementById('newFolderInput');
-    const name = nfi ? nfi.value.trim() : '';
+async function confirmCreateFolder() {
+    const name = document.getElementById('newFolderNameInput').value.trim();
     if (!name) {
-        if (nfi) { nfi.style.borderColor = '#D4A5A5'; setTimeout(() => nfi.style.borderColor = '', 1500); }
+        document.getElementById('newFolderNameInput').style.borderColor = '#D4A5A5';
+        setTimeout(() => document.getElementById('newFolderNameInput').style.borderColor = '', 1500);
         return;
     }
     const safeName = name.replace(/\//g, '_');
     const folders  = getFolders();
-    if (folders.find(f => f.id === safeName)) {
-        // folder already exists — just select it
-        selectedFolderId = safeName;
-    } else {
-        folders.push({ id: safeName, name, privacy: createPrivacy, recipes: [], coverImage: null, createdAt: new Date().toISOString() });
+    if (!folders.find(f => f.id === safeName)) {
+        folders.push({ id: safeName, name, privacy: savePrivacy, recipes: [], coverImage: null, createdAt: new Date().toISOString() });
         saveFoldersLocal(folders);
-        const uid = localStorage.getItem('userUID');
-        if (uid && window.fbCreateFolder) {
-            try { await window.fbCreateFolder(uid, name, createPrivacy); }
-            catch (err) { console.error('❌ Folder create failed:', err); }
-        }
-        selectedFolderId = safeName;
     }
-    if (nfi) nfi.value = '';
-    const saveBtn = document.getElementById('btnSaveToFolder');
-    if (saveBtn) saveBtn.disabled = false;
-    renderFolderList();
+    const uid = localStorage.getItem('userUID');
+    if (uid && window.fbCreateFolder) {
+        try { await window.fbCreateFolder(uid, name, savePrivacy); console.log('✅ Folder created:', name); }
+        catch (err) { console.error('❌ Folder create failed:', err); }
+    }
+    document.getElementById('newFolderNameInput').value = '';
+    renderSaveFolders();
 }
 
-async function confirmSave() {
-    if (!currentSaveMeal || !selectedFolderId) return;
+async function confirmSaveToFolder() {
+    if (!selectedFolderId || !currentSaveMeal) return;
+
     const folders = getFolders();
     const folder  = folders.find(f => f.id === selectedFolderId);
     if (!folder) return;
 
     folder.recipes = folder.recipes || [];
-    const alreadySaved = folder.recipes.some(r => r.id === currentSaveMeal.id);
-    if (alreadySaved) { showToast('Already saved to this folder!'); closeSaveModal(); return; }
+    const already  = folder.recipes.some(r => r.id === currentSaveMeal.id);
+    if (!already) {
+        const mealObj = { id: currentSaveMeal.id, name: currentSaveMeal.name, thumb: currentSaveMeal.thumb };
+        folder.recipes.push(mealObj);
+        if (!folder.coverImage) folder.coverImage = currentSaveMeal.thumb;
+        saveFoldersLocal(folders);
 
-    const mealObj = { id: currentSaveMeal.id, name: currentSaveMeal.name, thumb: currentSaveMeal.thumb };
-    folder.recipes.push(mealObj);
-    if (!folder.coverImage) folder.coverImage = currentSaveMeal.thumb;
-    saveFoldersLocal(folders);
-
-    const uid = localStorage.getItem('userUID');
-    if (uid && window.fbSaveRecipe) {
-        try { await window.fbSaveRecipe(uid, folder.name, mealObj); }
-        catch (err) { console.error('❌ Save failed:', err); }
+        const uid = localStorage.getItem('userUID');
+        if (uid && window.fbSaveRecipe) {
+            try { await window.fbSaveRecipe(uid, folder.name, mealObj); console.log('✅ Saved to:', folder.name); }
+            catch (err) { console.error('❌ Save failed:', err); }
+        }
     }
-    showToast(`Saved to "${folder.name}"!`);
-    closeSaveModal();
+    document.getElementById('savePopupOverlay').classList.remove('active');
 }
 
-window.openSavePopup          = openSavePopup;
-window.closeSaveModal         = closeSaveModal;
-window.handleSaveOverlayClick = handleSaveOverlayClick;
-window.setCreatePrivacy       = setCreatePrivacy;
-window.createAndSelect        = createAndSelect;
-window.confirmSave            = confirmSave;
-
-// ─── VOICE SEARCH ─────────────────────────────────────────────────────────────
-function initVoiceSearch(micEl, inputEl, onResult) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition || !micEl) return;
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    let listening = false;
-
-    micEl.style.cursor = 'pointer';
-    micEl.title = 'Search by voice';
-
-    micEl.addEventListener('click', () => {
-        if (listening) { recognition.stop(); return; }
-        recognition.start();
-    });
-
-    recognition.addEventListener('start', () => {
-        listening = true;
-        micEl.style.opacity = '0.5';
-        micEl.style.transform = 'scale(1.2)';
-        if (inputEl) inputEl.placeholder = 'Listening…';
-    });
-
-    recognition.addEventListener('result', (e) => {
-        const transcript = e.results[0][0].transcript;
-        if (inputEl) inputEl.value = transcript;
-        if (onResult) onResult(transcript);
-    });
-
-    recognition.addEventListener('end', () => {
-        listening = false;
-        micEl.style.opacity = '1';
-        micEl.style.transform = 'scale(1)';
-        if (inputEl) inputEl.placeholder = 'Search restaurants or dishes';
-    });
-
-    recognition.addEventListener('error', () => {
-        listening = false;
-        micEl.style.opacity = '1';
-        micEl.style.transform = 'scale(1)';
-        if (inputEl) inputEl.placeholder = 'Search restaurants or dishes';
-    });
-}
+window.openSavePopup       = openSavePopup;
+window.closeSavePopup      = closeSavePopup;
+window.selectSavePrivacy   = selectSavePrivacy;
+window.confirmCreateFolder = confirmCreateFolder;
+window.confirmSaveToFolder = confirmSaveToFolder;
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async function () {
     loadAvatar();
+    initVoiceSearch();
     await loadAreas();
-    loadAllRecipes();
+    startHomeFeed();
 
     const searchInput = document.querySelector('.search-bar input');
     const grid        = document.getElementById('foodGrid');
@@ -387,7 +617,11 @@ document.addEventListener('DOMContentLoaded', async function () {
             clearTimeout(searchDebounceTimer);
             if (query.length === 0) {
                 isSearchActive = false;
-                allMealsLoaded ? restoreAllRecipes(grid) : loadAllRecipes();
+                if (allMealsLoaded && allMealsCache.length) {
+                    restoreAllRecipes(grid);
+                } else {
+                    startHomeFeed();
+                }
                 return;
             }
             isSearchActive = true;
@@ -395,20 +629,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
-    // ── Pre-populate search from ?q= param (voice redirect from other pages) ──
-    const urlQuery = new URLSearchParams(window.location.search).get('q');
-    if (urlQuery && searchInput) {
-        searchInput.value = urlQuery;
-        isSearchActive = true;
-        searchRecipes(urlQuery);
-    }
+    const nfi = document.getElementById('newFolderNameInput');
+    if (nfi) nfi.addEventListener('keydown', e => { if (e.key === 'Enter') confirmCreateFolder(); });
 
-    // ── Wire up mic icon for voice search ──
-    const micIcon = document.querySelector('.mic-icon');
-    initVoiceSearch(micIcon, searchInput, (transcript) => {
-        isSearchActive = true;
-        searchRecipes(transcript);
-    });
+    const overlay = document.getElementById('savePopupOverlay');
+    if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
 
     const popup = document.getElementById('logoutPopup');
     if (popup) popup.addEventListener('click', e => { if (e.target === popup) closeLogoutPopup(); });

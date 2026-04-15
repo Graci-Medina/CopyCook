@@ -57,17 +57,13 @@
         .nav-icon img { width: 100%; height: 100%; border-radius: 50%; }
         .nav-icon.active { box-shadow: 0 0 0 3px #E8B4B4; }
 
-        .notification-badge {
-            position: absolute;
-            top: -5px; right: -5px;
-            background-color: #D4A5A5;
-            color: white;
-            font-size: 10px; font-weight: 700;
-            padding: 2px 6px;
-            border-radius: 10px;
-            min-width: 18px;
-            text-align: center;
+        .messages-unread-dot {
+            position: absolute; top: 0; right: 0;
+            width: 10px; height: 10px; border-radius: 50%;
+            background: #F06292; border: 2px solid #F5EFE7; box-sizing: border-box;
+            display: none; pointer-events: none;
         }
+        .messages-unread-dot.is-visible { display: block; }
 
         .nav-bottom { margin-top: auto; padding-bottom: 20px; }
 
@@ -132,6 +128,49 @@
             flex: 1;
             overflow-y: auto;
             padding: 0 30px 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .explore-move { width: 100%; }
+
+        .community-teaser {
+            background: linear-gradient(135deg, #FDF5F5 0%, #F0F5F0 100%);
+            border: 1.5px solid #E8D8D4;
+            border-radius: 20px;
+            padding: 18px 22px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .community-teaser p {
+            font-size: 14px;
+            color: #5A5A5A;
+            font-weight: 500;
+            margin: 0;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .community-teaser a {
+            background: #9FB19F;
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 999px;
+            white-space: nowrap;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .community-teaser a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(159,177,159,0.35);
         }
 
         .page-body::-webkit-scrollbar { width: 8px; }
@@ -465,7 +504,14 @@
 
         .store-finder-title {
             font-size: 20px; font-weight: 700; color: #2A2A2A;
-            display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+            display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+        }
+
+        .store-finder-free-note {
+            font-size: 12px; color: #8A8A8A;
+            line-height: 1.45;
+            margin-bottom: 18px;
+            max-width: 52ch;
         }
 
         .free-badge {
@@ -601,9 +647,9 @@
             <a href="explore.html" class="nav-icon active"><img src="explore-icon.png" alt="Explore"></a>
             <a href="../post page/post.html" class="nav-icon"><img src="plus-icon.png" alt="Add"></a>
             <a href="../Saved page/saved.html" class="nav-icon"><img src="save-icon.png" alt="Saved"></a>
-            <a href="../Messages page/Messages.html" class="nav-icon">
-                <img src="message.png" alt="Messages">
-                <span class="notification-badge">10</span>
+            <a href="../Messages page/Messages.html" class="nav-icon" aria-label="Messages">
+                <img src="message.png" alt="">
+                <span class="messages-unread-dot" aria-hidden="true"></span>
             </a>
         </nav>
         <div class="nav-bottom">
@@ -637,33 +683,37 @@
         <!-- Page body -->
         <div class="page-body">
 
+            <div id="exploreWrapHero" class="explore-move" style="order:10">
             <!-- Hero -->
             <div class="hero">
                 <div class="hero-text">
-                    <h1>Remake &amp; Dig In</h1>
-                    <p>Find Popular Restaurants</p>
+                    <h1 id="exploreHeroTitle">Remake &amp; Dig In</h1>
+                    <p id="exploreHeroSub">Find Popular Restaurants</p>
+                </div>
+            </div>
+            </div>
+
+            <div id="exploreWrapPills" class="explore-move" style="order:20">
+            <!-- Category pills (filled from onboarding preferences) -->
+            <div class="category-row" id="categoryRow"></div>
+            </div>
+
+            <div id="exploreWrapCommunity" class="explore-move" style="order:25; display:none">
+                <div class="community-teaser">
+                    <p>Your feed preference includes community — see what other cooks are posting.</p>
+                    <a href="../Home page/home.html">Open community feed →</a>
                 </div>
             </div>
 
-            <!-- Category pills -->
-            <div class="category-row" id="categoryRow">
-                <button class="category-pill active" onclick="filterCategory(this,'all')">All</button>
-                <button class="category-pill" onclick="filterCategory(this,'Chicken')">Chicken</button>
-                <button class="category-pill" onclick="filterCategory(this,'Beef')">Beef</button>
-                <button class="category-pill" onclick="filterCategory(this,'Seafood')">Seafood</button>
-                <button class="category-pill" onclick="filterCategory(this,'Pasta')">Pasta</button>
-                <button class="category-pill" onclick="filterCategory(this,'Dessert')">Dessert</button>
-                <button class="category-pill" onclick="filterCategory(this,'Vegetarian')">Vegetarian</button>
-                <button class="category-pill" onclick="filterCategory(this,'Breakfast')">Breakfast</button>
-            </div>
-
-            <!-- Featured -->
-            <div class="section-header"><div class="section-title">Featured Restaurants</div></div>
+            <div id="exploreWrapFeatured" class="explore-move" style="order:30">
+            <div class="section-header"><div class="section-title" id="featuredSectionTitle">Featured Restaurants</div></div>
             <div class="featured-grid" id="featuredGrid">
                 <div style="height:160px;" class="skeleton"></div>
                 <div style="height:160px;" class="skeleton"></div>
             </div>
+            </div>
 
+            <div id="exploreWrapChains" class="explore-move" style="order:40">
             <!-- All Restaurants -->
             <div class="section-header">
                 <div class="section-title" id="restaurantsSectionTitle">Popular Chains</div>
@@ -675,12 +725,17 @@
                 <div style="height:200px;" class="skeleton"></div>
                 <div style="height:200px;" class="skeleton"></div>
             </div>
+            </div>
 
+            <div id="exploreWrapStore" class="explore-move" style="order:50">
             <!--  Find Ingredients Near Me -->
             <div class="store-finder-section">
                 <div class="store-finder-title">
                      Find Ingredients Near Me
                 </div>
+                <p class="store-finder-free-note">
+                    Uses only free, public services: OpenStreetMap map tiles, community Overpass servers, and TheMealDB for recipes elsewhere on CopyCook. No API keys or paid map subscriptions required.
+                </p>
 
                 <div class="store-finder-input-row">
                     <div class="ingredient-input-wrap">
@@ -708,7 +763,7 @@
 
                 <div class="map-status-bar">
                     <span class="status-dot" id="statusDot"></span>
-                    <span id="statusText">Add ingredients above then click "Find Stores" — shows nearby grocery stores.</span>
+                    <span id="statusText">Add ingredients above, then Find Stores — loads a free OpenStreetMap and nearby shops when available.</span>
                 </div>
 
                 <div class="map-container" id="mapContainer">
@@ -720,10 +775,13 @@
 
                 <div class="stores-list" id="storesList"></div>
             </div>
+            </div>
 
+            <div id="exploreWrapTrending" class="explore-move" style="order:60">
             <!-- Trending recipes -->
-            <div class="section-header"><div class="section-title">Trending Recipes</div></div>
+            <div class="section-header"><div class="section-title" id="trendingSectionTitle">Trending Recipes</div></div>
             <div class="trending-scroll" id="trendingScroll"></div>
+            </div>
 
         </div>
     </main>
@@ -794,10 +852,190 @@ const CHAIN_RESTAURANTS = [
     { name: "Denny's",                tag: "Breakfast · Diner",        search: "eggs",       color: "#A5C4D4" },
 ];
 
-const FEATURED = [
+const FEATURED_DEFAULT = [
     { name: "The Cheesecake Factory", sub: "Over 250 dishes to recreate", idx: 0 },
     { name: "Olive Garden",           sub: "Unlimited breadsticks at home", idx: 3 },
 ];
+
+/** Onboarding cuisine values → keywords matched against restaurant name/tag/search */
+const CUISINE_TO_TERMS = {
+    Italian:    ['italian', 'pasta', 'olive'],
+    Japanese:   ['japanese', 'asian', 'chang', 'chinese'],
+    Mexican:    ['mexican', 'grill', 'chili'],
+    Indian:     ['indian', 'curry', 'asian'],
+    Spanish:    ['spanish', 'tapas'],
+    Chinese:    ['chinese', 'asian', 'chang'],
+    Moroccan:   ['moroccan'],
+    French:     ['french'],
+    American:   ['american', 'steakhouse', 'cheesecake', 'ihop', 'diner', 'roadhouse', 'outback', 'applebee'],
+    British:    ['british'],
+    Thai:       ['thai', 'asian'],
+    Other:      []
+};
+
+function loadExplorePrefs() {
+    try {
+        const raw = JSON.parse(localStorage.getItem('cc_prefs') || 'null');
+        return {
+            cuisines: Array.isArray(raw && raw.cuisines) ? raw.cuisines : [],
+            diet:     Array.isArray(raw && raw.diet) ? raw.diet : [],
+            skill:    raw && raw.skill ? raw.skill : null,
+            feed:     Array.isArray(raw && raw.feed) ? raw.feed : []
+        };
+    } catch (_) {
+        return { cuisines: [], diet: [], skill: null, feed: [] };
+    }
+}
+
+let explorePrefs = loadExplorePrefs();
+
+function restaurantBlob(r) {
+    return `${r.name} ${r.tag} ${r.search}`.toLowerCase();
+}
+
+function restaurantMatchScore(r, prefs) {
+    let s = 0;
+    const blob = restaurantBlob(r);
+    for (const c of prefs.cuisines || []) {
+        const terms = CUISINE_TO_TERMS[c] || [String(c).toLowerCase()];
+        for (const t of terms) {
+            if (t && blob.includes(t)) s += 4;
+        }
+    }
+    for (const d of prefs.diet || []) {
+        if (d === 'None') continue;
+        if (d === 'Vegetarian' && /vegetarian|veggie|salad|soup|pasta|bakery|bread|panera/i.test(blob)) s += 2;
+        if (d === 'Vegan' && /salad|soup|vegetable/i.test(blob)) s += 2;
+        if (d === 'Pescatarian' && /seafood|fish|lobster/i.test(blob)) s += 3;
+        if (d === 'Gluten-Free' && /salad|grill|steak|seafood/i.test(blob)) s += 1;
+        if (d === 'Dairy-Free' && /seafood|steak|bbq|grill/i.test(blob)) s += 1;
+    }
+    return s;
+}
+
+function sortRestaurantsByPrefs(list, prefs) {
+    return [...list].sort((a, b) => restaurantMatchScore(b, prefs) - restaurantMatchScore(a, prefs));
+}
+
+function restaurantMatchesCuisine(r, cuisine) {
+    const blob = restaurantBlob(r);
+    const terms = CUISINE_TO_TERMS[cuisine] || [String(cuisine).toLowerCase()];
+    return terms.some(t => t && blob.includes(t));
+}
+
+function restaurantMatchesDietKey(r, dietKey) {
+    const blob = restaurantBlob(r);
+    if (dietKey === 'Vegetarian') return /vegetarian|veggie|salad|soup|pasta|bakery|bread|panera|olive/i.test(blob);
+    if (dietKey === 'Vegan') return /salad|soup|vegetable|panera/i.test(blob);
+    if (dietKey === 'Pescatarian') return /seafood|fish|lobster/i.test(blob);
+    if (dietKey === 'Gluten-Free') return /salad|grill|steak|seafood|chicken/i.test(blob);
+    if (dietKey === 'Dairy-Free') return /seafood|steak|bbq|grill|chicken/i.test(blob);
+    return true;
+}
+
+function personalizeExploreHero(prefs) {
+    const h1 = document.getElementById('exploreHeroTitle');
+    const sub = document.getElementById('exploreHeroSub');
+    if (!h1 || !sub) return;
+    const name = (localStorage.getItem('userName') || localStorage.getItem('userDisplayName') || '').trim();
+    const first = name.split(/\s+/)[0] || '';
+    if (prefs.cuisines.length) {
+        h1.textContent = first ? `${first}, dig into flavors you picked` : 'Dig into flavors you picked';
+        const line = prefs.cuisines.slice(0, 4).join(' · ');
+        sub.textContent = line + (prefs.cuisines.length > 4 ? '…' : '') +
+            (prefs.skill ? ` · ${prefs.skill} friendly picks` : '');
+    } else {
+        h1.textContent = 'Remake & Dig In';
+        sub.textContent = 'Find popular restaurants';
+    }
+}
+
+function buildCategoryPills(prefs) {
+    const row = document.getElementById('categoryRow');
+    if (!row) return;
+    row.innerHTML = '';
+    function addPill(label, filterVal, isActive) {
+        const b = document.createElement('button');
+        b.className = 'category-pill' + (isActive ? ' active' : '');
+        b.textContent = label;
+        b.onclick = () => filterCategory(b, filterVal);
+        row.appendChild(b);
+    }
+    addPill('All', 'all', true);
+    (prefs.cuisines || []).forEach(c => {
+        if (c && c !== 'Other') addPill(c, 'cuisine:' + c, false);
+    });
+    (prefs.diet || []).forEach(d => {
+        if (d && d !== 'None') addPill(d, 'diet:' + d, false);
+    });
+    if (!prefs.cuisines.length) {
+        ['Chicken', 'Seafood', 'Pasta', 'Dessert', 'Breakfast'].forEach(x => addPill(x, 'tag:' + x, false));
+    }
+}
+
+function applyExploreSectionOrder(feed) {
+    const order = {
+        exploreWrapHero: 10,
+        exploreWrapPills: 20,
+        exploreWrapCommunity: 25,
+        exploreWrapFeatured: 30,
+        exploreWrapChains: 40,
+        exploreWrapStore: 50,
+        exploreWrapTrending: 60
+    };
+    const comm = document.getElementById('exploreWrapCommunity');
+    if (comm) {
+        comm.style.display = (feed && feed.includes('Community')) ? '' : 'none';
+    }
+    if (!feed || !feed.length) {
+        Object.keys(order).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.order = order[id];
+        });
+        return;
+    }
+    const first = feed[0];
+    if (first === 'Trending' || first === 'Quick' || first === 'Desserts') {
+        order.exploreWrapTrending = 28;
+        order.exploreWrapFeatured = 35;
+        order.exploreWrapChains = 42;
+        order.exploreWrapStore = 52;
+    } else if (first === 'Healthy') {
+        order.exploreWrapStore = 28;
+        order.exploreWrapFeatured = 35;
+        order.exploreWrapChains = 42;
+        order.exploreWrapTrending = 55;
+    } else if (first === 'World') {
+        order.exploreWrapFeatured = 28;
+        order.exploreWrapChains = 36;
+        order.exploreWrapTrending = 48;
+        order.exploreWrapStore = 55;
+    } else if (first === 'Community') {
+        order.exploreWrapCommunity = 22;
+    }
+    Object.keys(order).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.order = order[id];
+    });
+}
+
+function trendingSearchTerms(prefs) {
+    const base = ['pasta', 'chicken', 'beef', 'dessert', 'seafood', 'soup', 'BBQ', 'steak', 'salad', 'pizza'];
+    const feed = prefs.feed || [];
+    let out = [];
+    if (feed.includes('Quick')) out.push('pasta', 'salad', 'soup', 'rice', 'wrap', 'tacos');
+    if (feed.includes('Healthy')) out.push('salad', 'fish', 'grilled chicken', 'vegetable');
+    if (feed.includes('Desserts')) out.push('dessert', 'cake', 'chocolate', 'pudding');
+    if (feed.includes('World') || (prefs.cuisines || []).length) {
+        for (const c of prefs.cuisines || []) {
+            const terms = CUISINE_TO_TERMS[c];
+            if (terms && terms[0]) out.push(terms[0]);
+            else if (c && c !== 'Other') out.push(c.toLowerCase());
+        }
+    }
+    out = out.concat(base);
+    return [...new Set(out)].slice(0, 12);
+}
 
 const imageCache = {};
 
@@ -815,28 +1053,48 @@ async function fetchMealImage(searchTerm) {
     }
 }
 
-async function renderFeatured() {
+async function renderFeatured(prefs) {
     const grid = document.getElementById('featuredGrid');
+    const titleEl = document.getElementById('featuredSectionTitle');
+    if (titleEl) {
+        titleEl.textContent = (prefs.cuisines && prefs.cuisines.length) ? 'Picked for you' : 'Featured Restaurants';
+    }
     grid.innerHTML = '';
-    const results = await Promise.all(FEATURED.map(f => fetchMealImage(CHAIN_RESTAURANTS[f.idx].search)));
-    FEATURED.forEach((f, i) => {
+    const sorted = sortRestaurantsByPrefs(CHAIN_RESTAURANTS, prefs);
+    let picks;
+    if (sorted.length >= 2 && restaurantMatchScore(sorted[0], prefs) > 0) {
+        picks = [
+            { restaurant: sorted[0], sub: sorted[0].tag.split('·')[0].trim() },
+            { restaurant: sorted[1], sub: sorted[1].tag.split('·')[0].trim() }
+        ];
+    } else {
+        picks = FEATURED_DEFAULT.map(f => ({
+            restaurant: CHAIN_RESTAURANTS[f.idx],
+            sub: f.sub,
+            nameOverride: f.name
+        }));
+    }
+    const results = await Promise.all(picks.map(p => fetchMealImage(p.restaurant.search)));
+    picks.forEach((p, i) => {
+        const r = p.restaurant;
+        const displayName = p.nameOverride || r.name;
         const card = document.createElement('div');
         card.className = 'featured-card';
-        card.onclick = () => openRestaurantModal(CHAIN_RESTAURANTS[f.idx]);
+        card.onclick = () => openRestaurantModal(r);
         card.innerHTML = `
-            <img src="${results[i].img}" alt="${f.name}" loading="lazy">
+            <img src="${results[i].img}" alt="${displayName}" loading="lazy">
             <div class="featured-overlay"></div>
             <div class="featured-content">
                 <span class="featured-badge">Featured</span>
-                <div class="featured-title">${f.name}</div>
-                <div class="featured-sub">${f.sub}</div>
+                <div class="featured-title">${displayName}</div>
+                <div class="featured-sub">${p.sub}</div>
             </div>`;
         grid.appendChild(card);
     });
 }
 
 let visibleCount = 8;
-let filteredRestaurants = [...CHAIN_RESTAURANTS];
+let filteredRestaurants = sortRestaurantsByPrefs([...CHAIN_RESTAURANTS], explorePrefs);
 
 async function renderRestaurantCards(restaurants) {
     const grid = document.getElementById('restaurantsGrid');
@@ -871,11 +1129,19 @@ function loadMoreRestaurants() {
     document.querySelector('.see-all-btn').style.display = 'none';
 }
 
-async function renderTrending() {
+async function renderTrending(prefs) {
     const scroll = document.getElementById('trendingScroll');
+    const tTitle = document.getElementById('trendingSectionTitle');
+    if (tTitle) {
+        const feed = prefs.feed || [];
+        if (feed[0] === 'Quick') tTitle.textContent = 'Quick recipe ideas';
+        else if (feed[0] === 'Desserts' || feed.includes('Desserts')) tTitle.textContent = 'Sweet picks';
+        else if (feed.includes('Healthy')) tTitle.textContent = 'Lighter & fresh';
+        else tTitle.textContent = 'Trending recipes';
+    }
     scroll.innerHTML = '<div class="loading-row"><div class="spinner"></div></div>';
     try {
-        const searches = ['pasta', 'chicken', 'beef', 'dessert', 'seafood', 'soup', 'BBQ', 'steak', 'salad', 'pizza'];
+        const searches = trendingSearchTerms(prefs);
         const results = await Promise.all(searches.map(s => fetchMealImage(s)));
         scroll.innerHTML = '';
         results.forEach(r => {
@@ -900,13 +1166,29 @@ async function renderTrending() {
 function filterCategory(btn, cat) {
     document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
+    const p = explorePrefs || loadExplorePrefs();
     if (cat === 'all') {
-        filteredRestaurants = [...CHAIN_RESTAURANTS];
+        filteredRestaurants = sortRestaurantsByPrefs([...CHAIN_RESTAURANTS], p);
         document.getElementById('restaurantsSectionTitle').textContent = 'Popular Chains';
+    } else if (String(cat).startsWith('cuisine:')) {
+        const c = cat.slice(8);
+        filteredRestaurants = CHAIN_RESTAURANTS.filter(r => restaurantMatchesCuisine(r, c));
+        if (filteredRestaurants.length === 0) filteredRestaurants = sortRestaurantsByPrefs([...CHAIN_RESTAURANTS], p);
+        document.getElementById('restaurantsSectionTitle').textContent = `${c} picks`;
+    } else if (String(cat).startsWith('diet:')) {
+        const d = cat.slice(5);
+        filteredRestaurants = CHAIN_RESTAURANTS.filter(r => restaurantMatchesDietKey(r, d));
+        if (filteredRestaurants.length === 0) filteredRestaurants = sortRestaurantsByPrefs([...CHAIN_RESTAURANTS], p);
+        document.getElementById('restaurantsSectionTitle').textContent = `${d} friendly`;
+    } else if (String(cat).startsWith('tag:')) {
+        const t = cat.slice(4);
+        filteredRestaurants = CHAIN_RESTAURANTS.filter(r => r.tag.toLowerCase().includes(t.toLowerCase()) || r.search.toLowerCase().includes(t.toLowerCase()));
+        if (filteredRestaurants.length === 0) filteredRestaurants = sortRestaurantsByPrefs([...CHAIN_RESTAURANTS], p);
+        document.getElementById('restaurantsSectionTitle').textContent = `${t} restaurants`;
     } else {
         filteredRestaurants = CHAIN_RESTAURANTS.filter(r => r.tag.toLowerCase().includes(cat.toLowerCase()) || r.search.toLowerCase().includes(cat.toLowerCase()));
-        if (filteredRestaurants.length === 0) filteredRestaurants = [...CHAIN_RESTAURANTS];
-        document.getElementById('restaurantsSectionTitle').textContent = `${cat} Restaurants`;
+        if (filteredRestaurants.length === 0) filteredRestaurants = sortRestaurantsByPrefs([...CHAIN_RESTAURANTS], p);
+        document.getElementById('restaurantsSectionTitle').textContent = `${cat} restaurants`;
     }
     visibleCount = 8;
     document.querySelector('.see-all-btn').style.display = '';
@@ -920,8 +1202,13 @@ function ensureRecipeResultsSection() {
         recipeResultsSection = document.createElement('div');
         recipeResultsSection.id = 'recipeResultsSection';
         recipeResultsSection.style.display = 'none';
-        const trendingHeader = document.querySelector('#trendingScroll').previousElementSibling.previousElementSibling;
-        trendingHeader.parentNode.insertBefore(recipeResultsSection, trendingHeader);
+        const wrapTrending = document.getElementById('exploreWrapTrending');
+        if (wrapTrending && wrapTrending.parentNode) {
+            wrapTrending.parentNode.insertBefore(recipeResultsSection, wrapTrending);
+        } else {
+            const scroll = document.getElementById('trendingScroll');
+            if (scroll && scroll.parentNode) scroll.parentNode.insertBefore(recipeResultsSection, scroll);
+        }
     }
     return recipeResultsSection;
 }
@@ -971,7 +1258,7 @@ document.getElementById('searchInput').addEventListener('input', function() {
     const q   = raw.toLowerCase();
     searchTimer = setTimeout(() => {
         if (!q) {
-            filteredRestaurants = [...CHAIN_RESTAURANTS];
+            filteredRestaurants = sortRestaurantsByPrefs([...CHAIN_RESTAURANTS], explorePrefs);
             document.getElementById('restaurantsSectionTitle').textContent = 'Popular Chains';
             visibleCount = 8;
             document.querySelector('.see-all-btn').style.display = '';
@@ -982,7 +1269,7 @@ document.getElementById('searchInput').addEventListener('input', function() {
         filteredRestaurants = CHAIN_RESTAURANTS.filter(r => r.name.toLowerCase().includes(q) || r.tag.toLowerCase().includes(q));
         const hasResults = filteredRestaurants.length > 0;
         document.getElementById('restaurantsSectionTitle').textContent = hasResults ? `Restaurants matching "${raw}"` : 'Popular Chains';
-        if (!hasResults) filteredRestaurants = [...CHAIN_RESTAURANTS];
+        if (!hasResults) filteredRestaurants = sortRestaurantsByPrefs([...CHAIN_RESTAURANTS], explorePrefs);
         visibleCount = filteredRestaurants.length;
         renderRestaurantCards(filteredRestaurants);
         searchRecipesInExplore(raw);
@@ -1016,8 +1303,65 @@ async function openRestaurantModal(restaurant) {
 function closeModal() { document.getElementById('restaurantModal').classList.remove('active'); }
 
 // ──────────────────────────────────────────────────────────────────────────────
-//  STORE FINDER — Leaflet + OpenStreetMap + Overpass API (100% free)
+//  STORE FINDER — Leaflet + OpenStreetMap tiles + public Overpass mirrors (no API keys)
 // ──────────────────────────────────────────────────────────────────────────────
+
+const OVERPASS_ENDPOINTS = [
+    'https://overpass-api.de/api/interpreter',
+    'https://lz4.overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter'
+];
+
+/**
+ * Query free public Overpass instances in order (they can rate-limit or time out individually).
+ */
+async function fetchOverpassStores(overpassQuery) {
+    const body = overpassQuery.trim();
+    let lastErr = null;
+    for (const url of OVERPASS_ENDPOINTS) {
+        try {
+            const controller = new AbortController();
+            const kill = setTimeout(() => controller.abort(), 20000);
+            const res = await fetch(url, {
+                method: 'POST',
+                body,
+                signal: controller.signal,
+                headers: { 'Content-Type': 'text/plain;charset=UTF-8' }
+            });
+            clearTimeout(kill);
+            if (!res.ok) {
+                lastErr = new Error('HTTP ' + res.status);
+                continue;
+            }
+            const text = await res.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch {
+                lastErr = new Error('not json');
+                continue;
+            }
+            if (data.error) {
+                lastErr = new Error(data.error);
+                continue;
+            }
+            return data;
+        } catch (e) {
+            lastErr = e;
+        }
+    }
+    throw lastErr || new Error('Overpass unavailable');
+}
+
+/** OpenStreetMap / Nominatim UI — free, no key; bounded to map area around user */
+function openFreeMapSearchUrl(ingredient, lat, lng) {
+    const q = encodeURIComponent(`${ingredient} supermarket grocery`);
+    const w = lng - 0.08;
+    const e = lng + 0.08;
+    const n = lat + 0.08;
+    const s = lat - 0.08;
+    return `https://nominatim.openstreetmap.org/ui/search.html?q=${q}&viewbox=${w},${n},${e},${s}&bounded=1`;
+}
 
 let leafletMap       = null;
 let addedIngredients = [];
@@ -1113,7 +1457,7 @@ async function findNearbyStores() {
 
     const radius = 5000;
     const overpassQuery = `
-        [out:json][timeout:25];
+        [out:json][timeout:20];
         (
           node["shop"="supermarket"](around:${radius},${lat},${lng});
           node["shop"="grocery"](around:${radius},${lat},${lng});
@@ -1138,18 +1482,17 @@ async function findNearbyStores() {
     `;
 
     let stores = [];
+    let overpassFailed = false;
     try {
-        const res  = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: overpassQuery });
-        const data = await res.json();
+        const data = await fetchOverpassStores(overpassQuery);
         stores = (data.elements || []).map(el => ({
             ...el,
             lat: el.lat ?? el.center?.lat,
             lon: el.lon ?? el.center?.lon
         })).filter(el => el.lat && el.lon && el.tags?.name);
     } catch {
-        setStatus('red', 'Could not fetch nearby stores. Check your connection and try again.');
-        btn.disabled = false;
-        return;
+        overpassFailed = true;
+        setStatus('amber', 'Could not load the automatic store list (public servers busy). Your map is ready — use the ingredient buttons below to search free OpenStreetMap near you, or try Find Stores again.');
     }
 
     const storeIcon = L.divIcon({
@@ -1187,16 +1530,14 @@ async function findNearbyStores() {
     }
 
     if (addedIngredients.length > 0) {
-        // Per-ingredient Google Maps search buttons — actually functional
         const ingButtons = addedIngredients.map(ing => {
-            const query = encodeURIComponent(ing + ' grocery store near me');
-            const mapsUrl = `https://www.google.com/maps/search/${query}/@${lat},${lng},14z`;
-            return `<a href="${mapsUrl}" target="_blank" class="store-chip ingredient-search-chip">
+            const mapsUrl = openFreeMapSearchUrl(ing, lat, lng);
+            return `<a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="store-chip ingredient-search-chip">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke="#D4A5A5" stroke-width="2"/>
                     <circle cx="12" cy="10" r="3" stroke="#D4A5A5" stroke-width="2"/>
                 </svg>
-                Search "${ing}" near me
+                Search "${ing}" (OpenStreetMap)
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
                     <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="#9FB19F" stroke-width="2"/>
                     <path d="M15 3h6v6M10 14L21 3" stroke="#9FB19F" stroke-width="2" stroke-linecap="round"/>
@@ -1210,15 +1551,22 @@ async function findNearbyStores() {
             : '';
 
         storesList.innerHTML = ingButtons + nearbyChips;
-        setStatus('green', `Click an ingredient button to search Google Maps for where to buy it. The map shows ${stores.length} nearby stores.`);
+        if (overpassFailed) {
+            setStatus('amber', 'Store pins unavailable (public servers busy). Use “Search … (OpenStreetMap)” — free, no API key.');
+        } else {
+            setStatus('green', `Ingredient links use free OpenStreetMap search near your area. Map pins: ${stores.length} nearby shop${stores.length !== 1 ? 's' : ''}.`);
+        }
 
     } else {
-        // No ingredients — just show nearby store chips
         storesList.innerHTML = stores.length > 0
             ? stores.slice(0, 20).map(storeChipHTML).join('')
-            : '<p style="font-size:13px;color:#9A9A9A;margin-top:8px;">No stores found within 5km.</p>';
+            : '<p style="font-size:13px;color:#9A9A9A;margin-top:8px;">No stores found within 5km in OpenStreetMap data. Try again later or add ingredients for a bounded search.</p>';
 
-        setStatus('green', `Found ${stores.length} nearby store${stores.length !== 1 ? 's' : ''}. Tip: add ingredients above to search for them directly on Google Maps.`);
+        if (overpassFailed) {
+            setStatus('amber', 'Store list did not load from public servers. Map is ready — add ingredients for free OpenStreetMap search, or try Find Stores again.');
+        } else {
+            setStatus('green', `Found ${stores.length} nearby store${stores.length !== 1 ? 's' : ''} from free map data. Add ingredients for OpenStreetMap search shortcuts.`);
+        }
     }
 
     setTimeout(() => leafletMap && leafletMap.invalidateSize(), 100);
@@ -1227,9 +1575,14 @@ async function findNearbyStores() {
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', async () => {
-    await renderFeatured();
-    renderRestaurantCards(CHAIN_RESTAURANTS);
-    renderTrending();
+    explorePrefs = loadExplorePrefs();
+    personalizeExploreHero(explorePrefs);
+    buildCategoryPills(explorePrefs);
+    applyExploreSectionOrder(explorePrefs.feed);
+    await renderFeatured(explorePrefs);
+    filteredRestaurants = sortRestaurantsByPrefs([...CHAIN_RESTAURANTS], explorePrefs);
+    await renderRestaurantCards(filteredRestaurants);
+    await renderTrending(explorePrefs);
 
     // Voice search
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1279,5 +1632,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 </script>
+<script type="module" src="../messages-unread-nav.js"></script>
 </body>
 </html>

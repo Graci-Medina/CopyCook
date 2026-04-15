@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CopyCook - Your taste, your feed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Shrikhand&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #F5EFE7;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 20px 20px 48px;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        /* Card wrapper */
+        .survey-wrapper {
+            position: relative; z-index: 1;
+            width: 100%; max-width: 640px;
+            margin-top: 12px;
+            margin-bottom: 24px;
+        }
+
+        .survey-card {
+            background: #FDFBF7;
+            border-radius: 28px;
+            padding: 44px 48px 40px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+            border: 1.5px solid #F0DDD8;
+            max-height: calc(100dvh - 56px);
+            max-height: calc(100vh - 56px);
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Progress */
+        .progress-bar-track {
+            height: 6px;
+            background: #F0DDD8;
+            border-radius: 99px;
+            margin-bottom: 32px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #D4A5A5, #9FB19F);
+            border-radius: 99px;
+            transition: width 0.5s cubic-bezier(.4,0,.2,1);
+        }
+
+        /* Step header */
+        .step-label {
+            font-size: 12px; font-weight: 600; letter-spacing: 1.5px;
+            color: #D4A5A5; text-transform: uppercase; margin-bottom: 6px;
+        }
+        .step-title {
+            font-family: 'Shrikhand', cursive;
+            font-size: 1.75rem; color: #2A2A2A;
+            margin-bottom: 6px; line-height: 1.2;
+        }
+        .step-subtitle {
+            font-size: 14px; color: #7A6A60; margin-bottom: 28px;
+        }
+
+        /* Option grid */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .option-btn {
+            border: 2px solid #F0DDD8;
+            background: white;
+            border-radius: 16px;
+            padding: 14px 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.18s;
+            font-family: 'Poppins', sans-serif;
+        }
+        .option-btn .opt-label { font-size: 13px; font-weight: 500; color: #3A3A3A; line-height: 1.3; }
+        .option-btn:hover { border-color: #D4A5A5; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(212,165,165,0.2); }
+        .option-btn.selected {
+            border-color: #D4A5A5;
+            background: linear-gradient(135deg, #FDF0F0, #F0F5F0);
+            box-shadow: 0 4px 14px rgba(212,165,165,0.25);
+        }
+        .option-btn.selected .opt-label { color: #C08888; font-weight: 600; }
+
+        /* Single row options (skill level) */
+        .options-row {
+            display: flex; gap: 10px; flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+        .option-pill {
+            flex: 1; min-width: 100px;
+            border: 2px solid #F0DDD8;
+            background: white;
+            border-radius: 50px;
+            padding: 12px 16px;
+            cursor: pointer;
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px; font-weight: 500; color: #3A3A3A;
+            transition: all 0.18s;
+        }
+        .option-pill:hover { border-color: #9FB19F; }
+        .option-pill.selected {
+            border-color: #9FB19F;
+            background: linear-gradient(135deg, #F0F5F0, #E8F0E8);
+            color: #5A8A5A; font-weight: 600;
+        }
+
+        /* Hint text */
+        .hint { font-size: 12px; color: #ACA09A; margin-bottom: 12px; }
+
+        /* Navigation */
+        .nav-row {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 12px;
+            margin-top: 8px;
+            padding-top: 8px;
+            padding-bottom: 4px;
+            flex-wrap: wrap;
+        }
+        .btn-back {
+            background: none;
+            border: 2px solid #E8DDD8;
+            color: #7A6A60;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px; font-weight: 500;
+            padding: 12px 24px; border-radius: 50px;
+            cursor: pointer; transition: all 0.18s;
+        }
+        .btn-back:hover { border-color: #C8B8B0; background: #F5EFE7; }
+        .btn-next {
+            flex: 1;
+            background: linear-gradient(135deg, #D4A5A5, #C89898);
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px; font-weight: 600;
+            padding: 14px 28px; border-radius: 50px;
+            border: none; cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(212,165,165,0.4);
+        }
+        .btn-next:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212,165,165,0.5); }
+        .btn-next:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+        .btn-skip {
+            background: none; border: none;
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px; color: #ACA09A;
+            cursor: pointer; padding: 8px;
+            transition: color 0.15s;
+        }
+        .btn-skip:hover { color: #7A6A60; }
+
+        /* Step animations */
+        .step { display: none; }
+        .step.active {
+            display: block;
+            animation: stepIn 0.35s cubic-bezier(.4,0,.2,1);
+        }
+        @keyframes stepIn {
+            from { opacity: 0; transform: translateX(24px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Final celebration step */
+        .celebrate {
+            text-align: center; padding: 12px 0 4px;
+        }
+        .celebrate h2 {
+            font-family: 'Shrikhand', cursive;
+            font-size: 2rem; color: #2A2A2A; margin-bottom: 10px;
+        }
+        .celebrate p { font-size: 15px; color: #7A6A60; line-height: 1.6; margin-bottom: 28px; }
+
+        .btn-go {
+            width: 100%;
+            background: linear-gradient(135deg, #9FB19F, #7A9A7A);
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px; font-weight: 700;
+            padding: 16px; border-radius: 50px; border: none;
+            cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 4px 18px rgba(159,177,159,0.45);
+        }
+        .btn-go:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(159,177,159,0.5); }
+
+        /* Tags preview */
+        .pref-tags {
+            display: flex; flex-wrap: wrap; gap: 8px;
+            justify-content: center; margin-bottom: 24px;
+        }
+        .pref-tag {
+            background: #F0F5F0; color: #5A8A5A;
+            border: 1.5px solid #C8DCC8;
+            border-radius: 50px; padding: 6px 14px;
+            font-size: 13px; font-weight: 500;
+        }
+
+        @media (max-width: 520px) {
+            body { padding: 16px 14px 40px; }
+            .survey-card {
+                padding: 28px 20px 32px;
+                max-height: calc(100dvh - 40px);
+                max-height: calc(100vh - 40px);
+            }
+            .step-title { font-size: 1.4rem; }
+            .options-grid { grid-template-columns: repeat(2, 1fr); }
+            .btn-next { min-height: 48px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="survey-wrapper">
+        <div class="survey-card">
+        <p id="surveyWelcome" class="survey-welcome" style="display:none;font-size:14px;color:#7A6A60;margin-bottom:20px;line-height:1.5;text-align:center;">
+            Welcome to CopyCook! Answer a few quick questions so we can tailor your home feed.
+        </p>
+        <!-- Progress bar -->
+        <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progressFill" style="width: 20%"></div>
+        </div>
+
+        <!-- ── STEP 1: Cuisine preferences ── -->
+        <div class="step active" id="step1">
+            <div class="step-label">Step 1 of 4</div>
+            <h2 class="step-title">What cuisines do you love?</h2>
+            <p class="step-subtitle">Pick as many as you like — we'll fill your feed with them.</p>
+            <div class="options-grid" id="cuisineGrid">
+                <!-- populated by JS -->
+            </div>
+            <p class="hint">Select at least one</p>
+            <div class="nav-row">
+                <button class="btn-skip" onclick="skipStep(1)">Skip</button>
+                <button class="btn-next" id="nextBtn1" onclick="goNext(1)" disabled>Next →</button>
+            </div>
+        </div>
+
+        <!-- ── STEP 2: Dietary preferences ── -->
+        <div class="step" id="step2">
+            <div class="step-label">Step 2 of 4</div>
+            <h2 class="step-title">Any dietary preferences?</h2>
+            <p class="step-subtitle">We'll highlight recipes that fit your lifestyle.</p>
+            <div class="options-grid" id="dietGrid">
+                <!-- populated by JS -->
+            </div>
+            <div class="nav-row">
+                <button class="btn-back" onclick="goBack(2)">← Back</button>
+                <button class="btn-skip" onclick="skipStep(2)">Skip</button>
+                <button class="btn-next" onclick="goNext(2)">Next →</button>
+            </div>
+        </div>
+
+        <!-- ── STEP 3: Cooking skill ── -->
+        <div class="step" id="step3">
+            <div class="step-label">Step 3 of 4</div>
+            <h2 class="step-title">How confident are you in the kitchen?</h2>
+            <p class="step-subtitle">We'll tailor recipe complexity to your level.</p>
+            <div class="options-row" id="skillRow">
+                <!-- populated by JS -->
+            </div>
+            <div class="nav-row">
+                <button class="btn-back" onclick="goBack(3)">← Back</button>
+                <button class="btn-skip" onclick="skipStep(3)">Skip</button>
+                <button class="btn-next" id="nextBtn3" onclick="goNext(3)" disabled>Next →</button>
+            </div>
+        </div>
+
+        <!-- ── STEP 4: What to show on home ── -->
+        <div class="step" id="step4">
+            <div class="step-label">Step 4 of 4</div>
+            <h2 class="step-title">What would you like on your home feed?</h2>
+            <p class="step-subtitle">Customize what you see first when you open CopyCook.</p>
+            <div class="options-grid" id="feedGrid">
+                <!-- populated by JS -->
+            </div>
+            <div class="nav-row">
+                <button class="btn-back" onclick="goBack(4)">← Back</button>
+                <button class="btn-skip" onclick="skipStep(4)">Skip</button>
+                <button class="btn-next" id="nextBtn4" onclick="finishSurvey()" disabled>Let's cook!</button>
+            </div>
+        </div>
+
+        <!-- ── DONE ── -->
+        <div class="step" id="stepDone">
+            <div class="celebrate">
+                <h2>You're all set!</h2>
+                <p>Your home feed is being personalized right now. Get ready to discover amazing recipes made just for you.</p>
+                <div class="pref-tags" id="prefTagsDisplay"></div>
+                <button class="btn-go" onclick="goHome()">Take me to my feed! →</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const CUISINES = [
+    { label: 'Italian',    value: 'Italian' },
+    { label: 'Japanese',   value: 'Japanese' },
+    { label: 'Mexican',    value: 'Mexican' },
+    { label: 'Indian',     value: 'Indian' },
+    { label: 'Spanish',    value: 'Spanish' },
+    { label: 'Chinese',    value: 'Chinese' },
+    { label: 'Moroccan',   value: 'Moroccan' },
+    { label: 'French',     value: 'French' },
+    { label: 'American',   value: 'American' },
+    { label: 'British',    value: 'British' },
+    { label: 'Thai',       value: 'Thai' },
+    { label: 'Other',      value: 'Other' },
+];
+
+const DIETS = [
+    { label: 'Vegetarian',  value: 'Vegetarian' },
+    { label: 'Vegan',       value: 'Vegan' },
+    { label: 'Pescatarian', value: 'Pescatarian' },
+    { label: 'Gluten-Free', value: 'Gluten-Free' },
+    { label: 'Dairy-Free',  value: 'Dairy-Free' },
+    { label: 'No restrictions', value: 'None' },
+];
+
+const SKILLS = [
+    { label: 'Beginner',     value: 'Beginner',     desc: 'Just starting out' },
+    { label: 'Intermediate', value: 'Intermediate', desc: 'Comfortable cooking' },
+    { label: 'Advanced',     value: 'Advanced',     desc: 'Chef-level skills' },
+];
+
+const FEED_OPTIONS = [
+    { label: 'Trending',        value: 'Trending' },
+    { label: 'Quick meals',     value: 'Quick' },
+    { label: 'Community posts', value: 'Community' },
+    { label: 'World cuisine',   value: 'World' },
+    { label: 'Healthy picks',   value: 'Healthy' },
+    { label: 'Desserts',        value: 'Desserts' },
+];
+
+// ─── SELECTIONS ──────────────────────────────────────────────────────────────
+const selections = { cuisines: [], diet: [], skill: null, feed: [] };
+
+// ─── BUILD OPTIONS ───────────────────────────────────────────────────────────
+function buildGrid(containerId, items, type, isMulti = true) {
+    const grid = document.getElementById(containerId);
+    items.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<span class="opt-label">${item.label}</span>`;
+        btn.addEventListener('click', () => toggleOption(btn, item.value, type, isMulti));
+        grid.appendChild(btn);
+    });
+}
+
+function buildSkillRow() {
+    const row = document.getElementById('skillRow');
+    SKILLS.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'option-pill';
+        btn.innerHTML = `${item.label}<br><small style="font-weight:400;font-size:11px;color:#9A8A80;">${item.desc}</small>`;
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#skillRow .option-pill').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selections.skill = item.value;
+            document.getElementById('nextBtn3').disabled = false;
+        });
+        row.appendChild(btn);
+    });
+}
+
+function toggleOption(btn, value, type, isMulti) {
+    if (isMulti) {
+        btn.classList.toggle('selected');
+        if (btn.classList.contains('selected')) {
+            if (!selections[type].includes(value)) selections[type].push(value);
+        } else {
+            selections[type] = selections[type].filter(v => v !== value);
+        }
+    } else {
+        document.querySelectorAll(`#${type}Grid .option-btn`).forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selections[type] = [value];
+    }
+    // Enable next if needed
+    if (type === 'cuisines') document.getElementById('nextBtn1').disabled = selections.cuisines.length === 0;
+    if (type === 'feed')     document.getElementById('nextBtn4').disabled = selections.feed.length === 0;
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+const TOTAL = 4;
+
+function showStep(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    const el = n === 'done' ? document.getElementById('stepDone') : document.getElementById(`step${n}`);
+    el.classList.add('active');
+    const pct = n === 'done' ? 100 : (n / TOTAL) * 100;
+    document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function goNext(currentStep) {
+    showStep(currentStep + 1);
+}
+
+function goBack(currentStep) {
+    showStep(currentStep - 1);
+}
+
+function skipStep(step) {
+    if (step < TOTAL) showStep(step + 1);
+    else finishSurvey();
+}
+
+function finishSurvey() {
+    // Save prefs to localStorage
+    localStorage.setItem('cc_prefs', JSON.stringify(selections));
+    localStorage.setItem('cc_onboarded', 'true');
+
+    // Optionally save to Firestore if user is logged in
+    savePrefsToFirestore(selections);
+
+    // Show done screen with tags
+    const tagsEl = document.getElementById('prefTagsDisplay');
+    tagsEl.innerHTML = '';
+    const allTags = [
+        ...selections.cuisines,
+        ...selections.diet,
+        selections.skill ? `${selections.skill} cook` : null,
+        ...selections.feed,
+    ].filter(Boolean);
+    allTags.forEach(tag => {
+        const span = document.createElement('span');
+        span.className = 'pref-tag';
+        span.textContent = tag;
+        tagsEl.appendChild(span);
+    });
+
+    showStep('done');
+}
+
+async function savePrefsToFirestore(prefs) {
+    try {
+        const uid = localStorage.getItem('userUID');
+        if (!uid) return;
+        // Dynamic import to avoid blocking
+        const { db } = await import('./firebase-config.js');
+        const { doc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        await setDoc(doc(db, 'users', uid), {
+            preferences: prefs,
+            onboardingComplete: true,
+            preferencesUpdatedAt: new Date().toISOString(),
+            profileUpdatedAt: serverTimestamp()
+        }, { merge: true });
+    } catch (e) {
+        // Silently fail — prefs are in localStorage anyway
+        console.warn('Could not save prefs to Firestore:', e);
+    }
+}
+
+function goHome() {
+    localStorage.setItem('cc_justOnboarded', 'true');
+    window.location.href = 'Home page/home.html';
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+buildGrid('cuisineGrid', CUISINES, 'cuisines', true);
+buildGrid('dietGrid',    DIETS,    'diet',     true);
+buildGrid('feedGrid',    FEED_OPTIONS, 'feed', true);
+buildSkillRow();
+
+(function showSurveyWelcome() {
+    const el = document.getElementById('surveyWelcome');
+    if (!el) return;
+    if (localStorage.getItem('userUID') && localStorage.getItem('cc_onboarded') !== 'true') {
+        el.style.display = 'block';
+    }
+})();
+</script>
+</body>
+</html>
