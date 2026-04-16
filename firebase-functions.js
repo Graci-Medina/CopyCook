@@ -404,3 +404,60 @@ export async function getPosts() {
 export async function deletePost(postId) {
     await deleteDoc(doc(db, 'posts', postId));
 }
+
+//── RECIPE DATA ENTRY ──────────────────────────────────────────────────────────────────
+
+//Accept file input from 'fileinput' in uploadcsv.html
+document.getElementById('fileInput').addEventListener('change',function(event) {
+    const file = event.target.files[0];
+    let content;
+
+    //read csv file
+    if (file) {
+    const reader = new FileReader();
+    reader.onload = async function (e) {
+        content = e.target.result;
+        document.getElementById('output').innerText = content;
+
+        //Convert csv into Array
+        const lines = content.split('\n');
+        lines.shift();
+
+        //iterate through all lines of csv file
+        for (const element of lines) {
+            //format data
+            let recipeData = element.split(",");
+            let ingredients = recipeData[4].split("-");
+            recipeData[5] = recipeData[5].replace("-", ",");
+            recipeData[4] = ingredients;
+
+            //upload data to firestore
+            const recipesRef = doc(db, 'recipes', recipeData[0]);
+            await setDoc(recipesRef, {
+                idMeal: recipeData[0],
+                strMeal: recipeData[1],
+                strMealThumb: recipeData[2] || null,
+                ingredients: recipeData[3],
+                instructions: recipeData[4],
+                restaurant: recipeData[5]
+            });
+        }
+    };
+    reader.readAsText(file);
+    }
+});
+
+//-- TESTING ---------------
+
+const signupForm = document.getElementById('testForm');
+
+signupForm.addEventListener('submit',  function (e) {
+        e.preventDefault();
+        //sendMessage(123, 3345, "hi, this is a test message")
+        //document.getElementById("demo").textContent = "beh";
+        //newPost("77aObMfdVnhwFb95OkdStH6tWsQ2", "awesome pancakes", "1 tbsp butter", "step 1: make the food", "ihop", "testimgage.jpg");
+        //deletePost("dLZJPwmjWgcLZMHMXkCa");
+        //makeCSV();
+        //newRecipe("5355264","iHOP Pancakes","test","dough-sugar-flour-syrup-blueberries","instruction1-instrucion2","iHop");
+        }
+);
