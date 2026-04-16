@@ -407,8 +407,8 @@ export async function deletePost(postId) {
 
 //── RECIPE DATA ENTRY ──────────────────────────────────────────────────────────────────
 
-//Accept file input from 'fileinput' in uploadcsv.html
-document.getElementById('fileInput').addEventListener('change',function(event) {
+//Accept file input from 'csvInput' in uploadcsv.html
+document.getElementById('csvInput').addEventListener('change',function(event) {
     const file = event.target.files[0];
     let content;
 
