@@ -529,20 +529,20 @@
                 <div class="hero-actions" id="heroActions">
                     <button class="btn-solid" id="editProfileBtn">Edit Profile</button>
                     <button class="btn-solid" id="followToggleBtn" style="display:none;" type="button" onclick="toggleFollowFromButton()">Follow</button>
-                    <!-- Show share profile for all profiles-->
+                    <!-- show share profile for all profiles-->
                     <button class="btn-outline" id="shareProfileBtn" onclick="shareProfile()">Share Profile</button>
                 </div>
             </div>
 
             <!-- Tabs -->
             <div class="tabs-bar">
-                <!-- User posts
-                <button class="tab" id="tabPosts" onclick="switchTab('posts')">Posts</button> -->
+                <!-- User posts -->
+                <button class="tab" id="tabPosts" onclick="switchTab('posts')">Posts</button>
                 <button class="tab active" id="tabSaves" onclick="switchTab('saves')">Saves</button>
                 <button class="tab" id="tabLikes" onclick="switchTab('likes')">Likes</button>
             </div>
 
-            <!-- Posts panel
+            <!-- Posts panel-->
             <div class="tab-panel" id="panel-posts">
                 <div class="recipe-grid" id="postsGrid">
                     <div class="empty-state">
@@ -550,7 +550,7 @@
                         <p>Loading posts...</p>
                     </div>
                 </div>
-            </div> -->
+            </div>
 
             <!-- Saves panel -->
             <div class="tab-panel active" id="panel-saves">
@@ -607,7 +607,7 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import {
         getFirestore, collection, getDocs, doc, getDoc, query, where,
-        collectionGroup, setDoc, deleteDoc, serverTimestamp
+        collectionGroup, setDoc, deleteDoc, serverTimestamp, orderBy
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -987,7 +987,78 @@
         }
     }
 
-     // -- Load user posts -----------------------------
+ // -- Load users posts from  posts/{postId}
+  async function loadPosts(uid) {
+        const grid = document.getElementById('postsGrid');
+        try {
+            // Query posts authored by this profile's uid.
+            // Try with orderBy first; if Firestore needs a composite index,
+            // fall back to an unsorted query and sort client-side.
+            let docsList;
+            try {
+                const q = query(
+                    collection(db, 'posts'),
+                    where('uid', '==', uid),
+                    orderBy('createdAt', 'desc')
+                );
+                const snap = await getDocs(q);
+                docsList = snap.docs;
+            } catch (indexErr) {
+                if (indexErr && indexErr.code === 'failed-precondition') {
+                    const q = query(collection(db, 'posts'), where('uid', '==', uid));
+                    const snap = await getDocs(q);
+                    docsList = snap.docs.slice().sort((a, b) => {
+                        const ta = a.data().createdAt?.toMillis?.() || 0;
+                        const tb = b.data().createdAt?.toMillis?.() || 0;
+                        return tb - ta;
+                    });
+                } else {
+                    throw indexErr;
+                }
+            }
+
+            const posts = docsList.map(d => ({ id: d.id, ...d.data() }));
+            renderPostCards(posts);
+        } catch (e) {
+            console.warn('Could not load posts:', e);
+            renderPostCards([]);
+        }
+    }
+
+    function renderPostCards(posts) {
+        const grid = document.getElementById('postsGrid');
+        grid.innerHTML = '';
+
+        if (!posts.length) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <p>No posts yet</p>
+                    <span>${isOwnProfile ? 'Share your first recipe from the + tab' : 'This user hasn\'t posted yet'}</span>
+                </div>`;
+            return;
+        }
+
+        posts.forEach((post, idx) => {
+            const title = post.mealName || 'Untitled recipe';
+            const thumb = post.postImg || PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
+
+            const card = document.createElement('div');
+            card.className = 'recipe-card';
+            card.onclick = () => {
+                window.location.href =
+                    `../Home page/community-recipe.html?id=${encodeURIComponent(post.id)}`;
+            };
+            card.innerHTML = `
+                <img src="${thumb}" alt="${title}" loading="lazy"
+                     onerror="this.src='${PLACEHOLDER_IMAGES[0]}'">
+                <div class="recipe-card-body">
+                    <div class="recipe-card-title">${title}</div>
+                </div>`;
+            grid.appendChild(card);
+        });
+    }
+
 
 
     // ── Load saves (public folders) ───────────────────────────────────────────
@@ -1203,6 +1274,7 @@
         await loadProfile(targetUid, isOwnProfile);
         await loadSaves(targetUid);
         await loadLikes(targetUid);
+        await loadPosts(targetUid);
         await loadFollowStats(targetUid);
         await loadFollowState(targetUid);
 
