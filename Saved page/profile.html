@@ -527,17 +527,30 @@
                 </div>
                 <!-- Only shown when viewing own profile -->
                 <div class="hero-actions" id="heroActions">
-                    <button class="btn-outline" id="shareProfileBtn" onclick="shareProfile()">Share Profile</button>
                     <button class="btn-solid" id="editProfileBtn">Edit Profile</button>
                     <button class="btn-solid" id="followToggleBtn" style="display:none;" type="button" onclick="toggleFollowFromButton()">Follow</button>
+                    <!-- Show share profile for all profiles-->
+                    <button class="btn-outline" id="shareProfileBtn" onclick="shareProfile()">Share Profile</button>
                 </div>
             </div>
 
             <!-- Tabs -->
             <div class="tabs-bar">
+                <!-- User posts
+                <button class="tab" id="tabPosts" onclick="switchTab('posts')">Posts</button> -->
                 <button class="tab active" id="tabSaves" onclick="switchTab('saves')">Saves</button>
                 <button class="tab" id="tabLikes" onclick="switchTab('likes')">Likes</button>
             </div>
+
+            <!-- Posts panel
+            <div class="tab-panel" id="panel-posts">
+                <div class="recipe-grid" id="postsGrid">
+                    <div class="empty-state">
+                        <div class="empty-icon"></div>
+                        <p>Loading posts...</p>
+                    </div>
+                </div>
+            </div> -->
 
             <!-- Saves panel -->
             <div class="tab-panel active" id="panel-saves">
@@ -789,7 +802,8 @@
         const shareBtn = document.getElementById('shareProfileBtn');
         const editBtn = document.getElementById('editProfileBtn');
         const followBtn = document.getElementById('followToggleBtn');
-        if (shareBtn) shareBtn.style.display = isOwnProfile ? '' : 'none';
+        if (shareBtn) shareBtn.style.display = 'inline-block'
+;
         if (editBtn) editBtn.style.display = isOwnProfile ? '' : 'none';
         if (followBtn) followBtn.style.display = isOwnProfile ? 'none' : '';
         if (!isOwnProfile) closeEditProfileModal();
@@ -973,6 +987,9 @@
         }
     }
 
+     // -- Load user posts -----------------------------
+
+
     // ── Load saves (public folders) ───────────────────────────────────────────
     async function loadSaves(uid) {
         const grid = document.getElementById('foldersGrid');
@@ -1122,23 +1139,30 @@
         document.getElementById('panel-' + tab).classList.add('active');
     };
 
-     // ── Share profile  ─────────────────────────────────────────
+    // Share profile
+
     window.shareProfile = function() {
-        const profileUrl = window.location.href;
+        // Always include the viewed profile's uid so the link works for everyone
+        const uidToShare = currentProfileUid || signedInUid;
+        const baseUrl = window.location.origin + window.location.pathname;
+        const profileUrl = uidToShare
+            ? `${baseUrl}?uid=${encodeURIComponent(uidToShare)}`
+            : window.location.href;
+
+        const profileName = document.getElementById('heroName')?.textContent
+                            || 'CopyCook Profile';
+
         if (navigator.share) {
             navigator.share({
-                title: fullNameFromModel(profileModel) || 'CopyCook Profile',
+                title: profileName,
                 url: profileUrl
-            }).catch(err => {
-                console.warn('Error sharing profile:', err);
-            });
+            }).catch(err => console.warn('Error sharing:', err));
         } else {
-            // Fallback: copy URL to clipboard
             navigator.clipboard.writeText(profileUrl).then(() => {
-                alert('Profile URL copied to clipboard!');
+                alert('Profile link copied to clipboard!');
             }).catch(err => {
-                console.warn('Could not copy profile URL:', err);
-                alert('Could not share profile. Please try copying the URL manually:\n' + profileUrl);
+                console.error('Copy failed', err);
+                alert('Please copy the URL manually: ' + profileUrl);
             });
         }
     };
@@ -1181,6 +1205,7 @@
         await loadLikes(targetUid);
         await loadFollowStats(targetUid);
         await loadFollowState(targetUid);
+
     });
 
     const editBtn = document.getElementById('editProfileBtn');
