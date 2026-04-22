@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CopyCook — Recipe CSV import</title>
+</head>
+<body>
+    <p style="font-family:system-ui,sans-serif;max-width:640px;padding:12px 16px;">
+        Import recipes into Firestore <code>recipes/{idMeal}</code> from a CSV file.
+        You must be <strong>signed in</strong> (Firestore rules require auth for writes).
+        Open <a href="login.html">login.html</a> in this tab first if imports fail with permission errors.
+    </p>
+    <input type="file" id="csvInput" accept=".csv" />
+    <pre id="output" style="font-family:monospace;white-space:pre-wrap;padding:16px;"></pre>
+
+    <script type="module" src="./recipe-csv-import.js"></script>
+</body>
+</html>

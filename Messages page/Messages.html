@@ -944,11 +944,13 @@
 
 <script type="module">
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, deleteUser as firebaseAuthDeleteUser } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import '../account-delete.js';
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
-    deleteUserFirestoreData,
     pruneConversationsWithDeletedParticipants,
-    dedupeUsersByEmail
+    dedupeUsersByEmail,
+    pruneMyFollowingWithDeletedUsers,
+    deleteConversationCompletely
 } from '../firebase-functions.js';
 import {
     getFirestore, doc, setDoc, getDoc, getDocs, addDoc, updateDoc,
@@ -976,32 +978,6 @@ const openOtherUidParam = navParams.get('otherUid') || '';
 const openOtherNameParam = navParams.get('otherName') || '';
 let pendingConversationRestore = !!(openConvParam || openOtherUidParam);
 
-window.deleteAccount = async function () {
-    if (!confirm(
-        'Delete your account permanently? This removes your profile, saved folders, likes, and all conversations (for you and people you chatted with). This cannot be undone.'
-    )) return;
-    const user = auth.currentUser;
-    if (!user) {
-        alert('You are not signed in.');
-        return;
-    }
-    try {
-        await deleteUserFirestoreData(user.uid);
-        await firebaseAuthDeleteUser(user);
-        localStorage.clear();
-        sessionStorage.clear();
-        closeLogoutPopup();
-        window.location.href = '../login.html';
-    } catch (e) {
-        console.error('deleteAccount:', e);
-        const code = e && e.code ? e.code : '';
-        const msg = code === 'auth/requires-recent-login'
-            ? 'For security, log out, sign in again, then delete your account.'
-            : (e.message || 'Could not delete account. Try again.');
-        alert(msg);
-    }
-};
-
 // ── State ──
 let currentUser    = null;
 let activeConvId   = null;
@@ -1009,6 +985,7 @@ let messagesUnsub  = null;   // active onSnapshot unsubscriber for messages
 let convsUnsub     = null;   // active onSnapshot for conversation list
 let allConversations = [];   // raw data for filter
 let userSearchTimeout = null;
+const userStatusCache = new Map();
 
 // ── Avatar colors ──
 const AVATAR_COLORS = ['#D4A5A5','#9FB19F','#A5B4D4','#D4C4A5','#B4A5D4','#A5D4C4','#D4A5B4','#C4D4A5'];
@@ -1100,6 +1077,11 @@ onAuthStateChanged(auth, async user => {
     } catch (e) {
         console.warn('prune orphaned conversations:', e);
     }
+    try {
+        await pruneMyFollowingWithDeletedUsers(user.uid);
+    } catch (e) {
+        console.warn('prune deleted follows:', e);
+    }
     loadConversations();
 });
 
@@ -1133,11 +1115,12 @@ function loadConversations() {
         orderBy('lastMessageAt', 'desc')
     );
 
-    convsUnsub = onSnapshot(q, snapshot => {
+    convsUnsub = onSnapshot(q, async snapshot => {
         allConversations = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderConvList(allConversations);
-        updateUnreadBadge(allConversations);
-        tryRestoreConversationFromNav(allConversations);
+        const visibleConvs = await filterVisibleConversations(allConversations);
+        renderConvList(visibleConvs);
+        updateUnreadBadge(visibleConvs);
+        tryRestoreConversationFromNav(visibleConvs);
     }, err => {
         console.error('Conversations listener error:', err);
         // If index not built yet, fall back to simple query
@@ -1145,7 +1128,7 @@ function loadConversations() {
             collection(db, 'conversations'),
             where('participants', 'array-contains', currentUser.uid)
         );
-        convsUnsub = onSnapshot(fallback, snapshot => {
+        convsUnsub = onSnapshot(fallback, async snapshot => {
             allConversations = snapshot.docs
                 .map(d => ({ id: d.id, ...d.data() }))
                 .sort((a, b) => {
@@ -1153,11 +1136,45 @@ function loadConversations() {
                     const tb = b.lastMessageAt?.toMillis?.() || 0;
                     return tb - ta;
                 });
-            renderConvList(allConversations);
-            updateUnreadBadge(allConversations);
-            tryRestoreConversationFromNav(allConversations);
+            const visibleConvs = await filterVisibleConversations(allConversations);
+            renderConvList(visibleConvs);
+            updateUnreadBadge(visibleConvs);
+            tryRestoreConversationFromNav(visibleConvs);
         });
     });
+}
+
+async function statusForUser(uid) {
+    if (!uid) return { exists: false, isDeleted: true };
+    if (userStatusCache.has(uid)) return userStatusCache.get(uid);
+    try {
+        const snap = await getDoc(doc(db, 'users', uid));
+        const status = { exists: snap.exists(), isDeleted: snap.exists() ? !!snap.data().isDeleted : true };
+        userStatusCache.set(uid, status);
+        return status;
+    } catch {
+        const status = { exists: false, isDeleted: true };
+        userStatusCache.set(uid, status);
+        return status;
+    }
+}
+
+async function filterVisibleConversations(convs) {
+    const out = [];
+    for (const conv of convs) {
+        const otherUid = conv.participants?.find((p) => p !== currentUser.uid);
+        const st = await statusForUser(otherUid);
+        if (!st.exists || st.isDeleted) {
+            try {
+                if (conv?.id) await deleteConversationCompletely(conv.id);
+            } catch (e) {
+                console.warn('Could not delete stale conversation:', conv?.id, e);
+            }
+            continue;
+        }
+        out.push(conv);
+    }
+    return out;
 }
 
 function tryRestoreConversationFromNav(convs) {
@@ -1496,6 +1513,7 @@ window.autoResize = function(el) {
 // ══════════════════════════════════════════════
 
 window.openNewMessageModal = function() {
+    _usersCache = null; // Force fresh users query so deleted accounts disappear quickly.
     document.getElementById('userSearchInput').value = '';
     document.getElementById('userResults').innerHTML = '<div class="modal-hint">Start typing to find someone</div>';
     document.getElementById('newMsgModal').classList.add('active');
@@ -1533,6 +1551,7 @@ async function doUserSearch(searchQ) {
         const q = searchQ.toLowerCase();
         const matches = _usersCache.filter(u => {
             if (u.uid === currentUser.uid) return false;
+            if (u.isDeleted) return false;
             const name  = (u.displayName || '').toLowerCase();
             const email = (u.email || '').toLowerCase();
             return name.includes(q) || email.includes(q);

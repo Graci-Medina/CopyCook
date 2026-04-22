@@ -7,7 +7,8 @@ import {
     unsaveRecipe,
     createFolder,
     getFolders,
-    getPosts
+    getPosts,
+    pruneMyFollowingWithDeletedUsers
 } from '../firebase-functions.js';
 import '../account-delete.js';
 
@@ -35,6 +36,11 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         localStorage.setItem('userUID', user.uid);
         console.log('✅ userUID set in localStorage:', user.uid);
+        try {
+            await pruneMyFollowingWithDeletedUsers(user.uid);
+        } catch (e) {
+            console.warn('Could not prune following list:', e);
+        }
         try {
             const snap = await getDoc(doc(db, 'users', user.uid));
             if (snap.exists()) {

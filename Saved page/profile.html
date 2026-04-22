@@ -527,16 +527,28 @@
                 </div>
                 <!-- Only shown when viewing own profile -->
                 <div class="hero-actions" id="heroActions">
-                    <button class="btn-outline" id="shareProfileBtn">Share Profile</button>
                     <button class="btn-solid" id="editProfileBtn">Edit Profile</button>
                     <button class="btn-solid" id="followToggleBtn" style="display:none;" type="button" onclick="toggleFollowFromButton()">Follow</button>
+                    <!-- show share profile for all profiles -->
+                    <button class="btn-outline" id="shareProfileBtn" onclick="shareProfile()">Share Profile</button>
                 </div>
             </div>
 
             <!-- Tabs -->
             <div class="tabs-bar">
+                <button class="tab" id="tabPosts" onclick="switchTab('posts')">Posts</button>
                 <button class="tab active" id="tabSaves" onclick="switchTab('saves')">Saves</button>
                 <button class="tab" id="tabLikes" onclick="switchTab('likes')">Likes</button>
+            </div>
+
+            <!-- Posts panel -->
+            <div class="tab-panel" id="panel-posts">
+                <div class="recipe-grid" id="postsGrid">
+                    <div class="empty-state">
+                        <div class="empty-icon"></div>
+                        <p>Loading posts...</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Saves panel -->
@@ -585,16 +597,18 @@
     <div class="logout-content">
         <h3>Account Settings</h3>
         <button class="logout-btn" onclick="handleLogout()">Log Out</button>
+        <button class="logout-btn" onclick="deleteAccount()">Delete account</button>
         <button class="cancel-btn" onclick="closeLogoutPopup()">Cancel</button>
     </div>
 </div>
 
 <script type="module">
+    import '../account-delete.js';
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import {
         getFirestore, collection, getDocs, doc, getDoc, query, where,
-        collectionGroup, setDoc, deleteDoc, serverTimestamp
+        collectionGroup, setDoc, deleteDoc, serverTimestamp, orderBy
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -789,7 +803,7 @@
         const shareBtn = document.getElementById('shareProfileBtn');
         const editBtn = document.getElementById('editProfileBtn');
         const followBtn = document.getElementById('followToggleBtn');
-        if (shareBtn) shareBtn.style.display = isOwnProfile ? '' : 'none';
+        if (shareBtn) shareBtn.style.display = 'inline-block';
         if (editBtn) editBtn.style.display = isOwnProfile ? '' : 'none';
         if (followBtn) followBtn.style.display = isOwnProfile ? 'none' : '';
         if (!isOwnProfile) closeEditProfileModal();
@@ -973,6 +987,76 @@
         }
     }
 
+    async function loadPosts(uid) {
+        const grid = document.getElementById('postsGrid');
+        if (!grid) return;
+        try {
+            let docsList;
+            try {
+                const q = query(
+                    collection(db, 'posts'),
+                    where('uid', '==', uid),
+                    orderBy('createdAt', 'desc')
+                );
+                const snap = await getDocs(q);
+                docsList = snap.docs;
+            } catch (indexErr) {
+                if (indexErr && indexErr.code === 'failed-precondition') {
+                    const q = query(collection(db, 'posts'), where('uid', '==', uid));
+                    const snap = await getDocs(q);
+                    docsList = snap.docs.slice().sort((a, b) => {
+                        const ta = a.data().createdAt?.toMillis?.() || 0;
+                        const tb = b.data().createdAt?.toMillis?.() || 0;
+                        return tb - ta;
+                    });
+                } else {
+                    throw indexErr;
+                }
+            }
+
+            const posts = docsList.map((d) => ({ id: d.id, ...d.data() }));
+            renderPostCards(posts);
+        } catch (e) {
+            console.warn('Could not load posts:', e);
+            renderPostCards([]);
+        }
+    }
+
+    function renderPostCards(posts) {
+        const grid = document.getElementById('postsGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        if (!posts.length) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <p>No posts yet</p>
+                    <span>${isOwnProfile ? 'Share your first recipe from the + tab' : "This user hasn't posted yet"}</span>
+                </div>`;
+            return;
+        }
+
+        posts.forEach((post, idx) => {
+            const title = post.mealName || 'Untitled recipe';
+            const thumb = post.postImg || PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
+
+            const card = document.createElement('div');
+            card.className = 'recipe-card';
+            card.onclick = () => {
+                window.location.href =
+                    `../Home page/community-recipe.html?id=${encodeURIComponent(post.id)}`;
+            };
+            card.innerHTML = `
+                <img src="${thumb}" alt="${title}" loading="lazy"
+                     onerror="this.src='${PLACEHOLDER_IMAGES[0]}'">
+                <div class="recipe-card-body">
+                    <div class="recipe-card-title">${title}</div>
+                </div>`;
+            grid.appendChild(card);
+        });
+    }
+
     // ── Load saves (public folders) ───────────────────────────────────────────
     async function loadSaves(uid) {
         const grid = document.getElementById('foldersGrid');
@@ -1122,6 +1206,34 @@
         document.getElementById('panel-' + tab).classList.add('active');
     };
 
+    // Share profile
+
+    window.shareProfile = function() {
+        // Always include the viewed profile's uid so the link works for everyone
+        const uidToShare = currentProfileUid || signedInUid;
+        const baseUrl = window.location.origin + window.location.pathname;
+        const profileUrl = uidToShare
+            ? `${baseUrl}?uid=${encodeURIComponent(uidToShare)}`
+            : window.location.href;
+
+        const profileName = document.getElementById('heroName')?.textContent
+                            || 'CopyCook Profile';
+
+        if (navigator.share) {
+            navigator.share({
+                title: profileName,
+                url: profileUrl
+            }).catch(err => console.warn('Error sharing:', err));
+        } else {
+            navigator.clipboard.writeText(profileUrl).then(() => {
+                alert('Profile link copied to clipboard!');
+            }).catch(err => {
+                console.error('Copy failed', err);
+                alert('Please copy the URL manually: ' + profileUrl);
+            });
+        }
+    };
+
     // ── Logout ────────────────────────────────────────────────────────────────
     window.toggleLogoutPopup = function(e) {
         e.preventDefault();
@@ -1157,6 +1269,7 @@
         await loadProfile(targetUid, isOwnProfile);
         await loadSaves(targetUid);
         await loadLikes(targetUid);
+        await loadPosts(targetUid);
         await loadFollowStats(targetUid);
         await loadFollowState(targetUid);
     });

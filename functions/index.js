@@ -38,6 +38,21 @@ exports.cleanupUserDataOnAuthDelete = functions.auth.user().onDelete(async (user
     for (const d of likesSnap.docs) await d.ref.delete();
     const likedSnap = await userRef.collection('likedRecipes').get();
     for (const d of likedSnap.docs) await d.ref.delete();
+    const followingSnap = await userRef.collection('following').get();
+    for (const d of followingSnap.docs) await d.ref.delete();
+
+    const followerRefs = await db.collectionGroup('following').where('targetUid', '==', uid).get();
+    for (const d of followerRefs.docs) {
+        await d.ref.delete();
+    }
+
+    const postsSnap = await db.collection('posts').where('uid', '==', uid).get();
+    for (const d of postsSnap.docs) await d.ref.delete();
+
+    const commentsSnap = await db.collectionGroup('comments').where('uid', '==', uid).get();
+    for (const d of commentsSnap.docs) await d.ref.delete();
+    const ratingsSnap = await db.collectionGroup('ratings').where('uid', '==', uid).get();
+    for (const d of ratingsSnap.docs) await d.ref.delete();
 
     await userRef.delete();
 });

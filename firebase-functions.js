@@ -2,7 +2,7 @@ import { db } from './firebase-config.js';
 
 import {
     doc, setDoc, updateDoc, getDoc, getDocs, deleteDoc, collection,
-    arrayUnion, arrayRemove, addDoc, query, where, orderBy, serverTimestamp,
+    arrayUnion, arrayRemove, addDoc, query, where, orderBy, serverTimestamp, collectionGroup,
     increment, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -104,6 +104,70 @@ async function deleteUserSubcollections(uid) {
     for (const d of likedRecipesSnap.docs) {
         await deleteDoc(d.ref);
     }
+    const followingSnap = await getDocs(collection(db, 'users', uid, 'following'));
+    for (const d of followingSnap.docs) {
+        await deleteDoc(d.ref);
+    }
+}
+
+async function deleteUserPosts(uid) {
+    const postsSnap = await getDocs(query(collection(db, 'posts'), where('uid', '==', uid)));
+    for (const p of postsSnap.docs) {
+        await deleteDoc(p.ref);
+    }
+}
+
+async function deleteUserRecipeInteractions(uid) {
+    const [commentsSnap, ratingsSnap] = await Promise.all([
+        getDocs(query(collectionGroup(db, 'comments'), where('uid', '==', uid))),
+        getDocs(query(collectionGroup(db, 'ratings'), where('uid', '==', uid)))
+    ]);
+
+    for (const d of commentsSnap.docs) {
+        await deleteDoc(d.ref);
+    }
+    for (const d of ratingsSnap.docs) {
+        await deleteDoc(d.ref);
+    }
+}
+
+async function deleteFollowerReferencesForUser(uid) {
+    const followerRefs = await getDocs(
+        query(collectionGroup(db, 'following'), where('targetUid', '==', uid))
+    );
+    for (const d of followerRefs.docs) {
+        try {
+            await deleteDoc(d.ref);
+        } catch (e) {
+            // Legacy docs or restrictive rules on specific paths should not block account deletion.
+            console.warn('Could not delete follower reference:', d.ref.path, e);
+        }
+    }
+}
+
+async function runCleanupStep(stepName, fn) {
+    try {
+        await fn();
+    } catch (e) {
+        console.warn(`Account cleanup step failed (${stepName}):`, e);
+    }
+}
+
+export async function pruneMyFollowingWithDeletedUsers(myUid) {
+    if (!myUid) return;
+    const followingSnap = await getDocs(collection(db, 'users', myUid, 'following'));
+    for (const rel of followingSnap.docs) {
+        const targetUid = rel.data()?.targetUid || rel.id;
+        if (!targetUid) continue;
+        const targetUserSnap = await getDoc(doc(db, 'users', targetUid));
+        if (!targetUserSnap.exists()) {
+            try {
+                await deleteDoc(rel.ref);
+            } catch (e) {
+                console.warn('Could not prune deleted following user:', rel.ref.path, e);
+            }
+        }
+    }
 }
 
 /**
@@ -111,8 +175,15 @@ async function deleteUserSubcollections(uid) {
  * Run while the user is still signed in, then call Auth deleteUser().
  */
 export async function deleteUserFirestoreData(uid) {
-    await deleteConversationsForUser(uid);
-    await deleteUserSubcollections(uid);
+    await runCleanupStep('markDeleted', async () => setDoc(doc(db, 'users', uid), {
+        isDeleted: true,
+        deletedAt: new Date().toISOString()
+    }, { merge: true }));
+    await runCleanupStep('conversations', async () => deleteConversationsForUser(uid));
+    await runCleanupStep('posts', async () => deleteUserPosts(uid));
+    await runCleanupStep('recipeInteractions', async () => deleteUserRecipeInteractions(uid));
+    await runCleanupStep('followerReferences', async () => deleteFollowerReferencesForUser(uid));
+    await runCleanupStep('userSubcollections', async () => deleteUserSubcollections(uid));
     await deleteDoc(doc(db, 'users', uid));
 }
 
@@ -403,4 +474,33 @@ export async function getPosts() {
 
 export async function deletePost(postId) {
     await deleteDoc(doc(db, 'posts', postId));
+}
+
+// ── Recipe CSV import (admin / tooling) ─────────────────────────────────────
+// Column order matches teammate script: idMeal, strMeal, strMealThumb, ingredients,
+// ingredient tokens (dash-separated → array), restaurant (first "-" → comma).
+
+/**
+ * @param {string[]} recipeData - One CSV row split by comma (same shape as teammate upload).
+ */
+export async function importRecipeFromCsvRow(recipeData) {
+    const idMeal = (recipeData[0] || '').trim();
+    if (!idMeal) return;
+
+    const row = [...recipeData];
+    const ingredients = (row[4] || '').split('-');
+    if (row.length > 5 && row[5] != null && row[5] !== '') {
+        row[5] = String(row[5]).replace('-', ',');
+    }
+    row[4] = ingredients;
+
+    const recipesRef = doc(db, 'recipes', idMeal);
+    await setDoc(recipesRef, {
+        idMeal,
+        strMeal: row[1] || '',
+        strMealThumb: row[2] || null,
+        ingredients: row[3],
+        instructions: row[4],
+        restaurant: row[5]
+    });
 }

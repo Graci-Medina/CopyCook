@@ -809,10 +809,12 @@
     <div class="logout-content">
         <h3>Account Settings</h3>
         <button class="logout-btn" onclick="handleLogout()">Log Out</button>
+        <button class="logout-btn" onclick="deleteAccount()">Delete account</button>
         <button class="cancel-btn" onclick="closeLogoutPopup()">Cancel</button>
     </div>
 </div>
 
+<script type="module" src="../account-delete.js"></script>
 <script>
 // ── Avatar ──
 (function() {
@@ -837,7 +839,11 @@ document.getElementById('logoutPopup').addEventListener('click', e => { if (e.ta
 document.getElementById('restaurantModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 
 // ── Restaurant data ──
+// copycatRestaurant: when set, meals from ../Home page/copycat-recipes.json with matching strRestaurant/strArea are merged into this chain’s modal and recipe count.
 const CHAIN_RESTAURANTS = [
+    { name: "Taco Bell", tag: "Mexican · Fast Food", search: "taco", color: "#AD2136", copycatRestaurant: "Taco Bell" },
+    { name: "McDonald's", tag: "American · Fast Food", search: "burger", color: "#FFC72C", copycatRestaurant: "McDonald's" },
+    { name: "Chick-fil-A", tag: "American · Chicken", search: "chicken", color: "#E21235", copycatRestaurant: "Chick-fil-A" },
     { name: "The Cheesecake Factory", tag: "American · Casual Dining", search: "cheesecake", color: "#E8B4B4" },
     { name: "Applebee's",             tag: "American · Bar & Grill",   search: "steak",      color: "#D4C4A5" },
     { name: "Raising Cane's",         tag: "Fast Food · Chicken",      search: "chicken",    color: "#A5D4C4" },
@@ -853,21 +859,21 @@ const CHAIN_RESTAURANTS = [
 ];
 
 const FEATURED_DEFAULT = [
-    { name: "The Cheesecake Factory", sub: "Over 250 dishes to recreate", idx: 0 },
-    { name: "Olive Garden",           sub: "Unlimited breadsticks at home", idx: 3 },
+    { name: "The Cheesecake Factory", sub: "Over 250 dishes to recreate", idx: 3 },
+    { name: "Olive Garden",           sub: "Unlimited breadsticks at home", idx: 6 },
 ];
 
 /** Onboarding cuisine values → keywords matched against restaurant name/tag/search */
 const CUISINE_TO_TERMS = {
     Italian:    ['italian', 'pasta', 'olive'],
     Japanese:   ['japanese', 'asian', 'chang', 'chinese'],
-    Mexican:    ['mexican', 'grill', 'chili'],
+    Mexican:    ['mexican', 'grill', 'chili', 'taco'],
     Indian:     ['indian', 'curry', 'asian'],
     Spanish:    ['spanish', 'tapas'],
     Chinese:    ['chinese', 'asian', 'chang'],
     Moroccan:   ['moroccan'],
     French:     ['french'],
-    American:   ['american', 'steakhouse', 'cheesecake', 'ihop', 'diner', 'roadhouse', 'outback', 'applebee'],
+    American:   ['american', 'steakhouse', 'cheesecake', 'ihop', 'diner', 'roadhouse', 'outback', 'applebee', 'burger', 'mcdonald', 'chick', 'fil'],
     British:    ['british'],
     Thai:       ['thai', 'asian'],
     Other:      []
@@ -1039,6 +1045,39 @@ function trendingSearchTerms(prefs) {
 
 const imageCache = {};
 
+const EXPLORE_MEAL_PLACEHOLDER = 'https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg';
+
+/** MealDB thumbs use /preview; external URLs (e.g. CopyKat) must stay as-is. */
+function mealThumbSrc(meal) {
+    const u = (meal.strMealThumb || '').trim();
+    if (!u) return EXPLORE_MEAL_PLACEHOLDER;
+    if (/themealdb\.com/i.test(u)) return u.replace(/\/preview\/?$/i, '') + '/preview';
+    return u;
+}
+
+let copycatJsonCache = null;
+async function getAllCopycatMeals() {
+    if (copycatJsonCache) return copycatJsonCache;
+    try {
+        const res  = await fetch('../Home page/copycat-recipes.json');
+        const data = await res.json();
+        copycatJsonCache = data.meals || [];
+    } catch (_) {
+        copycatJsonCache = [];
+    }
+    return copycatJsonCache;
+}
+
+function copycatsForRestaurant(restaurant, allMeals) {
+    const key = (restaurant.copycatRestaurant || '').trim();
+    if (!key || !allMeals || !allMeals.length) return [];
+    const k = key.toLowerCase();
+    return allMeals.filter(m => {
+        const r = String(m.strRestaurant || m.strArea || '').trim().toLowerCase();
+        return r === k;
+    });
+}
+
 async function fetchMealImage(searchTerm) {
     if (imageCache[searchTerm]) return imageCache[searchTerm];
     try {
@@ -1099,13 +1138,15 @@ let filteredRestaurants = sortRestaurantsByPrefs([...CHAIN_RESTAURANTS], explore
 async function renderRestaurantCards(restaurants) {
     const grid = document.getElementById('restaurantsGrid');
     grid.innerHTML = '';
+    const allCopycats = await getAllCopycatMeals();
     const toShow = restaurants.slice(0, visibleCount);
     const results = await Promise.all(toShow.map(r => fetchMealImage(r.search)));
     toShow.forEach((r, i) => {
         const card = document.createElement('div');
         card.className = 'restaurant-card';
         card.onclick = () => openRestaurantModal(r);
-        const recipeCount = results[i].meals.length;
+        const cc = copycatsForRestaurant(r, allCopycats);
+        const recipeCount = (results[i].meals || []).length + cc.length;
         card.innerHTML = `
             <div class="restaurant-thumb">
                 <img src="${results[i].img}" alt="${r.name}" loading="lazy">
@@ -1151,7 +1192,7 @@ async function renderTrending(prefs) {
             card.className = 'trending-card';
             card.onclick = () => window.location.href = `../Home page/recipe.html?id=${meal.idMeal}`;
             card.innerHTML = `
-                <div class="trending-thumb"><img src="${meal.strMealThumb}/preview" alt="${meal.strMeal}" loading="lazy"></div>
+                <div class="trending-thumb"><img src="${mealThumbSrc(meal)}" alt="${meal.strMeal}" loading="lazy"></div>
                 <div class="trending-info">
                     <div class="trending-name">${meal.strMeal}</div>
                     <div class="trending-restaurant">${meal.strArea || meal.strCategory}</div>
@@ -1238,7 +1279,7 @@ async function searchRecipesInExplore(q) {
             card.className = 'trending-card';
             card.onclick = () => window.location.href = `../Home page/recipe.html?id=${meal.idMeal}`;
             card.innerHTML = `
-                <div class="trending-thumb"><img src="${meal.strMealThumb}/preview" alt="${meal.strMeal}" loading="lazy"></div>
+                <div class="trending-thumb"><img src="${mealThumbSrc(meal)}" alt="${meal.strMeal}" loading="lazy"></div>
                 <div class="trending-info">
                     <div class="trending-name">${meal.strMeal}</div>
                     <div class="trending-restaurant">${meal.strArea || meal.strCategory || ''}</div>
@@ -1282,19 +1323,28 @@ async function openRestaurantModal(restaurant) {
     document.getElementById('modalTags').innerHTML = restaurant.tag.split('·').map(t => `<span class="modal-tag">${t.trim()}</span>`).join('');
     document.getElementById('modalRecipesGrid').innerHTML = '<div class="modal-loading">Loading recipes…</div>';
     document.getElementById('restaurantModal').classList.add('active');
-    const result = await fetchMealImage(restaurant.search);
+    const [result, allCopycats] = await Promise.all([
+        fetchMealImage(restaurant.search),
+        getAllCopycatMeals()
+    ]);
+    const chainCopycats = copycatsForRestaurant(restaurant, allCopycats);
+    const apiMeals = (result.meals || []).filter(m => !chainCopycats.some(c => String(c.idMeal) === String(m.idMeal)));
+    const merged = [...chainCopycats, ...apiMeals];
     document.getElementById('modalHeroImg').src = result.img;
     const grid = document.getElementById('modalRecipesGrid');
     grid.innerHTML = '';
-    const meals = result.meals.slice(0, 6);
-    if (meals.length === 0) { grid.innerHTML = '<p style="color:#9FB19F;font-size:13px;">No recipes found.</p>'; return; }
-    document.getElementById('modalRecipesTitle').textContent = `Copycat Recipes (${result.meals.length} available)`;
-    meals.forEach(meal => {
+    if (merged.length === 0) {
+        grid.innerHTML = '<p style="color:#9FB19F;font-size:13px;">No recipes found.</p>';
+        document.getElementById('modalRecipesTitle').textContent = 'Copycat Recipes';
+        return;
+    }
+    document.getElementById('modalRecipesTitle').textContent = `Copycat Recipes (${merged.length} available)`;
+    merged.slice(0, 24).forEach(meal => {
         const card = document.createElement('div');
         card.className = 'modal-recipe-card';
         card.onclick = () => { closeModal(); window.location.href = `../Home page/recipe.html?id=${meal.idMeal}`; };
         card.innerHTML = `
-            <div class="modal-recipe-thumb"><img src="${meal.strMealThumb}/preview" alt="${meal.strMeal}" loading="lazy"></div>
+            <div class="modal-recipe-thumb"><img src="${mealThumbSrc(meal)}" alt="${meal.strMeal}" loading="lazy"></div>
             <div class="modal-recipe-name">${meal.strMeal}</div>`;
         grid.appendChild(card);
     });

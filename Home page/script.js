@@ -137,6 +137,50 @@ function createCard(meal) {
 }
 function showMessage(grid, text) { grid.innerHTML = `<p>${text}</p>`; }
 
+// ── Load local copycat recipes ──────────────────────────────────────────────
+async function loadCopycatRecipes() {
+    try {
+        const res  = await fetch('copycat-recipes.json');
+        const data = await res.json();
+        return data.meals || [];
+    } catch (err) {
+        console.warn('Could not load copycat-recipes.json:', err);
+        return [];
+    }
+}
+
+/** True if local copycat meal matches search text and/or resolved cuisine/area name. */
+function copycatMatchesSearch(meal, query, cuisineMatch) {
+    const q = (query || '').trim().toLowerCase();
+    const hay = [
+        meal.strMeal, meal.strTags, meal.strArea, meal.strCategory,
+        meal.strDescription || '', meal.strRestaurant || '', meal.strAuthor || ''
+    ].join(' ').toLowerCase();
+
+    if (cuisineMatch) {
+        const c = String(cuisineMatch).trim().toLowerCase();
+        if (c && (meal.strCategory || '').toLowerCase() === c) return true;
+        if (c && (meal.strArea || '').toLowerCase() === c) return true;
+    }
+
+    if (!q) return false;
+    const words = q.split(/\s+/).filter(Boolean);
+    return words.every(w => hay.includes(w));
+}
+
+/** Returns copycats that match and are not already in `seen` (mutates seen when includeInSeen). */
+async function matchingCopycatsForSearch(query, cuisineMatch, seen, includeInSeen) {
+    const copycats = await loadCopycatRecipes();
+    const out = [];
+    for (const meal of copycats) {
+        if (seen.has(meal.idMeal)) continue;
+        if (!copycatMatchesSearch(meal, query, cuisineMatch)) continue;
+        if (includeInSeen) seen.add(meal.idMeal);
+        out.push(meal);
+    }
+    return out;
+}
+
 // ─── ALL-RECIPES LOADER ───────────────────────────────────────────────────────
 let allMealsCache = [], allMealsLoaded = false, allMealsLoading = false;
 
@@ -165,6 +209,15 @@ async function loadAllRecipes() {
             } catch (_) {}
         }));
         allMealsLoaded = true; allMealsLoading = false;
+        // Merge copycat recipes into the feed
+        const copycats = await loadCopycatRecipes();
+        copycats.forEach(meal => {
+            if (!seenIds.has(meal.idMeal)) {
+                seenIds.add(meal.idMeal);
+                allMealsCache.push(meal);
+                grid.appendChild(createCard(meal));
+            }
+        });
         if (grid.children.length === 0) showMessage(grid, 'No recipes could be loaded. Please try again later.');
     } catch (err) {
         allMealsLoading = false;
@@ -418,17 +471,22 @@ async function searchByGenericFoodTerm(query, grid) {
         } catch (_) {}
     }));
 
+    const seenForCc = new Set(matches.map(m => m.idMeal));
+    const ccMatches = await matchingCopycatsForSearch(query, null, seenForCc, true);
+
     grid.innerHTML = '';
-    if (!matches.length) {
+    if (!matches.length && !ccMatches.length) {
         showMessage(grid, `No recipes found for "${query}".`);
         return true;
     }
 
+    const total = matches.length + ccMatches.length;
     const header = document.createElement('p');
-    header.textContent = `${query} — ${matches.length} recipes`;
+    header.textContent = `${query} — ${total} recipe${total !== 1 ? 's' : ''}`;
     header.style.cssText = 'grid-column:1/-1;font-weight:600;color:#5A5A5A;padding:4px 0 8px;';
     grid.appendChild(header);
     matches.forEach((meal) => grid.appendChild(createCard(meal)));
+    ccMatches.forEach((meal) => grid.appendChild(createCard(meal)));
     return true;
 }
 
@@ -450,19 +508,44 @@ async function searchRecipes(query) {
         if (cuisineMatch) {
             const res  = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?a=${encodeURIComponent(cuisineMatch)}`);
             const data = await res.json();
+            const meals = data.meals || [];
+            const seen = new Set(meals.map(m => m.idMeal));
+            const ccMatches = await matchingCopycatsForSearch(query, cuisineMatch, seen, true);
+
             grid.innerHTML = '';
-            if (!data.meals || data.meals.length === 0) { showMessage(grid, `No ${cuisineMatch} recipes found.`); return; }
+            if (!meals.length && !ccMatches.length) {
+                showMessage(grid, `No ${cuisineMatch} recipes found.`);
+                return;
+            }
+            const total = meals.length + ccMatches.length;
             const header = document.createElement('p');
-            header.textContent = `${cuisineMatch} cuisine — ${data.meals.length} recipes`;
+            header.textContent = `${cuisineMatch} cuisine — ${total} recipe${total !== 1 ? 's' : ''}`;
             header.style.cssText = 'grid-column:1/-1;font-weight:600;color:#5A5A5A;padding:4px 0 8px;';
             grid.appendChild(header);
-            data.meals.forEach(meal => grid.appendChild(createCard(meal)));
+            meals.forEach(meal => grid.appendChild(createCard(meal)));
+            ccMatches.forEach(meal => grid.appendChild(createCard(meal)));
         } else {
             const res  = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(query)}`);
             const data = await res.json();
+            const meals = data.meals || [];
+            const seen = new Set(meals.map(m => m.idMeal));
+            const ccMatches = await matchingCopycatsForSearch(query, null, seen, true);
+
             grid.innerHTML = '';
-            if (!data.meals || data.meals.length === 0) { showMessage(grid, 'No recipes found. Try a cuisine (e.g. Indian, Mexican) or a dish name.'); return; }
-            data.meals.forEach(meal => grid.appendChild(createCard(meal)));
+            if (!meals.length && !ccMatches.length) {
+                showMessage(grid, 'No recipes found. Try a cuisine (e.g. Indian, Mexican) or a dish name.');
+                return;
+            }
+            if (ccMatches.length) {
+                const header = document.createElement('p');
+                header.textContent = meals.length
+                    ? `${query} — ${meals.length} from TheMealDB, ${ccMatches.length} CopyCook`
+                    : `${query} — ${ccMatches.length} CopyCook recipe${ccMatches.length !== 1 ? 's' : ''}`;
+                header.style.cssText = 'grid-column:1/-1;font-weight:600;color:#5A5A5A;padding:4px 0 8px;';
+                grid.appendChild(header);
+            }
+            meals.forEach(meal => grid.appendChild(createCard(meal)));
+            ccMatches.forEach(meal => grid.appendChild(createCard(meal)));
         }
     } catch (err) {
         showMessage(grid, 'Search failed. Please check your connection.');

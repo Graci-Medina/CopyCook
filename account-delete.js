@@ -8,7 +8,7 @@ import { deleteUserFirestoreData } from './firebase-functions.js';
 
 window.deleteAccount = async function () {
     if (!confirm(
-        'Delete your account permanently? This removes your profile, saved folders, likes, and all conversations (for you and people you chatted with). This cannot be undone.'
+        'Delete your account permanently? This removes your profile, saved folders, follows, posts, likes, recipe activity, and all conversations. This cannot be undone.'
     )) return;
     const user = auth.currentUser;
     if (!user) {
@@ -21,7 +21,7 @@ window.deleteAccount = async function () {
         localStorage.clear();
         sessionStorage.clear();
         if (typeof window.closeLogoutPopup === 'function') window.closeLogoutPopup();
-        window.location.href = 'login.html';
+        window.location.href = new URL('../login.html', window.location.href).toString();
     } catch (e) {
         console.error('deleteAccount:', e);
         const code = e && e.code ? e.code : '';

@@ -467,6 +467,7 @@
     <div class="logout-content">
         <h3>Account Settings</h3>
         <button class="logout-btn" onclick="handleLogout()">Log Out</button>
+        <button class="logout-btn" onclick="deleteAccount()">Delete account</button>
         <button class="cancel-btn" onclick="closeLogoutPopup()">Cancel</button>
     </div>
 </div>
@@ -536,6 +537,7 @@
 
 <script type="module">
 import { db, auth } from '../firebase-config.js';
+import '../account-delete.js';
 import { getFolders, createFolder, saveRecipe, dedupeUsersByEmail } from '../firebase-functions.js';
 import {
     doc, getDoc, setDoc, collection, addDoc, getDocs, deleteDoc,

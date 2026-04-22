@@ -297,6 +297,44 @@
     .card.wide { grid-column: span 1; flex-direction: column; text-align: center; }
     .card.wide .card-visual { font-size: 56px; }
   }
+
+  .stars {
+    margin: 10px 0;
+  }
+
+  .star {
+    font-size: 30px;
+    cursor: pointer;
+    color: #ccc;
+    transition: 0.2s;
+  }
+
+  .star.active {
+    color: #f4c542;
+  }
+
+  .rating-card textarea {
+    width: 100%;
+    height: 80px;
+    border-radius: 10px;
+    border: none;
+    padding: 10px;
+    margin-top: 10px;
+    font-family: 'Poppins', sans-serif;
+    box-sizing: border-box;
+  }
+
+  .rating-card button {
+    margin-top: 12px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    background: var(--rose);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+  }
 </style>
 </head>
 <body>
@@ -379,11 +417,52 @@
     </div>
   </div>
 
+  <div class="card wide sage rating-card">
+    <div class="card-body">
+      <h2>Rate Your Experience</h2>
+      <p>Let us know how we did!</p>
+
+      <div class="stars">
+        <span class="star" onclick="setRating(1)">★</span>
+        <span class="star" onclick="setRating(2)">★</span>
+        <span class="star" onclick="setRating(3)">★</span>
+        <span class="star" onclick="setRating(4)">★</span>
+        <span class="star" onclick="setRating(5)">★</span>
+      </div>
+
+      <textarea id="comment" placeholder="Leave a comment..."></textarea>
+
+      <button type="button" onclick="submitFeedback()">Submit Feedback</button>
+    </div>
+  </div>
+
 </div>
 
 <div class="divider">built with love, caffeine & late nights</div>
 
-<p class="footer-note">© 2025 CopyCook </p>
+<p class="footer-note">© 2026 CopyCook</p>
+
+<script>
+  let selectedRating = 0;
+
+  function setRating(rating) {
+    selectedRating = rating;
+    const stars = document.querySelectorAll('.star');
+    stars.forEach((star, index) => {
+      star.classList.toggle('active', index < rating);
+    });
+  }
+
+  function submitFeedback() {
+    const comment = document.getElementById('comment').value;
+    console.log('Rating:', selectedRating);
+    console.log('Comment:', comment);
+    alert('Thanks for your feedback!');
+    selectedRating = 0;
+    document.getElementById('comment').value = '';
+    document.querySelectorAll('.star').forEach((s) => s.classList.remove('active'));
+  }
+</script>
 
 </body>
 </html>
