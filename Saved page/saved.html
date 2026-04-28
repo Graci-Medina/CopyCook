@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CopyCook - Saved Recipes</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app-shell.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -12,57 +13,13 @@
             font-family: 'Poppins', sans-serif;
             background-color: #F5EFE7;
             height: 100vh;
+            height: 100dvh;
             overflow: hidden;
         }
 
-        .container { display: flex; height: 100vh; }
+        .container { display: flex; height: 100vh; height: 100dvh; }
 
-        /* ── Sidebar ── */
-        .sidebar {
-            width: 75px;
-            background-color: #F5EFE7;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px 0;
-            border-right: 2px solid #E8B4B4;
-            flex-shrink: 0;
-        }
-
-        .logo { margin-bottom: 40px; }
-        .logo img { height: 50px; width: auto; cursor: pointer; }
-
-        .nav-icons {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-            flex: 1;
-            margin-top: 150px;
-        }
-
-        .nav-icon {
-            position: relative;
-            width: 30px; height: 30px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
-            text-decoration: none;
-        }
-
-        .nav-icon:hover { transform: scale(1.1); }
-        .nav-icon img { width: 100%; height: 100%; border-radius: 50%; }
-        .nav-icon.active { box-shadow: 0 0 0 3px #E8B4B4; }
-
-        .messages-unread-dot {
-            position: absolute; top: 0; right: 0;
-            width: 10px; height: 10px; border-radius: 50%;
-            background: #F06292; border: 2px solid #F5EFE7; box-sizing: border-box;
-            display: none; pointer-events: none;
-        }
-        .messages-unread-dot.is-visible { display: block; }
-
-        .nav-bottom { margin-top: auto; padding-bottom: 20px; }
+        /* Sidebar: ../app-shell.css */
 
         /* ── Main ── */
         .main-content {
@@ -74,6 +31,8 @@
         .top-bar {
             display: flex; align-items: center;
             padding: 18px 30px; gap: 15px; flex-shrink: 0;
+            min-height: 70px;
+            box-sizing: border-box;
         }
 
         .search-bar {
@@ -264,9 +223,22 @@
             backdrop-filter: blur(4px); z-index: 5;
         }
 
-        .folder-card:hover .delete-folder-btn { opacity: 1; }
+        .folder-card:hover .delete-folder-btn,
+        .folder-card:hover .rename-folder-btn { opacity: 1; }
         .delete-folder-btn:hover { background: #D4A5A5; transform: scale(1.1); }
         .delete-folder-btn:hover svg path { stroke: white; }
+
+        /* Rename (matches delete control; sits to the left of delete) */
+        .rename-folder-btn {
+            position: absolute; top: 10px; right: 48px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background: rgba(255,255,255,0.9); border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.2s, background 0.2s, transform 0.2s;
+            backdrop-filter: blur(4px); z-index: 5;
+        }
+        .rename-folder-btn:hover { background: #9FB19F; transform: scale(1.1); }
+        .rename-folder-btn:hover svg path { stroke: white; }
 
         /* ── Confirm delete modal ── */
         .confirm-overlay {
@@ -417,16 +389,11 @@
         /* ── Responsive ── */
         @media (max-width: 1100px) { .folders-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 768px) {
-            .sidebar { width: 60px; }
-            .nav-icon { width: 28px; height: 28px; }
             .folders-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-            .top-bar { padding: 14px 16px; }
+            .top-bar { padding: 14px 16px; min-height: 64px; }
             .page-body { padding: 0 16px 20px; }
         }
         @media (max-width: 480px) {
-            .sidebar { width: 50px; padding: 15px 0; }
-            .nav-icon { width: 24px; height: 24px; }
-            .messages-unread-dot { width: 8px; height: 8px; border-width: 1.5px; }
             .folders-grid { gap: 8px; }
         }
     </style>
@@ -445,7 +412,7 @@
             <a href="../Explore/explore.html" class="nav-icon">
                 <img src="explore-icon.png" alt="Explore">
             </a>
-            <a href="../post page/post.html" class="nav-icon">
+            <a href="/post%20page/post.html" class="nav-icon">
                 <img src="plus-icon.png" alt="Add">
             </a>
             <a href="../Saved page/saved.html" class="nav-icon active">
@@ -454,6 +421,10 @@
             <a href="../Messages page/Messages.html" class="nav-icon" aria-label="Messages">
                 <img src="message.png" alt="">
                 <span class="messages-unread-dot" aria-hidden="true"></span>
+            </a>
+            <a href="#" class="nav-icon" id="navNotificationsBtn" aria-label="Notifications">
+                <img class="nav-notification-img" src="/notification-icon.png" alt="Notifications">
+                <span class="notifications-unread-dot" aria-hidden="true"></span>
             </a>
         </nav>
         <div class="nav-bottom">
@@ -586,6 +557,18 @@
     </div>
 </div>
 
+<!-- Rename Folder Modal -->
+<div class="modal-overlay" id="renameModal">
+    <div class="modal">
+        <h3>Rename folder</h3>
+        <input type="text" id="renameFolderInput" placeholder="Folder name" maxlength="40" autocomplete="off">
+        <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="btnCloseRenameModal">Cancel</button>
+            <button type="button" class="btn-create-confirm" id="btnConfirmRename">Save</button>
+        </div>
+    </div>
+</div>
+
 <!-- Confirm Delete Folder Modal -->
 <div class="confirm-overlay" id="confirmDeleteOverlay">
     <div class="confirm-box">
@@ -609,7 +592,12 @@
 </div>
 
 <script type="module">
-import { createFolder as createFolderFS, getFolders as getFoldersFS, deleteFolder as deleteFolderFS } from '../firebase-functions.js';
+import {
+    createFolder as createFolderFS,
+    getFolders as getFoldersFS,
+    deleteFolder as deleteFolderFS,
+    renameFolder as renameFolderFS
+} from '../firebase-functions.js';
 import { db } from '../firebase-config.js';
 import '../account-delete.js';
 import { collection, collectionGroup, getDocs, query, where, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -786,6 +774,11 @@ function renderFolders() {
             <div class="folder-thumb">
                 <img src="${thumb}" alt="${folder.name}" loading="lazy">
                 ${lockIcon}
+                <button class="rename-folder-btn" title="Rename folder" aria-label="Rename ${folder.name}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M15.232 5.232l3.536 3.536M9 15l-2 5 5-2 8.5-8.5a2.828 2.828 0 10-4-4L9 15z" stroke="#5A5A5A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
                 <button class="delete-folder-btn" title="Delete folder" aria-label="Delete ${folder.name}">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                         <path d="M18 6L6 18M6 6l12 12" stroke="#5A5A5A" stroke-width="2" stroke-linecap="round"/>
@@ -797,6 +790,10 @@ function renderFolders() {
                 <div style="font-size:12px;font-weight:400;color:#9A9A9A;margin-top:2px;">${subtitle}</div>
             </div>`;
 
+        card.querySelector('.rename-folder-btn').addEventListener('click', e => {
+            e.stopPropagation();
+            openRenameModal(folder);
+        });
         card.querySelector('.delete-folder-btn').addEventListener('click', e => {
             e.stopPropagation();
             openConfirmDelete(folder, card);
@@ -875,6 +872,85 @@ function wireCreateFolderControls() {
 }
 wireCreateFolderControls();
 
+// ── Rename folder ─────────────────────────────────────────────────────────────
+let pendingRenameFolder = null;
+
+function openRenameModal(folder) {
+    pendingRenameFolder = folder;
+    const input = document.getElementById('renameFolderInput');
+    input.value = folder.name;
+    document.getElementById('renameModal').classList.add('active');
+    setTimeout(() => { input.focus(); input.select(); }, 80);
+}
+
+function closeRenameModal() {
+    document.getElementById('renameModal').classList.remove('active');
+    pendingRenameFolder = null;
+}
+
+document.getElementById('renameModal').addEventListener('click', function(e) {
+    if (e.target === this) closeRenameModal();
+});
+document.getElementById('btnCloseRenameModal').addEventListener('click', closeRenameModal);
+
+document.getElementById('btnConfirmRename').addEventListener('click', async () => {
+    if (!pendingRenameFolder) return;
+    const folder = pendingRenameFolder;
+    const raw = document.getElementById('renameFolderInput').value.trim();
+    if (!raw) {
+        document.getElementById('renameFolderInput').style.borderColor = '#D4A5A5';
+        setTimeout(() => { document.getElementById('renameFolderInput').style.borderColor = 'transparent'; }, 1500);
+        return;
+    }
+    const newId = raw.replace(/\//g, '_');
+    if (raw === folder.name && newId === folder.id) {
+        closeRenameModal();
+        return;
+    }
+
+    if (folders.some(f => f.id === newId && f.id !== folder.id)) {
+        alert('A folder with this name already exists.');
+        return;
+    }
+
+    const uid = localStorage.getItem('userUID');
+    const ix = folders.findIndex(f => f.id === folder.id);
+    if (ix < 0) {
+        closeRenameModal();
+        return;
+    }
+
+    closeRenameModal();
+
+    if (!uid) {
+        folders[ix] = { ...folders[ix], id: newId, name: raw };
+        saveFolders();
+        renderFolders();
+        return;
+    }
+
+    try {
+        const result = await renameFolderFS(uid, folder.id, raw);
+        const j = folders.findIndex(f => f.id === folder.id);
+        if (j >= 0) {
+            folders[j] = { ...folders[j], id: result.id, name: result.name };
+            saveFolders();
+            renderFolders();
+        }
+    } catch (err) {
+        console.error('Rename folder failed:', err);
+        alert(err.message || 'Could not rename folder.');
+    }
+});
+
+document.getElementById('renameFolderInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('btnConfirmRename').click();
+    }
+    if (e.key === 'Escape') closeRenameModal();
+});
+
 // ── Delete folder ─────────────────────────────────────────────────────────────
 let pendingDelete = null;
 
@@ -911,7 +987,7 @@ document.getElementById('btnConfirmDelete').addEventListener('click', async () =
     if (!uid) { console.warn('No userUID — Firestore delete skipped'); return; }
 
     try {
-        await deleteFolderFS(uid, folder.name);
+        await deleteFolderFS(uid, folder.id);
         console.log('✅ Folder deleted from Firestore:', folder.name);
     } catch (err) {
         console.error('❌ Firestore delete failed:', err);

@@ -10,91 +10,17 @@ body {
     font-family: 'Poppins', sans-serif;
     background-color: #F5EFE7;
     height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 }
 
 .container {
     display: flex;
     height: 100vh;
+    height: 100dvh;
 }
 
-/* Sidebar Styles */
-.sidebar {
-    width: 75px;
-    background-color: #f5efe7;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px 0;
-    border-right: 2px solid #E8B4B4;
-}
-
-.logo {
-    margin-bottom: 40px;
-}
-
-.logo img {
-    cursor: pointer;
-    height: 50px;
-    width: auto;
-}
-
-.nav-icons {
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-    flex: 1;
-    margin-top: 150px;
-}
-
-.nav-icon {
-    position: relative;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.nav-icon:hover {
-    transform: scale(1.1);
-}
-
-.nav-icon img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-}
-
-.nav-icon.active {
-    box-shadow: 0 0 0 3px #E8B4B4;
-}
-
-/* Unread messages: pink dot (shown via .is-visible from messages-unread-nav.js) */
-.messages-unread-dot {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #F06292;
-    border: 2px solid #F5EFE7;
-    box-sizing: border-box;
-    display: none;
-    pointer-events: none;
-}
-.messages-unread-dot.is-visible {
-    display: block;
-}
-
-.nav-bottom {
-    margin-top: auto;
-    padding-bottom: 20px;
-}
+/* Sidebar: shared in ../app-shell.css */
 
 /* Main Content Styles */
 .main-content {
@@ -663,6 +589,166 @@ body {
     box-shadow: 0 3px 10px rgba(212,165,165,0.35);
 }
 
+.roulette-tab-btn {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1.5px solid rgba(232, 180, 180, 0.75);
+    background: linear-gradient(135deg, #FFF8F8 0%, #FDEEEF 52%, #FAF2F2 100%);
+    box-shadow: 0 2px 8px rgba(232, 180, 180, 0.24);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.roulette-tab-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    border-color: #D4A5A5;
+    box-shadow: 0 6px 16px rgba(212, 165, 165, 0.34);
+}
+
+.roulette-tab-btn:focus-visible {
+    outline: 2px solid #D4A5A5;
+    outline-offset: 3px;
+}
+
+.roulette-tab-btn:disabled {
+    opacity: 0.82;
+    cursor: wait;
+    transform: none;
+}
+
+.roulette-tab-btn .roulette-wheel-wrap {
+    width: 28px;
+    height: 28px;
+}
+
+/* ── Recipe Roulette (random.php) ── */
+.roulette-strip {
+    flex-shrink: 0;
+    padding: 0 30px 12px;
+    display: flex;
+    justify-content: center;
+}
+
+.roulette-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: auto;
+    max-width: 400px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: 1.5px solid rgba(159, 177, 159, 0.55);
+    background: linear-gradient(135deg, #FFFBF7 0%, #F2F8F2 48%, #FAF6F2 100%);
+    box-shadow: 0 3px 10px rgba(159, 177, 159, 0.14);
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    text-align: left;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.roulette-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(159, 177, 159, 0.28);
+    border-color: #9FB19F;
+}
+
+.roulette-btn:focus-visible {
+    outline: 2px solid #6A906A;
+    outline-offset: 3px;
+}
+
+.roulette-btn:disabled {
+    opacity: 0.82;
+    cursor: wait;
+    transform: none;
+}
+
+.roulette-wheel-wrap {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.roulette-wheel-svg {
+    display: block;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.06));
+}
+
+.roulette-btn--spinning .roulette-wheel-svg {
+    animation: roulette-spin 0.75s linear infinite;
+}
+
+@keyframes roulette-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.roulette-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.roulette-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #454545;
+    letter-spacing: -0.02em;
+}
+
+.roulette-sub {
+    font-size: 12px;
+    font-weight: 500;
+    color: #8A867E;
+    line-height: 1.35;
+}
+
+@media (max-width: 520px) {
+    .roulette-tab-btn {
+        width: 34px;
+        height: 34px;
+    }
+
+    .roulette-tab-btn .roulette-wheel-wrap {
+        width: 24px;
+        height: 24px;
+    }
+
+    .roulette-strip {
+        padding-left: 16px;
+        padding-right: 16px;
+        padding-bottom: 10px;
+    }
+
+    .roulette-btn {
+        max-width: min(100%, 340px);
+        padding: 9px 12px;
+        gap: 10px;
+    }
+
+    .roulette-title {
+        font-size: 13px;
+    }
+
+    .roulette-sub {
+        font-size: 11px;
+    }
+
+    .roulette-wheel-wrap {
+        width: 40px;
+        height: 40px;
+    }
+}
+
 /* ── Tab content wrapper ── */
 .tab-content {
     flex: 1;
@@ -849,21 +935,15 @@ body {
 }
 
 @media (max-width: 768px) {
-    .sidebar { width: 60px; }
-    .nav-icon { width: 40px; height: 40px; }
     .food-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 15px 15px 15px; }
     .community-grid { padding: 0 15px 15px 15px; }
     .community-section-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .search-container { padding: 15px; }
+    .search-container { padding: 15px; min-height: 68px; box-sizing: border-box; }
     .search-bar { padding: 12px 16px; }
     .profile-pic { width: 45px; height: 45px; }
 }
 
 @media (max-width: 480px) {
-    .sidebar { width: 50px; padding: 15px 0; }
-    .logo svg { width: 35px; height: 35px; }
-    .nav-icon { width: 35px; height: 35px; }
-    .messages-unread-dot { width: 8px; height: 8px; border-width: 1.5px; }
     .food-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;

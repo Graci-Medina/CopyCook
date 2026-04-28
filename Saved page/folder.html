@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CopyCook - Folder</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app-shell.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -17,55 +18,7 @@
 
         .container { display: flex; height: 100vh; }
 
-        /* ── Sidebar ── */
-        .sidebar {
-            width: 75px;
-            background-color: #F5EFE7;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px 0;
-            border-right: 2px solid #E8B4B4;
-            flex-shrink: 0;
-        }
-
-        .logo { margin-bottom: 40px; }
-        .logo img { height: 50px; width: auto; cursor: pointer; }
-
-        .nav-icons {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-            flex: 1;
-            margin-top: 150px;
-        }
-
-        .nav-icon {
-            position: relative;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
-            text-decoration: none;
-        }
-
-        .nav-icon:hover { transform: scale(1.1); }
-        .nav-icon img { width: 100%; height: 100%; border-radius: 50%; }
-        .nav-icon.active { box-shadow: 0 0 0 3px #E8B4B4; }
-
-        .messages-unread-dot {
-            position: absolute; top: 0; right: 0;
-            width: 10px; height: 10px; border-radius: 50%;
-            background: #F06292; border: 2px solid #F5EFE7; box-sizing: border-box;
-            display: none; pointer-events: none;
-        }
-        .messages-unread-dot.is-visible { display: block; }
-
-        .nav-bottom { margin-top: auto; padding-bottom: 20px; }
+        /* Sidebar: ../app-shell.css */
 
         /* ── Main ── */
         .main-content {
@@ -454,12 +407,10 @@
 
         @media (max-width: 1200px) { .recipes-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 768px) {
-            .sidebar { width: 60px; }
             .recipes-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .top-bar, .page-body { padding-left: 16px; padding-right: 16px; }
         }
         @media (max-width: 480px) {
-            .sidebar { width: 50px; }
             .folder-title { font-size: 22px; }
             .recipes-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
         }
@@ -479,7 +430,7 @@
             <a href="../Explore/explore.html" class="nav-icon">
                 <img src="explore-icon.png" alt="Explore">
             </a>
-            <a href="../post page/post.html" class="nav-icon">
+            <a href="/post%20page/post.html" class="nav-icon">
                 <img src="plus-icon.png" alt="Add">
             </a>
             <a href="saved.html" class="nav-icon active">
@@ -488,6 +439,10 @@
             <a href="../Messages page/Messages.html" class="nav-icon" aria-label="Messages">
                 <img src="message.png" alt="">
                 <span class="messages-unread-dot" aria-hidden="true"></span>
+            </a>
+            <a href="#" class="nav-icon" id="navNotificationsBtn" aria-label="Notifications">
+                <img class="nav-notification-img" src="/notification-icon.png" alt="Notifications">
+                <span class="notifications-unread-dot" aria-hidden="true"></span>
             </a>
         </nav>
         <div class="nav-bottom">
@@ -901,7 +856,7 @@ document.getElementById('btnConfirmRemove').addEventListener('click', async func
     if (!uid) { console.warn('No userUID — Firestore remove skipped'); return; }
 
     try {
-        await unsaveRecipe(uid, folderName, meal);
+        await unsaveRecipe(uid, folderDocId, meal);
         console.log('✅ Removed:', meal.strMeal);
 
         // Sync localStorage — also recalculate coverImage from remaining recipes

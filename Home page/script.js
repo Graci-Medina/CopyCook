@@ -14,11 +14,74 @@ function loadAvatar() {
 
 // ─── NAVIGATION ───────────────────────────────────────────────────────────────
 function openRecipe(mealId) { window.location.href = `recipe.html?id=${mealId}`; }
+
+const MEALDB_RANDOM_URL = 'https://www.themealdb.com/api/json/v1/1/random.php';
+/** Minimum time the wheel spins before navigating (ms), so the animation is visible. */
+const ROULETTE_SPIN_MIN_MS = 2800;
+
+function delayMs(ms) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+}
+
+/** End spin state — also used after bfcache restore when returning via Back. */
+function resetSurpriseRecipeButton() {
+    const b = document.getElementById('surpriseRecipeBtn');
+    if (!b) return;
+    b.dataset.loading = '0';
+    b.removeAttribute('aria-busy');
+    b.disabled = false;
+    b.classList.remove('roulette-btn--spinning');
+}
+
+window.addEventListener('pageshow', function () {
+    resetSurpriseRecipeButton();
+});
+
+/**
+ * One MealDB random.php fetch; wheel spins at least ROULETTE_SPIN_MIN_MS, then navigate.
+ */
+async function surpriseRandomRecipe() {
+    const btn = document.getElementById('surpriseRecipeBtn');
+    if (btn && btn.dataset.loading === '1') return;
+
+    if (btn) {
+        btn.dataset.loading = '1';
+        btn.setAttribute('aria-busy', 'true');
+        btn.disabled = true;
+        btn.classList.add('roulette-btn--spinning');
+    }
+
+    const t0 = Date.now();
+
+    try {
+        const res = await fetch(MEALDB_RANDOM_URL);
+        if (!res.ok) throw new Error('Network response not ok');
+        const data = await res.json();
+        const meal = data.meals && data.meals[0];
+        if (!meal || !meal.idMeal) {
+            window.alert('No recipe returned. Please try again.');
+            resetSurpriseRecipeButton();
+            return;
+        }
+
+        const elapsed = Date.now() - t0;
+        const waitMore = ROULETTE_SPIN_MIN_MS - elapsed;
+        if (waitMore > 0) await delayMs(waitMore);
+
+        resetSurpriseRecipeButton();
+        openRecipe(meal.idMeal);
+    } catch (err) {
+        console.warn('Random recipe roulette:', err);
+        window.alert('Could not load a random recipe. Check your connection and try again.');
+        resetSurpriseRecipeButton();
+    }
+}
 function toggleLogoutPopup(event) { event.preventDefault(); document.getElementById('logoutPopup').classList.toggle('active'); }
 function closeLogoutPopup() { document.getElementById('logoutPopup').classList.remove('active'); }
 function handleLogout() { localStorage.clear(); sessionStorage.clear(); window.location.href = '../login.html'; }
 
-window.openRecipe        = openRecipe;
+window.openRecipe              = openRecipe;
+window.surpriseRandomRecipe   = surpriseRandomRecipe;
 window.toggleLogoutPopup = toggleLogoutPopup;
 window.closeLogoutPopup  = closeLogoutPopup;
 window.handleLogout      = handleLogout;
@@ -672,7 +735,7 @@ async function confirmSaveToFolder() {
 
         const uid = localStorage.getItem('userUID');
         if (uid && window.fbSaveRecipe) {
-            try { await window.fbSaveRecipe(uid, folder.name, mealObj); console.log('✅ Saved to:', folder.name); }
+            try { await window.fbSaveRecipe(uid, folder.id, mealObj); console.log('✅ Saved to:', folder.name); }
             catch (err) { console.error('❌ Save failed:', err); }
         }
     }

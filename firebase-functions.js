@@ -3,15 +3,17 @@ import { db } from './firebase-config.js';
 import {
     doc, setDoc, updateDoc, getDoc, getDocs, deleteDoc, collection,
     arrayUnion, arrayRemove, addDoc, query, where, orderBy, serverTimestamp, collectionGroup,
-    increment, writeBatch
+    increment, writeBatch, limit
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Firestore structure:
-//   users/{uid}/folders/{safeName}  →  { name, privacy, savedRecipes, coverImage, createdAt }
+//   users/{uid}/folders/{folderDocId}  →  { name, privacy, savedRecipes, coverImage, createdAt }
+//   Document id equals name with "/" → "_"; use folder doc id when saving/unsaving recipes.
 //   recipes/{mealId}/comments/{commentId}  →  { uid, displayName, text, createdAt }
 //   recipes/{mealId}/ratings/{uid}         →  { uid, stars, createdAt }
-//   recipes/{mealId}                       →  { ratingCount, ratingSum }  (aggregate)
+//   recipes/{mealId}                       →  { ratingCount, ratingSum, madeCount }  (aggregate)
+//   recipes/{mealId}/mades/{uid}           →  { uid, createdAt } ("Made It!")
 //   posts/{postId}  →  { uid, displayName, avatarColor, mealName, ingredients, instructions, postImg, createdAt }
 //   conversations/{convId}  →  participants[], messages in subcollection
 //   conversations/{convId}/messages/{msgId}
@@ -118,9 +120,10 @@ async function deleteUserPosts(uid) {
 }
 
 async function deleteUserRecipeInteractions(uid) {
-    const [commentsSnap, ratingsSnap] = await Promise.all([
+    const [commentsSnap, ratingsSnap, madesSnap] = await Promise.all([
         getDocs(query(collectionGroup(db, 'comments'), where('uid', '==', uid))),
-        getDocs(query(collectionGroup(db, 'ratings'), where('uid', '==', uid)))
+        getDocs(query(collectionGroup(db, 'ratings'), where('uid', '==', uid))),
+        getDocs(query(collectionGroup(db, 'mades'), where('uid', '==', uid)))
     ]);
 
     for (const d of commentsSnap.docs) {
@@ -128,6 +131,22 @@ async function deleteUserRecipeInteractions(uid) {
     }
     for (const d of ratingsSnap.docs) {
         await deleteDoc(d.ref);
+    }
+    for (const d of madesSnap.docs) {
+        const mealRef = d.ref.parent.parent;
+        const mealId = mealRef && mealRef.id;
+        await deleteDoc(d.ref);
+        if (mealId) {
+            try {
+                await updateDoc(doc(db, 'recipes', mealId), {
+                    madeCount: increment(-1)
+                });
+            } catch (_) {
+                try {
+                    await setDoc(doc(db, 'recipes', mealId), { madeCount: 0 }, { merge: true });
+                } catch (_) { /* ignore */ }
+            }
+        }
     }
 }
 
@@ -287,9 +306,37 @@ export async function createFolder(id, folderName, privacy = 'private') {
     await setDoc(folderRef, folderData);
 }
 
-export async function deleteFolder(uid, folderName) {
-    const safeName = folderName.replace(/\//g, '_');
-    await deleteDoc(doc(db, 'users', uid, 'folders', safeName));
+export async function deleteFolder(uid, folderDocId) {
+    await deleteDoc(doc(db, 'users', uid, 'folders', folderDocId));
+}
+
+/**
+ * Renames a folder (updates display `name`; migrates Firestore doc if the sanitized id changes).
+ */
+export async function renameFolder(uid, oldFolderId, newName) {
+    const trimmed = (newName || '').trim();
+    if (!trimmed) throw new Error('Folder name cannot be empty');
+    if (trimmed.length > 40) throw new Error('Folder name is too long');
+
+    const newId = trimmed.replace(/\//g, '_');
+    const oldRef = doc(db, 'users', uid, 'folders', oldFolderId);
+    const oldSnap = await getDoc(oldRef);
+    if (!oldSnap.exists()) throw new Error('Folder not found');
+
+    if (newId === oldFolderId) {
+        await updateDoc(oldRef, { name: trimmed });
+        return { id: oldFolderId, name: trimmed };
+    }
+
+    const newRef = doc(db, 'users', uid, 'folders', newId);
+    if ((await getDoc(newRef)).exists()) {
+        throw new Error('A folder with this name already exists');
+    }
+
+    const data = oldSnap.data();
+    await setDoc(newRef, { ...data, name: trimmed });
+    await deleteDoc(oldRef);
+    return { id: newId, name: trimmed };
 }
 
 export async function getFolders(uid) {
@@ -305,9 +352,8 @@ export async function getFolders(uid) {
     }));
 }
 
-export async function saveRecipe(uid, folderName, mealObj) {
-    const safeName = folderName.replace(/\//g, '_');
-    const ref = doc(db, 'users/' + uid + '/folders/' + safeName);
+export async function saveRecipe(uid, folderDocId, mealObj) {
+    const ref = doc(db, 'users/' + uid + '/folders/' + folderDocId);
     const canonical = {
         idMeal:       mealObj.idMeal       || mealObj.id,
         strMeal:      mealObj.strMeal      || mealObj.name,
@@ -321,9 +367,8 @@ export async function saveRecipe(uid, folderName, mealObj) {
     }
 }
 
-export async function unsaveRecipe(uid, folderName, mealObj) {
-    const safeName = folderName.replace(/\//g, '_');
-    const ref = doc(db, 'users/' + uid + '/folders/' + safeName);
+export async function unsaveRecipe(uid, folderDocId, mealObj) {
+    const ref = doc(db, 'users/' + uid + '/folders/' + folderDocId);
     const snap = await getDoc(ref);
     if (!snap.exists()) return;
     const targetId = mealObj.idMeal || mealObj.id;
@@ -375,7 +420,10 @@ export async function deleteComment(mealId, commentId) {
 
 // ── Ratings ───────────────────────────────────────────────────────────────────
 
+/** Star rating 1–5; updates aggregates on recipes/{mealId}. */
 export async function submitRating(mealId, uid, stars) {
+    const s = Math.max(1, Math.min(5, Math.round(Number(stars) || 0)));
+    stars = s;
     const ratingRef = doc(db, 'recipes', mealId, 'ratings', uid);
     const recipeRef = doc(db, 'recipes', mealId);
     const existing  = await getDoc(ratingRef);
@@ -404,10 +452,96 @@ export async function getRatingData(mealId) {
 }
 
 export async function getUserRating(mealId, uid) {
-    const snap = await getDoc(doc(db, 'recipes', mealId, 'ratings', uid));
-    return snap.exists() ? snap.data().stars : null;
+    if (!uid || mealId === undefined || mealId === null || String(mealId).trim() === '') return null;
+    try {
+        const snap = await getDoc(doc(db, 'recipes', String(mealId), 'ratings', uid));
+        return snap.exists() ? snap.data().stars : null;
+    } catch (e) {
+        console.warn('getUserRating:', mealId, e);
+        return null;
+    }
 }
 
+/** Toggle "Made It!" — increments/decrements recipes/{mealId}.madeCount (atomic batches). */
+export async function toggleMadeRecipe(mealId, uid) {
+    const mid = String(mealId ?? '').trim();
+    if (!mid || !uid) {
+        throw new Error('Missing recipe id or signed-in user');
+    }
+    const madeRef = doc(db, 'recipes', mid, 'mades', uid);
+    const recipeRef = doc(db, 'recipes', mid);
+    const existed = await getDoc(madeRef);
+    if (existed.exists()) {
+        const batch = writeBatch(db);
+        batch.delete(madeRef);
+        batch.set(recipeRef, { madeCount: increment(-1) }, { merge: true });
+        await batch.commit();
+        return false;
+    }
+    const batch = writeBatch(db);
+    batch.set(madeRef, { uid, createdAt: serverTimestamp() });
+    batch.set(recipeRef, { madeCount: increment(1) }, { merge: true });
+    await batch.commit();
+    return true;
+}
+
+export async function userHasMadeRecipe(mealId, uid) {
+    if (!uid || mealId === undefined || mealId === null || String(mealId).trim() === '') return false;
+    try {
+        return (await getDoc(doc(db, 'recipes', String(mealId), 'mades', uid))).exists();
+    } catch (e) {
+        console.warn('userHasMadeRecipe:', mealId, e);
+        return false;
+    }
+}
+
+/** Combined stats for rating + made count. */
+export async function getRecipeEngagement(mealId) {
+    if (mealId === undefined || mealId === null || String(mealId).trim() === '') {
+        return { averageRating: 0, ratingCount: 0, madeCount: 0 };
+    }
+    try {
+        const recipeSnap = await getDoc(doc(db, 'recipes', String(mealId)));
+        const data = recipeSnap.exists() ? recipeSnap.data() : {};
+        const c = data.ratingCount || 0;
+        const s = data.ratingSum || 0;
+        return {
+            averageRating: c > 0 ? s / c : 0,
+            ratingCount: c,
+            madeCount: data.madeCount || 0
+        };
+    } catch (e) {
+        console.warn('getRecipeEngagement:', mealId, e);
+        return { averageRating: 0, ratingCount: 0, madeCount: 0 };
+    }
+}
+
+/**
+ * Meals with highest madeCount for Explore (MealDB id = document id).
+ */
+export async function getMostMadeRecipes(maxRecipes = 12) {
+    const cap = Math.min(Math.max(Number(maxRecipes) || 12, 1), 30);
+    try {
+        const q = query(
+            collection(db, 'recipes'),
+            orderBy('madeCount', 'desc'),
+            limit(cap)
+        );
+        const snap = await getDocs(q);
+        return snap.docs.map((d) => ({
+            mealId: d.id,
+            madeCount: d.data().madeCount || 0,
+            avgRating: (() => {
+                const rc = d.data().ratingCount || 0;
+                const rs = d.data().ratingSum || 0;
+                return rc > 0 ? rs / rc : 0;
+            })()
+        })).filter((row) => row.madeCount > 0);
+    } catch (e) {
+        console.warn('getMostMadeRecipes:', e);
+        return [];
+    }
+}
 
 // ── Messages ───────────────────────────────────────────────────────────────────
 

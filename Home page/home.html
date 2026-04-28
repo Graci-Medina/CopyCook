@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CopyCook - Home</title>
+    <link rel="stylesheet" href="../app-shell.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -20,7 +21,7 @@
                 <a href="../Explore/explore.html" class="nav-icon">
                     <img src="explore-icon.png" alt="Explore">
                 </a>
-                <a href="../post page/post.html" class="nav-icon">
+                <a href="/post%20page/post.html" class="nav-icon">
                     <img src="plus-icon.png" alt="Add">
                 </a>
                 <a href="../Saved page/saved.html" class="nav-icon">
@@ -29,6 +30,10 @@
                 <a href="../Messages page/Messages.html" class="nav-icon" aria-label="Messages">
                     <img src="message.png" alt="">
                     <span class="messages-unread-dot" aria-hidden="true"></span>
+                </a>
+                <a href="#" class="nav-icon" id="navNotificationsBtn" aria-label="Notifications">
+                    <img class="nav-notification-img" src="/notification-icon.png" alt="Notifications">
+                    <span class="notifications-unread-dot" aria-hidden="true"></span>
                 </a>
             </nav>
             <div class="nav-bottom">
@@ -63,6 +68,24 @@
             <div class="tab-bar">
                 <button class="tab-btn active" id="tabHome" onclick="switchTab('home')">Home</button>
                 <button class="tab-btn" id="tabCommunity" onclick="switchTab('community')">Community Posts</button>
+                <button type="button"
+                    id="surpriseRecipeBtn"
+                    class="roulette-tab-btn"
+                    onclick="surpriseRandomRecipe()"
+                    aria-label="Recipe roulette">
+                    <span class="roulette-wheel-wrap" aria-hidden="true">
+                        <svg class="roulette-wheel-svg" width="30" height="30" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="26" cy="26" r="24" fill="#FFF8F8" stroke="#E8B4B4" stroke-width="2"/>
+                            <path d="M26 26 L26 2 A24 24 0 0012 43z" fill="#D4A5A5" opacity=".95"/>
+                            <path d="M26 26 L43 43 A24 24 0 0012 43z" fill="#E8C4C4" opacity=".92"/>
+                            <path d="M26 26 L52 26 A26 26 0 0136 43z" fill="#E8C4C4"/>
+                            <path d="M26 26 L42 14 A26 26 0 0136 3z" fill="#F0D5D5"/>
+                            <path d="M26 26 L26 0 A26 26 0 0010 17z" fill="#DCA8A8"/>
+                            <circle cx="26" cy="26" r="7" fill="white" stroke="#D4A5A5" stroke-width="2"/>
+                            <polygon points="26,14 31,26 26,38 21,26" fill="#E8B4B4"/>
+                        </svg>
+                    </span>
+                </button>
             </div>
 
             <!-- Home Tab: Food Grid -->

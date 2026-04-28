@@ -62,6 +62,18 @@ service cloud.firestore {
         allow write: if request.auth != null
                      && request.auth.uid == userId;
       }
+
+      match /mades/{madeUid} {
+        allow read: if true;
+        allow create: if request.auth != null
+                      && request.auth.uid == madeUid
+                      && request.resource.data.uid == request.auth.uid;
+        allow update: if request.auth != null
+                      && request.auth.uid == madeUid
+                      && request.resource.data.uid == request.auth.uid;
+        allow delete: if request.auth != null
+                      && request.auth.uid == madeUid;
+      }
     }
 
     match /conversations/{convId} {

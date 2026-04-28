@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <link rel="stylesheet" href="../app-shell.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -14,58 +15,13 @@
             font-family: 'Poppins', sans-serif;
             background-color: #F5EFE7;
             height: 100vh;
+            height: 100dvh;
             overflow: hidden;
         }
 
-        .container { display: flex; height: 100vh; }
+        .container { display: flex; height: 100vh; height: 100dvh; }
 
-        /* ── Sidebar ── */
-        .sidebar {
-            width: 75px;
-            background-color: #F5EFE7;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px 0;
-            border-right: 2px solid #E8B4B4;
-            flex-shrink: 0;
-            z-index: 10;
-        }
-
-        .logo { margin-bottom: 40px; }
-        .logo img { height: 50px; width: auto; cursor: pointer; }
-
-        .nav-icons {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-            flex: 1;
-            margin-top: 150px;
-        }
-
-        .nav-icon {
-            position: relative;
-            width: 30px; height: 30px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
-            text-decoration: none;
-        }
-
-        .nav-icon:hover { transform: scale(1.1); }
-        .nav-icon img { width: 100%; height: 100%; border-radius: 50%; }
-        .nav-icon.active { box-shadow: 0 0 0 3px #E8B4B4; }
-
-        .messages-unread-dot {
-            position: absolute; top: 0; right: 0;
-            width: 10px; height: 10px; border-radius: 50%;
-            background: #F06292; border: 2px solid #F5EFE7; box-sizing: border-box;
-            display: none; pointer-events: none;
-        }
-        .messages-unread-dot.is-visible { display: block; }
-
-        .nav-bottom { margin-top: auto; padding-bottom: 20px; }
+        /* Sidebar: ../app-shell.css */
 
         /* ── Main ── */
         .main-content {
@@ -83,6 +39,8 @@
             padding: 20px 30px;
             gap: 15px;
             flex-shrink: 0;
+            min-height: 70px;
+            box-sizing: border-box;
         }
 
         .search-bar {
@@ -257,6 +215,344 @@
             background: #9FB19F; border-color: #9FB19F; color: white;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(159,177,159,0.3);
+        }
+
+        /* ── Cuisine Passport (collapsed by default) ── */
+        .passport-loading { color: #9FB19F; font-size: 12px; padding: 8px 4px; }
+
+        #exploreWrapPassport { margin-bottom: 14px; }
+
+        .passport-details {
+            background: linear-gradient(145deg, #FDFBF7 0%, #F3F8F3 100%);
+            border: 1.5px solid #E8D8D4;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(80, 60, 50, 0.05);
+        }
+
+        .passport-summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            list-style: none;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .passport-summary::-webkit-details-marker { display: none; }
+
+        .passport-summary-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: #3A3A3A;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .passport-summary-right {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .passport-stats-badge {
+            flex-shrink: 0;
+            background: white;
+            border: 1.5px solid #E8B4B4;
+            border-radius: 999px;
+            padding: 4px 10px;
+            display: inline-flex;
+            align-items: baseline;
+            gap: 3px;
+            font-weight: 700;
+            color: #9FB19F;
+            font-size: 13px;
+        }
+
+        .passport-details .passport-progress-num { font-size: 17px; color: #6A906A; }
+        .passport-details .passport-progress-div { font-size: 11px; color: #C4B0B0; }
+        .passport-details .passport-progress-den { font-size: 12px; color: #888; }
+
+        .passport-chevron {
+            font-size: 8px;
+            color: #9A9088;
+            line-height: 1;
+            transition: transform 0.2s ease;
+        }
+
+        .passport-details[open] .passport-chevron { transform: rotate(-180deg); }
+
+        .passport-expand-body {
+            padding: 0 14px 12px;
+            border-top: 1px solid #EEE8E0;
+        }
+
+        .passport-sub {
+            font-size: 11px;
+            color: #7A7875;
+            line-height: 1.45;
+            margin: 10px 0 12px 0;
+        }
+
+        .passport-regions { display: flex; flex-direction: column; gap: 12px; }
+
+        .passport-region-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+
+        .passport-region-emoji { font-size: 14px; line-height: 1; }
+
+        .passport-region-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #454545;
+            margin: 0;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .passport-region-count {
+            font-size: 10px;
+            font-weight: 600;
+            color: #9FB19F;
+            background: rgba(159, 177, 159, 0.15);
+            padding: 3px 8px;
+            border-radius: 999px;
+        }
+
+        .passport-region-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
+            gap: 6px;
+        }
+
+        .passport-tile {
+            position: relative;
+            background: white;
+            border: 1.5px dashed #D6CEC4;
+            border-radius: 12px;
+            padding: 7px 4px 24px;
+            min-height: 78px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: center;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s, background 0.2s;
+            opacity: 0.9;
+        }
+
+        .passport-tile:hover { transform: translateY(-1px); opacity: 1; }
+
+        .passport-tile--stamped {
+            border-style: solid;
+            border-color: #9FB19F;
+            background: linear-gradient(180deg, #F7FBF7 0%, #ECF5EC 100%);
+            opacity: 1;
+            box-shadow: 0 2px 8px rgba(159, 177, 159, 0.2);
+        }
+
+        .passport-tile--open {
+            cursor: pointer;
+        }
+
+        .passport-tile--open:focus-visible {
+            outline: 2px solid #6A906A;
+            outline-offset: 2px;
+        }
+
+        .passport-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(40, 35, 32, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            animation: passportFadeIn 0.18s ease;
+        }
+
+        @keyframes passportFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .passport-modal-panel {
+            background: #FFFBF7;
+            border-radius: 18px;
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+            max-width: 400px;
+            width: 100%;
+            max-height: min(78vh, 520px);
+            display: flex;
+            flex-direction: column;
+            border: 1.5px solid #E8DED4;
+            overflow: hidden;
+        }
+
+        .passport-modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 14px 16px 12px;
+            border-bottom: 1px solid #EDE5DE;
+            background: linear-gradient(180deg, #FFF 0%, #FAF6F2 100%);
+            flex-shrink: 0;
+        }
+
+        .passport-modal-title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            color: #454545;
+            line-height: 1.25;
+        }
+
+        .passport-modal-close {
+            border: none;
+            background: rgba(228, 220, 210, 0.6);
+            color: #5C564E;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            font-size: 22px;
+            line-height: 1;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .passport-modal-close:hover {
+            background: rgba(212, 165, 165, 0.35);
+            color: #3A3835;
+        }
+
+        .passport-modal-body {
+            overflow-y: auto;
+            padding: 10px 12px 16px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .passport-modal-empty {
+            font-size: 13px;
+            color: #6A6762;
+            line-height: 1.5;
+            margin: 8px 4px;
+        }
+
+        .passport-modal-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 10px;
+            margin-bottom: 6px;
+            border-radius: 12px;
+            background: white;
+            border: 1.5px solid #EAE3DB;
+            text-decoration: none;
+            color: inherit;
+            transition: border-color 0.15s, box-shadow 0.15s, transform 0.12s;
+        }
+
+        .passport-modal-row:hover {
+            border-color: #C5D9C5;
+            box-shadow: 0 4px 12px rgba(106, 144, 106, 0.12);
+        }
+
+        .passport-modal-thumb {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #F0EDE8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .passport-modal-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .passport-modal-thumb--empty {
+            font-size: 20px;
+        }
+
+        .passport-modal-row-text {
+            flex: 1;
+            min-width: 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: #3D3D3D;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .passport-modal-row-go {
+            flex-shrink: 0;
+            font-size: 15px;
+            color: #7A9A7A;
+            font-weight: 700;
+        }
+
+        .passport-tile-flag { font-size: 16px; line-height: 1.1; margin-bottom: 3px; }
+
+        .passport-tile-name {
+            font-size: 9.5px;
+            font-weight: 600;
+            color: #4A4A4A;
+            line-height: 1.2;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .passport-tile-check {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            font-weight: 700;
+            color: #5A835A;
+            background: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1.5px solid #B8CFB8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .passport-tile-empty {
+            position: absolute;
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            color: #BEB5AC;
+            font-weight: 500;
+        }
+
+        @media (max-width: 560px) {
+            .passport-region-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
         }
 
         /* ── Restaurants grid ── */
@@ -629,7 +925,7 @@
         @media (max-width: 850px)  { .restaurants-grid { grid-template-columns: repeat(2, 1fr); } .featured-grid { grid-template-columns: 1fr; } }
         @media (max-width: 560px)  {
             .restaurants-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .top-bar { padding: 14px 16px; }
+            .top-bar { padding: 14px 16px; min-height: 64px; }
             .page-body { padding: 0 16px 20px; }
             .hero { padding: 28px 24px; }
             .hero-text h1 { font-size: 26px; }
@@ -645,11 +941,15 @@
         <nav class="nav-icons">
             <a href="../Home page/home.html" class="nav-icon"><img src="home-icon.png" alt="Home"></a>
             <a href="explore.html" class="nav-icon active"><img src="explore-icon.png" alt="Explore"></a>
-            <a href="../post page/post.html" class="nav-icon"><img src="plus-icon.png" alt="Add"></a>
+            <a href="/post%20page/post.html" class="nav-icon"><img src="plus-icon.png" alt="Add"></a>
             <a href="../Saved page/saved.html" class="nav-icon"><img src="save-icon.png" alt="Saved"></a>
             <a href="../Messages page/Messages.html" class="nav-icon" aria-label="Messages">
                 <img src="message.png" alt="">
                 <span class="messages-unread-dot" aria-hidden="true"></span>
+            </a>
+            <a href="#" class="nav-icon" id="navNotificationsBtn" aria-label="Notifications">
+                <img class="nav-notification-img" src="/notification-icon.png" alt="Notifications">
+                <span class="notifications-unread-dot" aria-hidden="true"></span>
             </a>
         </nav>
         <div class="nav-bottom">
@@ -696,6 +996,17 @@
             <div id="exploreWrapPills" class="explore-move" style="order:20">
             <!-- Category pills (filled from onboarding preferences) -->
             <div class="category-row" id="categoryRow"></div>
+            </div>
+
+            <!-- Cuisine Passport (TheMealDB strArea; client-side localStorage) -->
+            <div id="exploreWrapPassport" class="explore-move" style="order:22;width:100%">
+                <div id="explorePassportMount"></div>
+            </div>
+
+            <!-- Firestore-backed; filled by Firebase module -->
+            <div id="exploreWrapMostMade" class="explore-move" style="order:26;width:100%">
+                <div class="section-header"><div class="section-title">Most made by cooks</div></div>
+                <div class="featured-grid" id="mostMadeGrid"><div style="height:160px;" class="skeleton"></div></div>
             </div>
 
             <div id="exploreWrapCommunity" class="explore-move" style="order:25; display:none">
@@ -815,6 +1126,7 @@
 </div>
 
 <script type="module" src="../account-delete.js"></script>
+<script src="../cuisine-passport.js"></script>
 <script>
 // ── Avatar ──
 (function() {
@@ -984,6 +1296,7 @@ function applyExploreSectionOrder(feed) {
         exploreWrapHero: 10,
         exploreWrapPills: 20,
         exploreWrapCommunity: 25,
+        exploreWrapMostMade: 26,
         exploreWrapFeatured: 30,
         exploreWrapChains: 40,
         exploreWrapStore: 50,
@@ -1405,7 +1718,7 @@ async function fetchOverpassStores(overpassQuery) {
 
 /** OpenStreetMap / Nominatim UI — free, no key; bounded to map area around user */
 function openFreeMapSearchUrl(ingredient, lat, lng) {
-    const q = encodeURIComponent(`${ingredient} supermarket grocery`);
+    const q = encodeURIComponent(`${ingredient}`);
     const w = lng - 0.08;
     const e = lng + 0.08;
     const n = lat + 0.08;
@@ -1629,6 +1942,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     personalizeExploreHero(explorePrefs);
     buildCategoryPills(explorePrefs);
     applyExploreSectionOrder(explorePrefs.feed);
+    if (typeof initCuisinePassportSection === 'function') initCuisinePassportSection('explorePassportMount');
     await renderFeatured(explorePrefs);
     filteredRestaurants = sortRestaurantsByPrefs([...CHAIN_RESTAURANTS], explorePrefs);
     await renderRestaurantCards(filteredRestaurants);
@@ -1681,6 +1995,131 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 });
+</script>
+<script type="module">
+import { getMostMadeRecipes } from '../firebase-functions.js';
+
+const MOST_MADE_MEAL_THUMB_FALLBACK = 'https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg';
+
+function mostMadeThumbSrc(meal) {
+    const u = (meal.strMealThumb || '').trim();
+    if (!u) return MOST_MADE_MEAL_THUMB_FALLBACK;
+    if (/themealdb\.com/i.test(u)) return u.replace(/\/preview\/?$/i, '') + '/preview';
+    return u;
+}
+
+async function loadCopycatRecipesForExplore() {
+    try {
+        const res = await fetch('../Home page/copycat-recipes.json');
+        const data = await res.json();
+        return data.meals || [];
+    } catch {
+        return [];
+    }
+}
+
+async function resolveMealById(mealId, copycatMeals) {
+    const id = String(mealId);
+    const n = parseInt(id, 10);
+    if (Number.isFinite(n) && n >= 99001) {
+        return (copycatMeals || []).find((x) => String(x.idMeal) === id) || null;
+    }
+    try {
+        const res = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${encodeURIComponent(id)}`);
+        const data = await res.json();
+        return (data.meals && data.meals[0]) || null;
+    } catch {
+        return null;
+    }
+}
+
+async function loadMostMadeSection() {
+    const wrap = document.getElementById('exploreWrapMostMade');
+    const grid = document.getElementById('mostMadeGrid');
+    if (!wrap || !grid) return;
+
+    let rows = [];
+    try {
+        rows = await getMostMadeRecipes(12);
+    } catch (e) {
+        console.warn('Most made:', e);
+    }
+
+    const copycats = await loadCopycatRecipesForExplore();
+    const enriched = await Promise.all(
+        rows.map(async (row) => ({
+            row,
+            meal: await resolveMealById(row.mealId, copycats),
+        }))
+    );
+
+    const withMeals = enriched.filter((e) => e.meal);
+    grid.innerHTML = '';
+
+    if (!withMeals.length) {
+        wrap.style.display = 'none';
+        return;
+    }
+
+    wrap.style.display = '';
+
+    const frag = document.createDocumentFragment();
+
+    withMeals.forEach(({ row, meal }) => {
+        const imgSrc = mostMadeThumbSrc(meal).replace(/"/g, '%22');
+        const avgStr = row.avgRating > 0 ? row.avgRating.toFixed(1) : '—';
+        const title = meal.strMeal || 'Recipe';
+        const subtitle = `${row.madeCount} cooked · ★ ${avgStr}`;
+
+        const card = document.createElement('div');
+        card.className = 'featured-card';
+        const imgEl = document.createElement('img');
+        imgEl.src = imgSrc;
+        imgEl.alt = title;
+        imgEl.loading = 'lazy';
+
+        const overlay = document.createElement('div');
+        overlay.className = 'featured-overlay';
+
+        const fc = document.createElement('div');
+        fc.className = 'featured-content';
+
+        const badge = document.createElement('span');
+        badge.className = 'featured-badge';
+        badge.textContent = 'Popular';
+
+        const tEl = document.createElement('div');
+        tEl.className = 'featured-title';
+        tEl.textContent = title;
+
+        const sEl = document.createElement('div');
+        sEl.className = 'featured-sub';
+        sEl.textContent = subtitle;
+
+        fc.appendChild(badge);
+        fc.appendChild(tEl);
+        fc.appendChild(sEl);
+
+        card.appendChild(imgEl);
+        card.appendChild(overlay);
+        card.appendChild(fc);
+
+        const linkId = String(meal.idMeal ?? row.mealId);
+        card.addEventListener('click', () => {
+            window.location.href = '../Home page/recipe.html?id=' + encodeURIComponent(linkId);
+        });
+
+        frag.appendChild(card);
+    });
+
+    grid.appendChild(frag);
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadMostMadeSection);
+} else {
+    loadMostMadeSection();
+}
 </script>
 <script type="module" src="../messages-unread-nav.js"></script>
 </body>

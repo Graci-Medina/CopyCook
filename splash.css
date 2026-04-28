@@ -9,14 +9,20 @@ body {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    min-height: 100vh;
+    min-height: 100dvh;
     height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 }
 
 /* ── Page fade in/out ── */
 .page-wrapper {
     width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
     height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     opacity: 0;
@@ -32,19 +38,28 @@ body {
 }
 
 /* ── Navbar ── */
+/* Desktop: fixed padding so the bar height does not drift with fractional vw changes. */
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 18px 40px;
+    padding: 16px 40px;
+    padding-top: max(16px, env(safe-area-inset-top, 0px));
+    padding-left: max(40px, env(safe-area-inset-left, 0px));
+    padding-right: max(40px, env(safe-area-inset-right, 0px));
     position: relative;
     z-index: 10;
+    flex-shrink: 0;
+    min-height: calc(48px + env(safe-area-inset-top, 0px));
+    box-sizing: border-box;
 }
 
 .logo img {
     height: 52px;
     width: auto;
+    max-height: 52px;
     cursor: pointer;
+    display: block;
 }
 
 .nav-links {
@@ -91,30 +106,33 @@ body {
 /* ── Brand text ── */
 .brand-text {
     position: absolute;
-    top: 5%;
+    top: clamp(2%, 4dvh, 8%);
     left: 50%;
     transform: translateX(-50%);
     font-family: 'Shrikhand', cursive;
-    font-size: clamp(130px, 19vw, 260px);
+    font-size: clamp(2.1rem, 16vw + 0.35rem, 16.25rem);
+    max-width: 96vw;
+    text-align: center;
     color: #9FB19F;
     white-space: nowrap;
     z-index: 1;
     user-select: none;
     pointer-events: none;
-    letter-spacing: -3px;
+    letter-spacing: clamp(-0.08em, -0.35vw, -0.02em);
     line-height: 1;
     text-shadow:
-        4px 6px 0px #7a9a7a,
-        6px 10px 20px rgba(0, 0, 0, 0.15);
+        0.03em 0.04em 0 #7a9a7a,
+        0.04em 0.06em 0.12em rgba(0, 0, 0, 0.15);
 }
 
 /* ── Tagline — small, snug above the C in CopyCook ── */
 .tagline-img {
     position: absolute;
-    top: -1%;
-    left: 54%;
-    transform: translateX(-50%);
-    width: clamp(180px, 15vw, 260px);
+    top: clamp(-2%, -0.5dvh, 1%);
+    left: 50%;
+    transform: translateX(calc(-50% + min(4vw, 1.75rem)));
+    width: min(42vw, clamp(5.5rem, 18vw + 1.25rem, 16.25rem));
+    height: auto;
     z-index: 4;
     pointer-events: none;
     user-select: none;
@@ -123,13 +141,15 @@ body {
 /* ── Plates track ── */
 .plates-track {
     position: absolute;
-    bottom: -45px;
+    bottom: clamp(-2.5rem, -6vw, -2.25rem);
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     align-items: flex-end;
     justify-content: center;
     z-index: 2;
+    max-width: 100%;
+    padding: 0 env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
 }
 
 .plate {
@@ -137,7 +157,7 @@ body {
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    margin-right: -50px;
+    margin-right: clamp(-2.75rem, -7vw, -1.25rem);
 }
 
 .plate:last-child { margin-right: 0; }
@@ -145,23 +165,42 @@ body {
 .plate img {
     display: block;
     object-fit: contain;
-    width: clamp(340px, 38vw, 560px);
-    height: clamp(340px, 38vw, 560px);
-    filter: drop-shadow(0 20px 40px rgba(0,0,0,0.15));
+    /* Single square size so plates never stretch — shrinks with narrow viewports / short screens */
+    --plate-size: min(
+        clamp(6.5rem, 26vw + 1.5rem, 35rem),
+        36vw,
+        52dvh
+    );
+    width: var(--plate-size);
+    height: var(--plate-size);
+    filter: drop-shadow(0 1.25rem 2.5rem rgba(0,0,0,0.15));
 }
 
-/* ── Responsive ── */
+/* ── Responsive (layout only — hero scales via clamp above) ── */
 @media (max-width: 900px) {
-    .brand-text { font-size: 100px; }
-    .plate img  { width: 260px; height: 260px; }
-    .tagline-img { width: 160px; }
+    .nav-links { gap: 16px; }
+}
+
+/* Mobile: fixed dimensions — vw-based padding/logo caused the bar to resize when the
+   viewport or browser chrome (URL bar) shifted. */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 14px 18px;
+        padding-top: max(14px, env(safe-area-inset-top, 0px));
+        padding-left: max(18px, env(safe-area-inset-left, 0px));
+        padding-right: max(18px, env(safe-area-inset-right, 0px));
+        min-height: calc(48px + env(safe-area-inset-top, 0px));
+    }
+    .logo img {
+        height: 44px;
+        max-height: 44px;
+    }
 }
 
 @media (max-width: 550px) {
-    .navbar { padding: 14px 18px; }
     .nav-links a { display: none; }
-    .brand-text { font-size: 64px; letter-spacing: -1px; }
-    .plate img  { width: 170px; height: 170px; }
-    .plate { margin-right: -20px; }
-    .tagline-img { width: 130px; }
+    .login-btn {
+        padding: 9px 20px;
+        font-size: 14px;
+    }
 }

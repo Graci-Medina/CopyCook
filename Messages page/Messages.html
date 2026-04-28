@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CopyCook - Messages</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../app-shell.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -20,56 +21,7 @@
             height: 100vh;
         }
 
-        /* ── Sidebar ── */
-        .sidebar {
-            width: 75px;
-            background-color: #F5EFE7;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px 0;
-            border-right: 2px solid #E8B4B4;
-            flex-shrink: 0;
-            z-index: 10;
-        }
-
-        .logo { margin-bottom: 40px; }
-        .logo img { height: 50px; width: auto; cursor: pointer; }
-
-        .nav-icons {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-            flex: 1;
-            margin-top: 150px;
-        }
-
-        .nav-icon {
-            position: relative;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
-            text-decoration: none;
-        }
-
-        .nav-icon:hover { transform: scale(1.1); }
-        .nav-icon img { width: 100%; height: 100%; border-radius: 50%; }
-        .nav-icon.active { box-shadow: 0 0 0 3px #E8B4B4; }
-
-        .messages-unread-dot {
-            position: absolute; top: 0; right: 0;
-            width: 10px; height: 10px; border-radius: 50%;
-            background: #F06292; border: 2px solid #F5EFE7; box-sizing: border-box;
-            display: none; pointer-events: none;
-        }
-        .messages-unread-dot.is-visible { display: block; }
-
-        .nav-bottom { margin-top: auto; padding-bottom: 20px; }
+        /* Sidebar: ../app-shell.css */
 
         /* ── Left Panel (Messages List) ── */
         .messages-panel {
@@ -757,8 +709,53 @@
             .messages-panel { width: 260px; }
         }
 
+        /* Mobile: conversation list fills the area; chat opens full-width when selected */
+        .chat-back-mobile {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            margin-right: 4px;
+            margin-left: -6px;
+            padding: 0;
+            border: none;
+            border-radius: 50%;
+            background: #F0EBE3;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        .chat-back-mobile:hover { background: #E8B4B4; }
+        .chat-back-mobile svg {
+            width: 20px;
+            height: 20px;
+        }
+
         @media (max-width: 680px) {
-            .messages-panel { display: none; }
+            .messages-panel {
+                flex: 1;
+                width: auto;
+                min-width: 0;
+                border-right: none;
+            }
+            /* Default: show list — hide chat shell until user opens a conversation */
+            .container:not(.mobile-chat-open) .chat-panel {
+                display: none !important;
+            }
+            /* In-thread: hide list, full-width chat */
+            .container.mobile-chat-open .messages-panel {
+                display: none !important;
+            }
+            .container.mobile-chat-open .chat-panel {
+                display: flex !important;
+                flex-direction: column;
+                flex: 1;
+                min-height: 0;
+            }
+            .chat-back-mobile {
+                display: flex;
+            }
         }
     </style>
 </head>
@@ -777,7 +774,7 @@
             <a href="../Explore/explore.html" class="nav-icon">
                 <img src="explore-icon.png" alt="Explore">
             </a>
-            <a href="../post page/post.html" class="nav-icon">
+            <a href="/post%20page/post.html" class="nav-icon">
                 <img src="plus-icon.png" alt="Add">
             </a>
             <a href="../Saved page/saved.html" class="nav-icon">
@@ -786,6 +783,10 @@
             <a href="Messages.html" class="nav-icon active" aria-label="Messages">
                 <img src="message.png" alt="">
                 <span class="messages-unread-dot" aria-hidden="true"></span>
+            </a>
+            <a href="#" class="nav-icon" id="navNotificationsBtn" aria-label="Notifications">
+                <img class="nav-notification-img" src="/notification-icon.png" alt="Notifications">
+                <span class="notifications-unread-dot" aria-hidden="true"></span>
             </a>
         </nav>
         <div class="nav-bottom">
@@ -841,6 +842,11 @@
 
             <!-- Chat top bar -->
             <div class="chat-topbar">
+                <button type="button" class="chat-back-mobile" id="chatBackMobile" onclick="leaveConversationView()" aria-label="Back to conversations">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M15 18l-6-6 6-6" stroke="#5A5A5A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
                 <div class="chat-avatar" id="chatAvatar"></div>
                 <div class="chat-contact-info">
                     <div class="chat-contact-name" id="chatName" onclick="openOtherProfile()" style="cursor:pointer;transition:color 0.2s;" onmouseover="this.style.color='#D4A5A5'" onmouseout="this.style.color='#2A2A2A'"></div>
@@ -1302,7 +1308,39 @@ async function openConversation(convId, otherName, otherUid) {
 
     // Subscribe to messages
     subscribeMessages(convId, otherName);
+
+    // Mobile: full-width thread (list hidden until back)
+    if (window.matchMedia('(max-width: 680px)').matches) {
+        document.querySelector('.container')?.classList.add('mobile-chat-open');
+    }
 }
+
+/** Mobile: return to conversation list */
+window.leaveConversationView = function() {
+    if (!window.matchMedia('(max-width: 680px)').matches) return;
+    activeConvId = null;
+    if (typeof messagesUnsub === 'function') {
+        messagesUnsub();
+        messagesUnsub = null;
+    }
+    document.getElementById('activeChatState').style.display = 'none';
+    document.getElementById('chatMessages').innerHTML = '';
+    document.getElementById('noChatState').style.display = 'flex';
+    document.querySelector('.container')?.classList.remove('mobile-chat-open');
+    document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
+};
+
+window.addEventListener('resize', () => {
+    const mq = window.matchMedia('(max-width: 680px)');
+    const c = document.querySelector('.container');
+    if (!c) return;
+    if (!mq.matches) {
+        c.classList.remove('mobile-chat-open');
+        return;
+    }
+    if (activeConvId) c.classList.add('mobile-chat-open');
+    else c.classList.remove('mobile-chat-open');
+});
 
 async function markAsRead(convId) {
     try {
@@ -1756,5 +1794,6 @@ function escHtml(str) {
 }
 
 </script>
+<script type="module" src="../messages-unread-nav.js"></script>
 </body>
 </html>

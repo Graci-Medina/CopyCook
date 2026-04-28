@@ -14,7 +14,12 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+/** Loads even when GA is blocked (privacy extensions), file://, or unsupported contexts. */
+try {
+    getAnalytics(app);
+} catch (e) {
+    console.warn('Firebase Analytics unavailable:', e && e.message ? e.message : e);
+}
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
