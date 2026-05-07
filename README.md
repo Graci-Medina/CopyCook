@@ -71,29 +71,27 @@ Ever crave your favourite restaurant dish but wince at the price tag? CopyCook w
 # Screenshots
 
 ### Splash/Landing Page:
-<img src="https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/splash_landing.png" width="240"> 
-
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/splash_landing.png?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/splash_landing.png?size=240)
 ### Log In Page:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/login.png?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/login.png?size=240)
 ### Onboarding Survey:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/onboarding_survey.png?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/onboarding_survey.png?size=240)
 ### Home Page:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/home.png?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/home.png?size=240)
 ### Community Posts:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/community_posts.png?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/community_posts.png?size=240)
 ### Explore Page:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/explore.png?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/explore.png?size=240)
 ### Ingredients Map:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/ingredients_map.png?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/ingredients_map.png?size=240)
 ### Share A Recipe Page:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/share_a_recipe.png?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/share_a_recipe.png?size=240)
 ### Saved Folders Page:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/saved_folders.png?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/saved_folders.png?size=240)
 ### Messages Page:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/messages.png?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/messages.png?size=240)
 ### Profile Page:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/profile_page.png?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/profile_page.png?size=240)
 
 # The CopyCook Team
 ## Neha Mariya Saji
@@ -104,7 +102,7 @@ Ever crave your favourite restaurant dish but wince at the price tag? CopyCook w
 ## Graci Medina
 <img src="https://github.com/graci-medina.png" width="200">  
 
-[Github](https://github.com/graci-medina) [LinkedIn](https://www.linkedin.com/in/grace-medina-92b86620b)
+![](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/github.png?size=25) [Github](https://github.com/graci-medina) ![](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/linkedin.png?size=25) [LinkedIn](https://www.linkedin.com/in/grace-medina-92b86620b)
 
 ## Aubrey Morra
 <img src="https://github.com/aubsickle.png" width="200">  
