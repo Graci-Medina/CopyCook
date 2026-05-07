@@ -82,6 +82,8 @@ Ever crave your favourite restaurant dish but wince at the price tag? CopyCook w
 ![Screenshot](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/community_posts.png?size=240)
 ### Explore Page:
 ![Screenshot](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/explore.png?size=240)
+### Recipe Page:
+![Screenshot](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/recipe_page.png?size=240)
 ### Ingredients Map:
 ![Screenshot](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/ingredients_map.png?size=240)
 ### Share A Recipe Page:
@@ -97,22 +99,22 @@ Ever crave your favourite restaurant dish but wince at the price tag? CopyCook w
 ## Neha Mariya Saji
 <img src="https://github.com/nehasaji28.png" width="200">  
 
-[Github](https://github.com/nehasaji28) [LinkedIn](https://www.linkedin.com/in/neha-mariya-saji-1045b32b3)
+<img src="https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/github.png" width="20">  [Github](https://github.com/nehasaji28)  —  <img src="https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/linkedin.png" width="20"> [LinkedIn](https://www.linkedin.com/in/neha-mariya-saji-1045b32b3)
 
 ## Graci Medina
 <img src="https://github.com/graci-medina.png" width="200">  
 
-![](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/github.png?size=25) [Github](https://github.com/graci-medina) ![](https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/linkedin.png?size=25) [LinkedIn](https://www.linkedin.com/in/grace-medina-92b86620b)
+<img src="https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/github.png" width="20">  [Github](https://github.com/graci-medina)  —  <img src="https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/linkedin.png" width="20"> [LinkedIn](https://www.linkedin.com/in/grace-medina-92b86620b)
 
 ## Aubrey Morra
 <img src="https://github.com/aubsickle.png" width="200">  
 
-[Github](https://github.com/aubsickle) [LinkedIn](https://www.linkedin.com/in/aubrey-morra)
+<img src="https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/github.png" width="20">  [Github](https://github.com/aubsickle)  —  <img src="https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/linkedin.png" width="20"> [LinkedIn](https://www.linkedin.com/in/aubrey-morra)
 
 ## Lochana Subedi
 <img src="https://github.com/subedi21.png" width="200">  
 
-[Github](https://github.com/subedi21) [LinkedIn](https://www.linkedin.com/in/lochana-subedi)
+<img src="https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/github.png" width="20">  [Github](https://github.com/subedi21)  —  <img src="https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/linkedin.png" width="20"> [LinkedIn](https://www.linkedin.com/in/lochana-subedi)
 
 
 
