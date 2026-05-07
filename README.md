@@ -4,7 +4,7 @@
 
 ![GitHub contributors](https://img.shields.io/github/contributors/Graci-Medina/CopyCook) 
 ![Static Badge](https://img.shields.io/badge/Senior_Project-FSC-brightgreen)
-### [CopyCook Live Link](https://copycook-f596a.web.app/)
+### <img src="logo.png" width="25"> [CopyCook Live Link](https://copycook-f596a.web.app/)
 ## Description
 Ever crave your favourite restaurant dish but wince at the price tag? CopyCook was built to fix that! CopyCook is a recipe discovery platform where you can find copycat recipes from popular chain restaurants and see exactly how much you save by making it at home instead.
 
@@ -69,8 +69,31 @@ Ever crave your favourite restaurant dish but wince at the price tag? CopyCook w
 + Firebase Hosting (Live-Link)
 
 # Screenshots
- 
-# The Team
+
+### Splash/Landing Page:
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/splash_landing.PNG?size=240)
+### Log In Page:
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/login.PNG?size=240)
+### Onboarding Survey:
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/onboarding_survey.PNG?size=240)
+### Home Page:
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/home.PNG?size=240)
+### Community Posts:
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/community_posts.PNG?size=240)
+### Explore Page:
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/explore.PNG?size=240)
+### Ingredients Map:
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/ingredients_map.PNG?size=240)
+### Share A Recipe Page:
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/share_a_recipe.PNG?size=240)
+### Saved Folders Page:
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/saved_folders.PNG?size=240)
+### Messages Page:
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/messages.PNG?size=240)
+### Profile Page:
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/profile_page.PNG?size=240)
+
+# The CopyCook Team
 ## Neha Mariya Saji
 <img src="https://github.com/nehasaji28.png" width="200">  
 
