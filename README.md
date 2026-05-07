@@ -71,27 +71,29 @@ Ever crave your favourite restaurant dish but wince at the price tag? CopyCook w
 # Screenshots
 
 ### Splash/Landing Page:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/splash_landing.PNG?size=240)
+<img src="https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/splash_landing.png" width="240"> 
+
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/splash_landing.png?size=240)
 ### Log In Page:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/login.PNG?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/login.png?size=240)
 ### Onboarding Survey:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/onboarding_survey.PNG?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/onboarding_survey.png?size=240)
 ### Home Page:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/home.PNG?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/home.png?size=240)
 ### Community Posts:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/community_posts.PNG?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/community_posts.png?size=240)
 ### Explore Page:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/explore.PNG?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/explore.png?size=240)
 ### Ingredients Map:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/ingredients_map.PNG?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/ingredients_map.png?size=240)
 ### Share A Recipe Page:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/share_a_recipe.PNG?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/share_a_recipe.png?size=240)
 ### Saved Folders Page:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/saved_folders.PNG?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/saved_folders.png?size=240)
 ### Messages Page:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/messages.PNG?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/messages.png?size=240)
 ### Profile Page:
-![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/profile_page.PNG?size=240)
+![Screenshot](https://github.com/Graci-Medina/CopyCook/tree/main/screenshots/profile_page.png?size=240)
 
 # The CopyCook Team
 ## Neha Mariya Saji
