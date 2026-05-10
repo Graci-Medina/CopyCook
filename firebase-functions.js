@@ -339,6 +339,15 @@ export async function renameFolder(uid, oldFolderId, newName) {
     return { id: newId, name: trimmed };
 }
 
+/** Set folder visibility: `'public'` (profile + others) or `'private'` (owner only). */
+export async function updateFolderPrivacy(uid, folderDocId, privacy = 'private') {
+    const p = (privacy === 'public' || privacy === 'Public') ? 'public' : 'private';
+    const ref = doc(db, 'users', uid, 'folders', folderDocId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) throw new Error('Folder not found');
+    await updateDoc(ref, { privacy: p });
+}
+
 export async function getFolders(uid) {
     const foldersRef = collection(db, 'users/' + uid + '/folders');
     const snapshot = await getDocs(foldersRef);
@@ -495,6 +504,29 @@ export async function userHasMadeRecipe(mealId, uid) {
     }
 }
 
+/**
+ * All MealDB-style recipe ids the user has marked "Made It" (recipes/{mealId}/mades/{uid}).
+ * Used to hide those recipes from the home feed.
+ */
+export async function getMadeMealIdsForUser(uid) {
+    const ids = new Set();
+    if (!uid) return ids;
+    try {
+        const snap = await getDocs(
+            query(collectionGroup(db, 'mades'), where('uid', '==', uid))
+        );
+        snap.docs.forEach((d) => {
+            try {
+                const recipeRef = d.ref.parent && d.ref.parent.parent;
+                if (recipeRef && recipeRef.id) ids.add(String(recipeRef.id));
+            } catch (_) {}
+        });
+    } catch (e) {
+        console.warn('getMadeMealIdsForUser:', e);
+    }
+    return ids;
+}
+
 /** Combined stats for rating + made count. */
 export async function getRecipeEngagement(mealId) {
     if (mealId === undefined || mealId === null || String(mealId).trim() === '') {
@@ -519,8 +551,8 @@ export async function getRecipeEngagement(mealId) {
 /**
  * Meals with highest madeCount for Explore (MealDB id = document id).
  */
-export async function getMostMadeRecipes(maxRecipes = 12) {
-    const cap = Math.min(Math.max(Number(maxRecipes) || 12, 1), 30);
+export async function getMostMadeRecipes(maxRecipes = 8) {
+    const cap = Math.min(Math.max(Number(maxRecipes) || 8, 1), 30);
     try {
         const q = query(
             collection(db, 'recipes'),
@@ -539,6 +571,94 @@ export async function getMostMadeRecipes(maxRecipes = 12) {
         })).filter((row) => row.madeCount > 0);
     } catch (e) {
         console.warn('getMostMadeRecipes:', e);
+        return [];
+    }
+}
+
+/**
+ * Most recently active recipes based on latest "made" or "rating" events.
+ * Returns unique recipes ordered by newest activity first.
+ */
+export async function getRecentMadeOrRatedRecipes(maxRecipes = 5) {
+    const cap = Math.min(Math.max(Number(maxRecipes) || 5, 1), 20);
+    const scanCap = Math.max(cap * 6, 30);
+
+    function toMillis(v) {
+        if (!v) return 0;
+        try {
+            if (typeof v.toMillis === 'function') return v.toMillis();
+            if (typeof v.toDate === 'function') return v.toDate().getTime();
+        } catch (_) {}
+        if (v instanceof Date) return v.getTime();
+        if (typeof v === 'string' || typeof v === 'number') {
+            const t = new Date(v).getTime();
+            return Number.isFinite(t) ? t : 0;
+        }
+        return 0;
+    }
+
+    try {
+        const [madeSnap, ratingSnap] = await Promise.all([
+            getDocs(
+                query(
+                    collectionGroup(db, 'mades'),
+                    orderBy('createdAt', 'desc'),
+                    limit(scanCap)
+                )
+            ),
+            getDocs(
+                query(
+                    collectionGroup(db, 'ratings'),
+                    orderBy('createdAt', 'desc'),
+                    limit(scanCap)
+                )
+            )
+        ]);
+
+        const lastActivityByMeal = new Map();
+
+        const ingest = (docSnap) => {
+            const recipeRef = docSnap.ref.parent && docSnap.ref.parent.parent;
+            if (!recipeRef || !recipeRef.id) return;
+            const mealId = String(recipeRef.id);
+            const ms = toMillis(docSnap.data().createdAt);
+            const prev = lastActivityByMeal.get(mealId) || 0;
+            if (ms > prev) lastActivityByMeal.set(mealId, ms);
+        };
+
+        madeSnap.docs.forEach(ingest);
+        ratingSnap.docs.forEach(ingest);
+
+        const sortedMealIds = Array.from(lastActivityByMeal.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, cap)
+            .map(([mealId]) => mealId);
+
+        if (!sortedMealIds.length) return [];
+
+        const recipeDocs = await Promise.all(
+            sortedMealIds.map((mealId) => getDoc(doc(db, 'recipes', mealId)))
+        );
+
+        const byId = new Map();
+        recipeDocs.forEach((snap, idx) => {
+            if (!snap.exists()) return;
+            const d = snap.data() || {};
+            const mealId = sortedMealIds[idx];
+            const rc = d.ratingCount || 0;
+            const rs = d.ratingSum || 0;
+            byId.set(mealId, {
+                mealId,
+                madeCount: d.madeCount || 0,
+                avgRating: rc > 0 ? rs / rc : 0
+            });
+        });
+
+        return sortedMealIds
+            .map((mealId) => byId.get(mealId))
+            .filter(Boolean);
+    } catch (e) {
+        console.warn('getRecentMadeOrRatedRecipes:', e);
         return [];
     }
 }

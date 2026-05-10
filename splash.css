@@ -54,6 +54,12 @@ body {
     box-sizing: border-box;
 }
 
+.navbar a.logo {
+    text-decoration: none;
+    display: inline-block;
+    line-height: 0;
+}
+
 .logo img {
     height: 52px;
     width: auto;
@@ -128,9 +134,9 @@ body {
 /* ── Tagline — small, snug above the C in CopyCook ── */
 .tagline-img {
     position: absolute;
-    top: clamp(-2%, -0.5dvh, 1%);
+    top: clamp(-3.2%, -1.5dvh, 0.2%);
     left: 50%;
-    transform: translateX(calc(-50% + min(4vw, 1.75rem)));
+    transform: translateX(calc(-50% + min(5vw, 2.2rem)));
     width: min(42vw, clamp(5.5rem, 18vw + 1.25rem, 16.25rem));
     height: auto;
     z-index: 4;
@@ -141,7 +147,7 @@ body {
 /* ── Plates track ── */
 .plates-track {
     position: absolute;
-    bottom: clamp(-2.5rem, -6vw, -2.25rem);
+    bottom: clamp(0.25rem, 2.2vw, 1.5rem);
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -165,11 +171,11 @@ body {
 .plate img {
     display: block;
     object-fit: contain;
-    /* Single square size so plates never stretch — shrinks with narrow viewports / short screens */
+    /* Bigger hero plates inspired by reference layout */
     --plate-size: min(
-        clamp(6.5rem, 26vw + 1.5rem, 35rem),
-        36vw,
-        52dvh
+        clamp(9rem, 33vw + 1.5rem, 42rem),
+        43vw,
+        64dvh
     );
     width: var(--plate-size);
     height: var(--plate-size);

@@ -32,6 +32,35 @@
             background-color: #F5EFE7;
         }
 
+        .post-top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 18px 30px 0;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .post-top-bar .profile-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #E8B4B4;
+            cursor: pointer;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .post-top-bar .profile-avatar:hover { transform: scale(1.05); }
+        .post-top-bar .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
         .post-body {
             flex: 1;
             overflow-y: auto;
@@ -219,7 +248,7 @@
         /* ── Logout popup ── */
         .logout-popup {
             display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.5); z-index: 200;
+            background: rgba(0,0,0,0.5); z-index: 10001;
             align-items: center; justify-content: center;
         }
 
@@ -268,7 +297,7 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
         <div class="logo">
-            <img src="logo.png" alt="CopyCook Logo" onclick="window.location.href='../Home page/home.html'">
+            <img src="logo.png" alt="CopyCook Logo" onclick="ccBrandLogoNavigate('../Home page/home.html','../index.html')">
         </div>
         <nav class="nav-icons">
             <a href="../Home page/home.html" class="nav-icon">
@@ -301,6 +330,11 @@
 
     <!-- Main Content -->
     <main class="main-content">
+        <div class="post-top-bar">
+            <div class="profile-avatar" id="profileAvatar" role="button" tabindex="0" aria-label="Account settings" onclick="window.location.href='../Saved page/profile.html'" onkeydown="var k=event.key;if(k==='Enter'||k===' '){event.preventDefault();window.location.href='../Saved page/profile.html';}">
+                <img src="../Home page/drakepfp.png" alt="">
+            </div>
+        </div>
         <div class="post-body">
 
             <!-- Auth gate -->
@@ -373,6 +407,8 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<script src="../ui-feedback.js"></script>
+<script src="../auth-session.js"></script>
 <script type="module">
     import { auth, db } from '../firebase-config.js';
     import '../account-delete.js';
@@ -382,12 +418,43 @@
 
     let currentUser = null;
 
-    onAuthStateChanged(auth, (user) => {
+    function paintPostTopAvatar() {
+        const el = document.getElementById('profileAvatar');
+        if (!el) return;
+        const initial = localStorage.getItem('userInitial');
+        const color = localStorage.getItem('userAvatarColor');
+        const name = localStorage.getItem('userDisplayName');
+        if (initial && color) {
+            el.textContent = initial;
+            el.style.backgroundColor = color;
+            el.title = name || '';
+            const img = el.querySelector('img');
+            if (img) img.remove();
+        }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
             document.getElementById('authGate').style.display = 'none';
             document.getElementById('postContent').style.display = 'block';
             addIngRow();
+            try {
+                const snap = await getDoc(doc(db, 'users', user.uid));
+                const data = snap.exists() ? snap.data() : {};
+                const displayName = data.displayName || user.displayName || localStorage.getItem('userDisplayName')
+                    || (user.email ? user.email.split('@')[0] : 'Chef');
+                const avatarColor = data.avatarColor || localStorage.getItem('userAvatarColor') || '#9FB19F';
+                const trimmed = String(displayName || '').trim();
+                const initial = trimmed ? trimmed.charAt(0).toUpperCase() : '?';
+                localStorage.setItem('userDisplayName', displayName);
+                localStorage.setItem('userAvatarColor', avatarColor);
+                localStorage.setItem('userInitial', initial);
+                paintPostTopAvatar();
+            } catch (err) {
+                console.warn('post page avatar hydrate:', err);
+                paintPostTopAvatar();
+            }
         } else {
             document.getElementById('authGate').style.display = 'flex';
             document.getElementById('postContent').style.display = 'none';
@@ -480,11 +547,22 @@
         t.textContent = msg;
         t.className = 'toast' + (success ? ' success' : '');
         t.classList.add('show');
+        try {
+            if (window.UIFeedback) {
+                if (success) {
+                    window.UIFeedback.success();
+                    window.UIFeedback.hapticSuccess();
+                } else {
+                    window.UIFeedback.warning();
+                    window.UIFeedback.hapticMedium();
+                }
+            }
+        } catch (_) {}
         setTimeout(() => t.classList.remove('show'), 2600);
     }
 
     window.toggleLogoutPopup = function(e) {
-        e.preventDefault();
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
         document.getElementById('logoutPopup').classList.toggle('active');
     };
 
@@ -493,6 +571,11 @@
     };
 
     window.handleLogout = async function() {
+        var uid = null;
+        try { uid = localStorage.getItem('userUID'); } catch (_) {}
+        if (typeof preparePassportStorageForLogout === 'function') preparePassportStorageForLogout(uid);
+        if (typeof clearAuthLocalStoragePreservePassport === 'function') clearAuthLocalStoragePreservePassport();
+        else { localStorage.clear(); sessionStorage.clear(); }
         await signOut(auth);
         window.location.href = '../login.html';
     };

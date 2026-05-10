@@ -8,7 +8,8 @@ import {
     createFolder,
     getFolders,
     getPosts,
-    pruneMyFollowingWithDeletedUsers
+    pruneMyFollowingWithDeletedUsers,
+    getMadeMealIdsForUser
 } from '../firebase-functions.js';
 import '../account-delete.js';
 
@@ -32,8 +33,10 @@ function normalizePrefsFromFirestore(raw) {
 
 // Write userUID to localStorage as soon as auth resolves
 // so script.js can read it for all save/folder operations
+let ccHomeFirebaseLastUid = undefined;
 onAuthStateChanged(auth, async (user) => {
     if (user) {
+        ccHomeFirebaseLastUid = user.uid;
         localStorage.setItem('userUID', user.uid);
         console.log('✅ userUID set in localStorage:', user.uid);
         try {
@@ -56,7 +59,22 @@ onAuthStateChanged(auth, async (user) => {
         } catch (e) {
             console.warn('Could not load user preferences:', e);
         }
+        try {
+            window.ccMadeMealIdSet = await getMadeMealIdsForUser(user.uid);
+        } catch (e) {
+            console.warn('Could not load made recipes:', e);
+            window.ccMadeMealIdSet = new Set();
+        }
         if (typeof window.applyHomePersonalization === 'function') {
+            window.applyHomePersonalization();
+        }
+    } else {
+        localStorage.removeItem('userUID');
+        window.ccMadeMealIdSet = new Set();
+        // Avoid double-loading the feed on first paint (guest); only refresh after sign-out.
+        const wasSignedIn = ccHomeFirebaseLastUid !== undefined;
+        ccHomeFirebaseLastUid = undefined;
+        if (wasSignedIn && typeof window.applyHomePersonalization === 'function') {
             window.applyHomePersonalization();
         }
     }

@@ -224,7 +224,8 @@
         }
 
         .folder-card:hover .delete-folder-btn,
-        .folder-card:hover .rename-folder-btn { opacity: 1; }
+        .folder-card:hover .rename-folder-btn,
+        .folder-card:hover .privacy-folder-btn { opacity: 1; }
         .delete-folder-btn:hover { background: #D4A5A5; transform: scale(1.1); }
         .delete-folder-btn:hover svg path { stroke: white; }
 
@@ -239,6 +240,18 @@
         }
         .rename-folder-btn:hover { background: #9FB19F; transform: scale(1.1); }
         .rename-folder-btn:hover svg path { stroke: white; }
+
+        .privacy-folder-btn {
+            position: absolute; top: 10px; right: 86px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background: rgba(255,255,255,0.9); border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.2s, background 0.2s, transform 0.2s;
+            backdrop-filter: blur(4px); z-index: 5;
+        }
+        .privacy-folder-btn:hover { background: #9FB19F; transform: scale(1.1); }
+        .privacy-folder-btn:hover svg path,
+        .privacy-folder-btn:hover svg circle { stroke: white; }
 
         /* ── Confirm delete modal ── */
         .confirm-overlay {
@@ -362,7 +375,7 @@
         /* ── Logout popup ── */
         .logout-popup {
             display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.5); z-index: 200;
+            background: rgba(0,0,0,0.5); z-index: 10001;
             align-items: center; justify-content: center;
         }
 
@@ -403,7 +416,7 @@
 
     <aside class="sidebar">
         <div class="logo">
-            <img src="logo.png" alt="CopyCook Logo">
+            <img src="logo.png" alt="CopyCook Logo" onclick="ccBrandLogoNavigate('../Home page/home.html','../index.html')">
         </div>
         <nav class="nav-icons">
             <a href="../Home page/home.html" class="nav-icon">
@@ -450,7 +463,7 @@
                     <line x1="9" y1="20" x2="15" y2="20" stroke="#D4A5A5" stroke-width="2"/>
                 </svg>
             </div>
-            <div class="profile-avatar" id="profileAvatar"></div>
+            <div class="profile-avatar" id="profileAvatar" role="button" tabindex="0" aria-label="Account settings" onclick="window.location.href='profile.html'" onkeydown="var k=event.key;if(k==='Enter'||k===' '){event.preventDefault();window.location.href='profile.html';}"></div>
         </div>
 
         <div class="page-body">
@@ -562,6 +575,11 @@
     <div class="modal">
         <h3>Rename folder</h3>
         <input type="text" id="renameFolderInput" placeholder="Folder name" maxlength="40" autocomplete="off">
+        <p style="font-size:13px;color:#7A7A7A;margin:-8px 0 12px;">Who can see this folder</p>
+        <div class="modal-privacy" id="renameModalPrivacyRow">
+            <button type="button" class="privacy-btn" id="renameBtnPrivate">Private</button>
+            <button type="button" class="privacy-btn" id="renameBtnPublic">Public</button>
+        </div>
         <div class="modal-actions">
             <button type="button" class="btn-cancel" id="btnCloseRenameModal">Cancel</button>
             <button type="button" class="btn-create-confirm" id="btnConfirmRename">Save</button>
@@ -591,12 +609,15 @@
     </div>
 </div>
 
+<script src="../ui-feedback.js"></script>
+<script src="../auth-session.js"></script>
 <script type="module">
 import {
     createFolder as createFolderFS,
     getFolders as getFoldersFS,
     deleteFolder as deleteFolderFS,
-    renameFolder as renameFolderFS
+    renameFolder as renameFolderFS,
+    updateFolderPrivacy as updateFolderPrivacyFS
 } from '../firebase-functions.js';
 import { db } from '../firebase-config.js';
 import '../account-delete.js';
@@ -646,6 +667,31 @@ function getSortedFolders(list) {
 function normalizeFolderPrivacy(p) {
     const s = (p || 'private').toString().toLowerCase().trim();
     return s === 'public' ? 'public' : 'private';
+}
+
+async function toggleFolderPrivacyQuick(folder, e) {
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+    const next = normalizeFolderPrivacy(folder.privacy) === 'public' ? 'private' : 'public';
+    const uid = localStorage.getItem('userUID');
+    const ix = folders.findIndex(f => f.id === folder.id);
+    if (ix < 0) return;
+    if (!uid) {
+        folders[ix] = { ...folders[ix], privacy: next };
+        saveFolders();
+        setTab(next);
+        renderFolders();
+        return;
+    }
+    try {
+        await updateFolderPrivacyFS(uid, folder.id, next);
+        folders[ix].privacy = next;
+        saveFolders();
+        setTab(next);
+        renderFolders();
+    } catch (err) {
+        console.error('Privacy update failed:', err);
+        alert(err.message || 'Could not update folder visibility.');
+    }
 }
 
 // ── Sort button ──────────────────────────────────────────────────────────────
@@ -753,7 +799,17 @@ function renderFolders() {
         card.onclick = () => openFolder(folder.id);
 
         const thumb    = folder.coverImage || PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
-        const lockIcon = normalizeFolderPrivacy(folder.privacy) === 'private' ? `
+        const isPrivateFolder = normalizeFolderPrivacy(folder.privacy) === 'private';
+        const privacyToggleIcon = isPrivateFolder ? `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="4" stroke="#5A5A5A" stroke-width="2" fill="none"/>
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="#5A5A5A" stroke-width="2" fill="none"/>
+            </svg>` : `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="5" y="11" width="14" height="10" rx="2" stroke="#5A5A5A" stroke-width="2" fill="none"/>
+                <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#5A5A5A" stroke-width="2" fill="none"/>
+            </svg>`;
+        const lockIcon = isPrivateFolder ? `
             <div class="lock-badge">
                 <svg viewBox="0 0 24 24" fill="none">
                     <rect x="5" y="11" width="14" height="10" rx="2" stroke="#5A5A5A" stroke-width="2" fill="none"/>
@@ -774,6 +830,9 @@ function renderFolders() {
             <div class="folder-thumb">
                 <img src="${thumb}" alt="${folder.name}" loading="lazy">
                 ${lockIcon}
+                <button type="button" class="privacy-folder-btn" title="${isPrivateFolder ? 'Make folder public (shown on your profile)' : 'Make folder private'}" aria-label="Toggle folder privacy">
+                    ${privacyToggleIcon}
+                </button>
                 <button class="rename-folder-btn" title="Rename folder" aria-label="Rename ${folder.name}">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                         <path d="M15.232 5.232l3.536 3.536M9 15l-2 5 5-2 8.5-8.5a2.828 2.828 0 10-4-4L9 15z" stroke="#5A5A5A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -790,6 +849,10 @@ function renderFolders() {
                 <div style="font-size:12px;font-weight:400;color:#9A9A9A;margin-top:2px;">${subtitle}</div>
             </div>`;
 
+        card.querySelector('.privacy-folder-btn').addEventListener('click', e => {
+            e.stopPropagation();
+            void toggleFolderPrivacyQuick(folder, e);
+        });
         card.querySelector('.rename-folder-btn').addEventListener('click', e => {
             e.stopPropagation();
             openRenameModal(folder);
@@ -874,11 +937,21 @@ wireCreateFolderControls();
 
 // ── Rename folder ─────────────────────────────────────────────────────────────
 let pendingRenameFolder = null;
+let renameSelectedPrivacy = 'private';
+
+function selectRenameModalPrivacy(p) {
+    renameSelectedPrivacy = normalizeFolderPrivacy(p);
+    document.getElementById('renameBtnPrivate').className =
+        `privacy-btn ${renameSelectedPrivacy === 'private' ? 'selected' : ''}`;
+    document.getElementById('renameBtnPublic').className =
+        `privacy-btn ${renameSelectedPrivacy === 'public' ? 'selected' : ''}`;
+}
 
 function openRenameModal(folder) {
     pendingRenameFolder = folder;
     const input = document.getElementById('renameFolderInput');
     input.value = folder.name;
+    selectRenameModalPrivacy(folder.privacy);
     document.getElementById('renameModal').classList.add('active');
     setTimeout(() => { input.focus(); input.select(); }, 80);
 }
@@ -892,6 +965,8 @@ document.getElementById('renameModal').addEventListener('click', function(e) {
     if (e.target === this) closeRenameModal();
 });
 document.getElementById('btnCloseRenameModal').addEventListener('click', closeRenameModal);
+document.getElementById('renameBtnPrivate').addEventListener('click', () => selectRenameModalPrivacy('private'));
+document.getElementById('renameBtnPublic').addEventListener('click', () => selectRenameModalPrivacy('public'));
 
 document.getElementById('btnConfirmRename').addEventListener('click', async () => {
     if (!pendingRenameFolder) return;
@@ -903,12 +978,16 @@ document.getElementById('btnConfirmRename').addEventListener('click', async () =
         return;
     }
     const newId = raw.replace(/\//g, '_');
-    if (raw === folder.name && newId === folder.id) {
+    const privacyNext = normalizeFolderPrivacy(renameSelectedPrivacy);
+    const privacyChanged = normalizeFolderPrivacy(folder.privacy) !== privacyNext;
+    const nameChanged = raw !== folder.name || newId !== folder.id;
+
+    if (!nameChanged && !privacyChanged) {
         closeRenameModal();
         return;
     }
 
-    if (folders.some(f => f.id === newId && f.id !== folder.id)) {
+    if (nameChanged && folders.some(f => f.id === newId && f.id !== folder.id)) {
         alert('A folder with this name already exists.');
         return;
     }
@@ -923,23 +1002,34 @@ document.getElementById('btnConfirmRename').addEventListener('click', async () =
     closeRenameModal();
 
     if (!uid) {
-        folders[ix] = { ...folders[ix], id: newId, name: raw };
+        folders[ix] = { ...folders[ix], id: newId, name: raw, privacy: privacyNext };
         saveFolders();
+        if (privacyChanged) setTab(privacyNext);
         renderFolders();
         return;
     }
 
     try {
-        const result = await renameFolderFS(uid, folder.id, raw);
-        const j = folders.findIndex(f => f.id === folder.id);
-        if (j >= 0) {
-            folders[j] = { ...folders[j], id: result.id, name: result.name };
-            saveFolders();
-            renderFolders();
+        let docId = folder.id;
+        if (nameChanged) {
+            const result = await renameFolderFS(uid, folder.id, raw);
+            docId = result.id;
+            const j = folders.findIndex(f => f.id === folder.id);
+            if (j >= 0) {
+                folders[j] = { ...folders[j], id: result.id, name: result.name };
+            }
         }
+        if (privacyChanged) {
+            await updateFolderPrivacyFS(uid, docId, privacyNext);
+            const j = folders.findIndex(f => f.id === docId);
+            if (j >= 0) folders[j] = { ...folders[j], privacy: privacyNext };
+        }
+        saveFolders();
+        if (privacyChanged) setTab(privacyNext);
+        renderFolders();
     } catch (err) {
-        console.error('Rename folder failed:', err);
-        alert(err.message || 'Could not rename folder.');
+        console.error('Rename / privacy update failed:', err);
+        alert(err.message || 'Could not save folder changes.');
     }
 });
 
@@ -1019,15 +1109,15 @@ document.getElementById('folderNameInput').addEventListener('keydown', function(
 
 // ── Logout ────────────────────────────────────────────────────────────────────
 window.toggleLogoutPopup = function(e) {
-    e.preventDefault();
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
     document.getElementById('logoutPopup').classList.toggle('active');
 };
 window.closeLogoutPopup = function() {
     document.getElementById('logoutPopup').classList.remove('active');
 };
 window.handleLogout = function() {
-    localStorage.clear(); sessionStorage.clear();
-    window.location.href = '../login.html';
+    if (typeof logoutClearSessionKeepPassport === 'function') logoutClearSessionKeepPassport('../login.html');
+    else { localStorage.clear(); sessionStorage.clear(); window.location.href = '../login.html'; }
 };
 document.getElementById('logoutPopup').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeLogoutPopup();

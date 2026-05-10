@@ -152,6 +152,26 @@
 
         .privacy-badge svg { width: 11px; height: 11px; }
 
+        .privacy-switch-btn {
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 999px;
+            border: 2px solid #C8D4C8;
+            background: white;
+            color: #4A684A;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .privacy-switch-btn:hover:not(:disabled) {
+            background: #F4FAF4;
+            border-color: #9FB19F;
+        }
+
+        .privacy-switch-btn:disabled { opacity: 0.6; cursor: wait; }
+
         /* ── Sort wrapper ── */
         .sort-wrapper {
             position: relative;
@@ -377,7 +397,7 @@
             display: none;
             position: fixed; inset: 0;
             background: rgba(0,0,0,0.5);
-            z-index: 300;
+            z-index: 10001;
             align-items: center;
             justify-content: center;
         }
@@ -421,7 +441,7 @@
 
     <aside class="sidebar">
         <div class="logo">
-            <img src="logo.png" alt="CopyCook Logo">
+            <img src="logo.png" alt="CopyCook Logo" onclick="ccBrandLogoNavigate('../Home page/home.html','../index.html')">
         </div>
         <nav class="nav-icons">
             <a href="../Home page/home.html" class="nav-icon">
@@ -468,7 +488,7 @@
                     <line x1="9" y1="20" x2="15" y2="20" stroke="#D4A5A5" stroke-width="2"/>
                 </svg>
             </div>
-            <div class="profile-avatar" id="profileAvatar"></div>
+            <div class="profile-avatar" id="profileAvatar" role="button" tabindex="0" aria-label="Account settings" onclick="window.location.href='profile.html'" onkeydown="var k=event.key;if(k==='Enter'||k===' '){event.preventDefault();window.location.href='profile.html';}"></div>
         </div>
 
         <div class="page-body">
@@ -491,6 +511,7 @@
                             </svg>
                             <span id="privacyLabel">Private</span>
                         </span>
+                        <button type="button" class="privacy-switch-btn" id="privacySwitchBtn" hidden>Make public</button>
                     </div>
                 </div>
 
@@ -583,11 +604,13 @@
     </div>
 </div>
 
+<script src="../ui-feedback.js"></script>
+<script src="../auth-session.js"></script>
 <script type="module">
 import { db } from '../firebase-config.js';
 import '../account-delete.js';
 import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
-import { getFolders, unsaveRecipe } from '../firebase-functions.js';
+import { getFolders, unsaveRecipe, updateFolderPrivacy } from '../firebase-functions.js';
 
 // ── URL params ────────────────────────────────────────────────────────────────
 const params   = new URLSearchParams(window.location.search);
@@ -609,8 +632,28 @@ let currentFolderDocId = '';
 /** Viewing someone else's folder (from Messages → profile → public folder) */
 let isReadOnlyView    = false;
 let folderOwnerUid    = '';
+/** Set after a successful folder load for privacy toggles */
+let loadedFolder      = null;
 
 const PLACEHOLDER_THUMB = 'https://www.themealdb.com/images/media/meals/llcbn01574260722.jpg';
+
+function normalizeFolderPrivacy(p) {
+    const s = (p || 'private').toString().toLowerCase().trim();
+    return s === 'public' ? 'public' : 'private';
+}
+
+function refreshPrivacySwitchBtn(folder) {
+    const btn = document.getElementById('privacySwitchBtn');
+    if (!btn) return;
+    if (!folder || isReadOnlyView) {
+        btn.hidden = true;
+        return;
+    }
+    btn.hidden = false;
+    const pub = normalizeFolderPrivacy(folder.privacy) === 'public';
+    btn.textContent = pub ? 'Make private' : 'Make public';
+    btn.title = pub ? 'Only you will see this folder' : 'Show this folder on your profile';
+}
 
 // ── Sort helpers ──────────────────────────────────────────────────────────────
 function mealTitle(m) {
@@ -737,7 +780,7 @@ function renderHeader(folder) {
     document.getElementById('recipeCount').textContent =
         count + ' recipe' + (count !== 1 ? 's' : '');
 
-    const isPublic = folder.privacy === 'public';
+    const isPublic = normalizeFolderPrivacy(folder.privacy) === 'public';
     document.getElementById('privacyLabel').textContent = isPublic ? 'Public' : 'Private';
 
     const badge = document.getElementById('privacyBadge');
@@ -756,6 +799,7 @@ function renderHeader(folder) {
             '<rect x="5" y="11" width="14" height="10" rx="2" stroke="#5A5A5A" stroke-width="2" fill="none"/>' +
             '<path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#5A5A5A" stroke-width="2" fill="none"/>';
     }
+    refreshPrivacySwitchBtn(folder);
 }
 
 // ── Render recipe cards ───────────────────────────────────────────────────────
@@ -882,19 +926,46 @@ document.getElementById('confirmOverlay').addEventListener('click', function(e) 
 
 // ── Logout ────────────────────────────────────────────────────────────────────
 window.toggleLogoutPopup = function(e) {
-    e.preventDefault();
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
     document.getElementById('logoutPopup').classList.toggle('active');
 };
 window.closeLogoutPopup = function() {
     document.getElementById('logoutPopup').classList.remove('active');
 };
 window.handleLogout = function() {
-    localStorage.clear();
-    sessionStorage.clear();
-    window.location.href = '../login.html';
+    if (typeof logoutClearSessionKeepPassport === 'function') logoutClearSessionKeepPassport('../login.html');
+    else { localStorage.clear(); sessionStorage.clear(); window.location.href = '../login.html'; }
 };
 document.getElementById('logoutPopup').addEventListener('click', function(e) {
     if (e.target === e.currentTarget) closeLogoutPopup();
+});
+
+document.getElementById('privacySwitchBtn').addEventListener('click', async function() {
+    if (!loadedFolder || isReadOnlyView) return;
+    const uid = localStorage.getItem('userUID');
+    if (!uid) return;
+
+    const next = normalizeFolderPrivacy(loadedFolder.privacy) === 'public' ? 'private' : 'public';
+    const btn = document.getElementById('privacySwitchBtn');
+    btn.disabled = true;
+    try {
+        await updateFolderPrivacy(uid, loadedFolder.id, next);
+        loadedFolder = { ...loadedFolder, privacy: next };
+        renderHeader(loadedFolder);
+        try {
+            var foldersLs = JSON.parse(localStorage.getItem('ccFolders') || '[]');
+            var lf = foldersLs.find(function(x) { return x.id === loadedFolder.id; });
+            if (lf) {
+                lf.privacy = next;
+                localStorage.setItem('ccFolders', JSON.stringify(foldersLs));
+            }
+        } catch (_) { /* noop */ }
+    } catch (err) {
+        console.error('Privacy update failed:', err);
+        alert((err && err.message) ? err.message : 'Could not update folder visibility.');
+    } finally {
+        btn.disabled = false;
+    }
 });
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -955,8 +1026,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         allRecipes         = attachRecipeSortMeta(folder.recipes || []);
         currentFolderName  = folder.name;
         currentFolderDocId = folder.id;
+        loadedFolder       = folder;
 
-        renderHeader(folder);
+        renderHeader(loadedFolder);
         renderRecipes(getSorted(), folder.id, folder.name);
 
     } catch (err) {

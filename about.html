@@ -9,6 +9,8 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   :root {
+    --story-max: 1200px;
+    --story-gutter: max(16px, min(5vw, 48px));
     --cream:   #F5EFE7;
     --rose:    #E8B4B4;
     --dusty:   #D4A5A5;
@@ -177,11 +179,11 @@
   /* ── STORY SECTION ── */
   .story {
     background: var(--white);
-    padding: 70px 24px;
+    padding: 70px var(--story-gutter);
   }
 
   .story-inner {
-    max-width: 900px;
+    max-width: var(--story-max);
     margin: 0 auto;
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -409,6 +411,20 @@
     padding: 0 18px;
   }
 
+  .team-card .team-linkedin {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sage-dk);
+    text-decoration: none;
+    padding: 0 18px;
+  }
+  .team-card .team-linkedin:hover {
+    color: var(--rose);
+    text-decoration: underline;
+  }
+
   .team-card .fav {
     margin-top: 12px;
     font-size: 11px;
@@ -505,8 +521,8 @@
     <div class="story-text">
       <span class="label">The origin</span>
       <h2>Why CopyCook?</h2>
-      <p>Ever crave your favourite restaurant dish but wince at the price tag? CopyCook was built to fix that. It's a recipe discovery platform where you can find copycat recipes from popular chain restaurants and see exactly how much you save by making it at home instead.</p>
-      <p>With rising food prices and shrinkflation hitting everyone's wallets, we wanted to make home cooking feel accessible, affordable, and genuinely fun. Browse recipes, compare homemade costs against dine-in prices, save your favourites into personal folders, and build your own little cookbook, all in one cozy corner of the internet.</p>
+      <p>Ever crave your favourite restaurant dish but wince at the price tag? You're not imagining it. Eating out has gotten expensive. The average American drops over $3,000 a year dining out, restaurant prices have climbed roughly 30% since 2020, and chains have quietly shrunk portion sizes by 10-15% while charging you more for the privilege. A casual dinner for two at Applebee's or Chili's can easily hit $60-$80 with tip. Meanwhile, the Bureau of Labor Statistics will tell you that food away from home is consistently 2-3x pricier than the same meal made at home.</p>
+      <p>CopyCook was built for exactly that moment when you're craving something good but refuse to pay restaurant prices for it. It's a recipe discovery platform where you can find copycat recipes from your favourite chain restaurants and see exactly how much you save by making it yourself. Shrinkflation got you? We've got you back. Browse recipes, compare homemade costs against dine-in prices, save your favourites into personal folders, and build your own little cookbook, all in one cozy corner of the internet where the only bill at the end is the one you didn't get.</p>
     </div>
     <div class="story-visual">
       <div class="stat-pill">
@@ -545,6 +561,7 @@
       <h3>Neha</h3>
       <span class="role">UI, UX & Full Stack</span>
       <p class="bio">Designed and built the entire UI/UX experience from scratch, crafted the frontend, and handled Firebase integration to bring CopyCook to life.</p>
+      <a class="team-linkedin" href="https://www.linkedin.com/in/neha-mariya-saji-1045b32b3/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       <span class="fav"> Fave dish: <strong>Neha's Shawarma</strong></span>
     </div>
 
@@ -553,6 +570,7 @@
       <h3>Lochana</h3>
       <span class="role"> Backend & Auth</span>
       <p class="bio">Handled authentication, user management, and the behind-the-scenes plumbing that keeps everything secure and running smoothly.</p>
+      <a class="team-linkedin" href="https://www.linkedin.com/in/lochana-subedi/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       <span class="fav"> Fave dish: <strong>Lochana's Momos</strong></span>
     </div>
 
@@ -561,6 +579,7 @@
       <h3>Grace</h3>
       <span class="role">Backend & API</span>
       <p class="bio">Built out the server-side logic and API integrations, connecting CopyCook to the outside world and making sure every recipe request comes back fast and clean.</p>
+      <a class="team-linkedin" href="https://www.linkedin.com/in/grace-medina-92b86620b/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       <span class="fav"> Fave dish: <strong>Graci's Oatmeal</strong></span>
     </div>
 
@@ -569,6 +588,7 @@
       <h3>Aubrey</h3>
       <span class="role">Database & Firebase</span>
       <p class="bio">Architected the backend database structure, wired up all Firestore collections, and kept our data flowing smoothly so every save, like, and folder actually sticks.</p>
+      <a class="team-linkedin" href="https://www.linkedin.com/in/aubrey-morra/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       <span class="fav"> Fave dish: <strong>Aubrey's Ravioli</strong></span>
     </div>
 

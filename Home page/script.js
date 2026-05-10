@@ -19,6 +19,13 @@ const MEALDB_RANDOM_URL = 'https://www.themealdb.com/api/json/v1/1/random.php';
 /** Minimum time the wheel spins before navigating (ms), so the animation is visible. */
 const ROULETTE_SPIN_MIN_MS = 2800;
 
+/** True when signed-in user's "Made It" ids (Firestore) include this MealDB id. Guests: always false until set loads. */
+function userMarkedMadeMeal(idMeal) {
+    const set = window.ccMadeMealIdSet;
+    if (!set || !(set instanceof Set) || set.size === 0) return false;
+    return set.has(String(idMeal));
+}
+
 function delayMs(ms) {
     return new Promise(function (resolve) { setTimeout(resolve, ms); });
 }
@@ -57,9 +64,20 @@ async function surpriseRandomRecipe() {
         const res = await fetch(MEALDB_RANDOM_URL);
         if (!res.ok) throw new Error('Network response not ok');
         const data = await res.json();
-        const meal = data.meals && data.meals[0];
+        let meal = data.meals && data.meals[0];
+        for (let attempts = 0; attempts < 25 && meal && userMarkedMadeMeal(meal.idMeal); attempts++) {
+            const resR = await fetch(MEALDB_RANDOM_URL);
+            if (!resR.ok) break;
+            const dataR = await resR.json();
+            meal = dataR.meals && dataR.meals[0];
+        }
         if (!meal || !meal.idMeal) {
             window.alert('No recipe returned. Please try again.');
+            resetSurpriseRecipeButton();
+            return;
+        }
+        if (userMarkedMadeMeal(meal.idMeal)) {
+            window.alert('Could not find a recipe you have not made yet. Try again or clear some "Made it" recipes.');
             resetSurpriseRecipeButton();
             return;
         }
@@ -76,9 +94,15 @@ async function surpriseRandomRecipe() {
         resetSurpriseRecipeButton();
     }
 }
-function toggleLogoutPopup(event) { event.preventDefault(); document.getElementById('logoutPopup').classList.toggle('active'); }
+function toggleLogoutPopup(event) {
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+    document.getElementById('logoutPopup').classList.toggle('active');
+}
 function closeLogoutPopup() { document.getElementById('logoutPopup').classList.remove('active'); }
-function handleLogout() { localStorage.clear(); sessionStorage.clear(); window.location.href = '../login.html'; }
+function handleLogout() {
+    if (typeof logoutClearSessionKeepPassport === 'function') logoutClearSessionKeepPassport('../login.html');
+    else { localStorage.clear(); sessionStorage.clear(); window.location.href = '../login.html'; }
+}
 
 window.openRecipe              = openRecipe;
 window.surpriseRandomRecipe   = surpriseRandomRecipe;
@@ -236,6 +260,7 @@ async function matchingCopycatsForSearch(query, cuisineMatch, seen, includeInSee
     const copycats = await loadCopycatRecipes();
     const out = [];
     for (const meal of copycats) {
+        if (userMarkedMadeMeal(meal.idMeal)) continue;
         if (seen.has(meal.idMeal)) continue;
         if (!copycatMatchesSearch(meal, query, cuisineMatch)) continue;
         if (includeInSeen) seen.add(meal.idMeal);
@@ -264,6 +289,7 @@ async function loadAllRecipes() {
                 const data = await res.json();
                 if (!data.meals) return;
                 data.meals.forEach(meal => {
+                    if (userMarkedMadeMeal(meal.idMeal)) return;
                     if (seenIds.has(meal.idMeal)) return;
                     seenIds.add(meal.idMeal);
                     allMealsCache.push(meal);
@@ -275,6 +301,7 @@ async function loadAllRecipes() {
         // Merge copycat recipes into the feed
         const copycats = await loadCopycatRecipes();
         copycats.forEach(meal => {
+            if (userMarkedMadeMeal(meal.idMeal)) return;
             if (!seenIds.has(meal.idMeal)) {
                 seenIds.add(meal.idMeal);
                 allMealsCache.push(meal);
@@ -293,6 +320,7 @@ function restoreAllRecipes(grid) {
     grid.innerHTML = '';
     const seen = new Set();
     allMealsCache.forEach(meal => {
+        if (userMarkedMadeMeal(meal.idMeal)) return;
         if (!seen.has(meal.idMeal)) { seen.add(meal.idMeal); grid.appendChild(createCard(meal)); }
     });
 }
@@ -350,6 +378,7 @@ async function addMealsFromArea(area, seen, bucket) {
         const res = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?a=${encodeURIComponent(area)}`);
         const data = await res.json();
         (data.meals || []).forEach(m => {
+            if (userMarkedMadeMeal(m.idMeal)) { seen.add(m.idMeal); return; }
             if (!seen.has(m.idMeal)) { seen.add(m.idMeal); bucket.push(m); }
         });
     } catch (_) {}
@@ -360,6 +389,7 @@ async function addMealsFromCategory(cat, seen, bucket) {
         const res = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${encodeURIComponent(cat)}`);
         const data = await res.json();
         (data.meals || []).forEach(m => {
+            if (userMarkedMadeMeal(m.idMeal)) { seen.add(m.idMeal); return; }
             if (!seen.has(m.idMeal)) { seen.add(m.idMeal); bucket.push(m); }
         });
     } catch (_) {}
@@ -431,6 +461,7 @@ async function loadPersonalizedRecipes(prefs) {
     }
 
     shuffleInPlace(allMealsCache);
+    allMealsCache = allMealsCache.filter(m => !userMarkedMadeMeal(m.idMeal));
 
     allMealsLoading = false;
     allMealsLoaded = true;
@@ -442,7 +473,9 @@ async function loadPersonalizedRecipes(prefs) {
     }
 
     grid.innerHTML = '';
-    allMealsCache.forEach(meal => grid.appendChild(createCard(meal)));
+    allMealsCache.forEach(meal => {
+        if (!userMarkedMadeMeal(meal.idMeal)) grid.appendChild(createCard(meal));
+    });
 }
 
 function applyFeedTabPreference(prefs) {
@@ -527,6 +560,7 @@ async function searchByGenericFoodTerm(query, grid) {
             const res = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${encodeURIComponent(cat)}`);
             const data = await res.json();
             (data.meals || []).forEach((meal) => {
+                if (userMarkedMadeMeal(meal.idMeal)) return;
                 if (seen.has(meal.idMeal)) return;
                 seen.add(meal.idMeal);
                 matches.push(meal);
@@ -571,7 +605,7 @@ async function searchRecipes(query) {
         if (cuisineMatch) {
             const res  = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?a=${encodeURIComponent(cuisineMatch)}`);
             const data = await res.json();
-            const meals = data.meals || [];
+            const meals = (data.meals || []).filter(m => !userMarkedMadeMeal(m.idMeal));
             const seen = new Set(meals.map(m => m.idMeal));
             const ccMatches = await matchingCopycatsForSearch(query, cuisineMatch, seen, true);
 
@@ -590,7 +624,7 @@ async function searchRecipes(query) {
         } else {
             const res  = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(query)}`);
             const data = await res.json();
-            const meals = data.meals || [];
+            const meals = (data.meals || []).filter(m => !userMarkedMadeMeal(m.idMeal));
             const seen = new Set(meals.map(m => m.idMeal));
             const ccMatches = await matchingCopycatsForSearch(query, null, seen, true);
 
@@ -705,7 +739,8 @@ async function confirmCreateFolder() {
     }
     const safeName = name.replace(/\//g, '_');
     const folders  = getFolders();
-    if (!folders.find(f => f.id === safeName)) {
+    const existedBefore = folders.some(f => f.id === safeName);
+    if (!existedBefore) {
         folders.push({ id: safeName, name, privacy: savePrivacy, recipes: [], coverImage: null, createdAt: new Date().toISOString() });
         saveFoldersLocal(folders);
     }
@@ -716,6 +751,12 @@ async function confirmCreateFolder() {
     }
     document.getElementById('newFolderNameInput').value = '';
     renderSaveFolders();
+    try {
+        if (!existedBefore && window.UIFeedback) {
+            window.UIFeedback.toggle();
+            window.UIFeedback.hapticMedium();
+        }
+    } catch (_) {}
 }
 
 async function confirmSaveToFolder() {
@@ -740,6 +781,12 @@ async function confirmSaveToFolder() {
         }
     }
     document.getElementById('savePopupOverlay').classList.remove('active');
+    try {
+        if (!already && window.UIFeedback) {
+            window.UIFeedback.success();
+            window.UIFeedback.hapticSuccess();
+        }
+    } catch (_) {}
 }
 
 window.openSavePopup       = openSavePopup;

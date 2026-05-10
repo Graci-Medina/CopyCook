@@ -6,6 +6,8 @@
     <title>CopyCook - Recipe</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../app-shell.css">
+    <script src="../ui-feedback.js"></script>
+    <script src="../auth-session.js"></script>
     <script src="../cuisine-passport.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -183,6 +185,96 @@
         }
         .made-it-btn:disabled { opacity: 0.65; cursor: wait; }
         .made-it-btn.needs-auth { cursor: pointer; opacity: 0.95; }
+        @keyframes made-it-btn-pop {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.07); }
+            70% { transform: scale(0.97); }
+            100% { transform: scale(1); }
+        }
+        .made-it-btn.made-it-celebrate-pulse {
+            animation: made-it-btn-pop 0.55s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+        }
+        .made-it-achievement-host {
+            position: fixed;
+            z-index: 3000;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .made-it-achievement-badge {
+            position: absolute;
+            bottom: calc(100% + 12px);
+            left: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+            width: max-content;
+            max-width: min(292px, 94vw);
+            white-space: nowrap;
+            transform: translateX(-50%);
+            padding: 10px 22px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #FFF8FA, #F5D8E2);
+            border: 1px solid #E8B4B4;
+            box-shadow: 0 10px 28px rgba(90, 42, 58, 0.16);
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #5A3A3A;
+            font-family: 'Poppins', sans-serif;
+            opacity: 0;
+            animation: made-it-badge-enter 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        /* Keeps sparkle emoji visually aligned with the label (avoid wrap / baseline drop). */
+        .made-it-achievement-badge .achievement-sparkle {
+            flex-shrink: 0;
+            line-height: 1;
+            font-size: 15px;
+        }
+        @keyframes made-it-badge-enter {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(10px) scale(0.7);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0) scale(1);
+            }
+        }
+        .made-it-achievement-host.fade-out .made-it-achievement-badge {
+            transition: opacity 0.38s ease, transform 0.38s ease;
+            opacity: 0;
+            transform: translateX(-50%) translateY(-8px);
+        }
+        .made-it-spark {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #E8A030;
+            box-shadow: 0 0 0 2px rgba(232, 160, 48, 0.3);
+            animation: made-it-sparkfly 0.62s ease-out forwards;
+        }
+        .made-it-spark:nth-child(4n + 2) {
+            background: #7A9B7A;
+            box-shadow: 0 0 0 2px rgba(122, 155, 122, 0.35);
+        }
+        .made-it-spark:nth-child(4n + 3) {
+            background: #E8B4B4;
+            box-shadow: 0 0 0 2px rgba(232, 180, 180, 0.35);
+        }
+        @keyframes made-it-sparkfly {
+            to {
+                transform: translate(var(--tx), var(--ty)) scale(0.15);
+                opacity: 0;
+            }
+        }
 
         .card { background: white; border-radius: 20px; padding: 22px 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
         .card-title { font-size: 18px; font-weight: 700; color: #2A2A2A; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
@@ -413,7 +505,7 @@
         .comment-send:disabled { background: #E0C8C8; cursor: not-allowed; transform: none; }
 
         /* ── Logout popup ── */
-        .logout-popup { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .logout-popup { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10001; align-items: center; justify-content: center; }
         .logout-popup.active { display: flex; }
         .logout-content { background: #FDFBF7; border: 3px solid #E8B4B4; border-radius: 20px; padding: 40px 50px; text-align: center; }
         .logout-content h3 { color: #3A3A3A; font-size: 24px; margin-bottom: 30px; font-weight: 500; }
@@ -533,6 +625,11 @@
             line-height: 1.55;
             color: #323232;
             min-height: 80px;
+            max-height: 210px;
+            overflow-y: auto;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
         .cook-along-actions {
             display: flex;
@@ -688,7 +785,7 @@
 
     <aside class="sidebar">
         <div class="logo">
-            <img src="logo.png" alt="CopyCook Logo" onclick="window.location.href='home.html'">
+            <img src="logo.png" alt="CopyCook Logo" onclick="ccBrandLogoNavigate('home.html','../index.html')">
         </div>
         <nav class="nav-icons">
             <a href="home.html" class="nav-icon active"><img src="home-icon.png" alt="Home"></a>
@@ -727,7 +824,7 @@
                     <line x1="9" y1="20" x2="15" y2="20" stroke="#D4A5A5" stroke-width="2"/>
                 </svg>
             </div>
-            <div class="profile-pic" id="profileAvatar"></div>
+            <div class="profile-pic" id="profileAvatar" role="button" tabindex="0" aria-label="Account settings" onclick="window.location.href='../Saved page/profile.html'" onkeydown="var k=event.key;if(k==='Enter'||k===' '){event.preventDefault();window.location.href='../Saved page/profile.html';}"></div>
         </div>
 
         <div class="recipe-body" id="recipeBody">
@@ -946,9 +1043,12 @@ onAuthStateChanged(auth, async (user) => {
 })();
 
 // ── Logout ─────────────────────────────────────────────────────────────────
-window.toggleLogoutPopup = (e) => { e.preventDefault(); document.getElementById('logoutPopup').classList.toggle('active'); };
+window.toggleLogoutPopup = (e) => { if (e && typeof e.preventDefault === 'function') e.preventDefault(); document.getElementById('logoutPopup').classList.toggle('active'); };
 window.closeLogoutPopup  = ()  => { document.getElementById('logoutPopup').classList.remove('active'); };
-window.handleLogout      = ()  => { localStorage.clear(); sessionStorage.clear(); window.location.href = '../login.html'; };
+window.handleLogout      = ()  => {
+    if (typeof logoutClearSessionKeepPassport === 'function') logoutClearSessionKeepPassport('../login.html');
+    else { localStorage.clear(); sessionStorage.clear(); window.location.href = '../login.html'; }
+};
 document.getElementById('logoutPopup').addEventListener('click', e => { if (e.target === e.currentTarget) window.closeLogoutPopup(); });
 
 // ── Like helpers ───────────────────────────────────────────────────────────
@@ -1070,7 +1170,16 @@ window.confirmCreateFolder = async () => {
         document.getElementById('newFolderNameInput').value = '';
         await renderSaveFolders();
         console.log('✅ Folder created:', name);
-    } catch (err) { console.error('Create folder error:', err); }
+        try {
+            if (window.UIFeedback) {
+                window.UIFeedback.toggle();
+                window.UIFeedback.hapticMedium();
+            }
+        } catch (_) {}
+    } catch (err) {
+        console.error('Create folder error:', err);
+        try { if (window.UIFeedback) window.UIFeedback.error(); } catch (_) {}
+    }
 };
 
 window.confirmSaveToFolder = async () => {
@@ -1120,8 +1229,15 @@ window.confirmSaveToFolder = async () => {
         }
 
         document.getElementById('savePopupOverlay').classList.remove('active');
+        try {
+            if (!already && window.UIFeedback) {
+                window.UIFeedback.success();
+                window.UIFeedback.hapticSuccess();
+            }
+        } catch (_) {}
     } catch (err) {
         console.error('Save to folder error:', err);
+        try { if (window.UIFeedback) window.UIFeedback.error(); } catch (_) {}
     } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save';
@@ -1328,8 +1444,15 @@ window.postComment = async () => {
             createdAt: serverTimestamp()
         });
         input.value = '';
+        try {
+            if (window.UIFeedback) {
+                window.UIFeedback.success();
+                window.UIFeedback.hapticMedium();
+            }
+        } catch (_) {}
     } catch (err) {
         console.error('Post comment failed:', err);
+        try { if (window.UIFeedback) window.UIFeedback.error(); } catch (_) {}
         alert('Failed to post comment.');
     } finally { sendBtn.disabled = false; input.focus(); }
 };
@@ -1342,6 +1465,75 @@ async function deleteComment(commentId) {
 
 function escapeHtml(str) {
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function playMadeItAchievementSound() {
+    try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        const ctx = new AC();
+        const ding = () => {
+            const now = ctx.currentTime;
+            const freqs = [523.25, 659.25, 783.99];
+            freqs.forEach((f, i) => {
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+                o.type = 'sine';
+                o.frequency.value = f;
+                g.gain.setValueAtTime(0.0001, now);
+                g.gain.exponentialRampToValueAtTime(0.09, now + 0.02 + i * 0.05);
+                g.gain.exponentialRampToValueAtTime(0.0001, now + 0.26 + i * 0.06);
+                o.connect(g);
+                g.connect(ctx.destination);
+                o.start(now + i * 0.07);
+                o.stop(now + 0.4 + i * 0.08);
+            });
+        };
+        if (ctx.state === 'suspended' && typeof ctx.resume === 'function') {
+            ctx.resume().then(ding).catch(() => {});
+        } else {
+            ding();
+        }
+    } catch (_) { /* no audio */ }
+}
+
+function celebrateMadeItAchievement(madeBtn) {
+    if (!madeBtn || !madeBtn.getBoundingClientRect) return;
+    try {
+        if (window.UIFeedback) window.UIFeedback.hapticSuccess();
+    } catch (_) {}
+    playMadeItAchievementSound();
+    madeBtn.classList.remove('made-it-celebrate-pulse');
+    void madeBtn.offsetWidth;
+    madeBtn.classList.add('made-it-celebrate-pulse');
+    window.setTimeout(() => madeBtn.classList.remove('made-it-celebrate-pulse'), 600);
+
+    const prev = document.getElementById('madeItAchievementHost');
+    if (prev) prev.remove();
+
+    const host = document.createElement('div');
+    host.id = 'madeItAchievementHost';
+    host.setAttribute('aria-hidden', 'true');
+    host.className = 'made-it-achievement-host';
+    const r = madeBtn.getBoundingClientRect();
+    host.style.left = `${r.left + r.width / 2}px`;
+    host.style.top = `${r.top + r.height / 2}px`;
+
+    const sparkCount = 12;
+    const sparksHtml = Array.from({ length: sparkCount }, (_, i) => {
+        const angle = (Math.PI * 2 * i) / sparkCount + Math.random() * 0.35;
+        const dist = 32 + Math.random() * 40;
+        const tx = Math.round(Math.cos(angle) * dist);
+        const ty = Math.round(Math.sin(angle) * dist);
+        const delay = (Math.random() * 0.06).toFixed(3);
+        return `<span class="made-it-spark" style="--tx:${tx}px;--ty:${ty}px;animation-delay:${delay}s"></span>`;
+    }).join('');
+
+    host.innerHTML =
+        `<div class="made-it-achievement-badge"><span>You made it!</span><span class="achievement-sparkle" aria-hidden="true">✨</span></div>${sparksHtml}`;
+    document.body.appendChild(host);
+    window.setTimeout(() => { host.classList.add('fade-out'); }, 1000);
+    window.setTimeout(() => { host.remove(); }, 1550);
 }
 
 function formatCurrency(value) {
@@ -1404,7 +1596,7 @@ function buildCostComparisonCard(ingredients, dishName) {
 
 // ── Layout builder ─────────────────────────────────────────────────────────
 function buildLayout({
-    title, image, tag, authorTagHtml, ingredientRows, stepRows, costComparisonCard, passportStripHtml,
+    title, image, tag, authorTagHtml, ingredientRows, stepRows, costComparisonCard,
     cookAlongLaunchHtml
 }) {
     return `
@@ -1435,7 +1627,7 @@ function buildLayout({
                 </button>
                 <button class="save-action-btn" onclick="openSavePopup()">Save</button>
             </div>
-            ${passportStripHtml || ''}
+            <div id="passportRecipeMount"></div>
             <div class="recipe-image-wrap">
                 <img src="${image}" alt="${title}">
             </div>
@@ -1464,11 +1656,36 @@ function buildLayout({
     `;
 }
 
+/** Passport “add” UI only shows after user marks Made It (or has already marked it). */
+function mountPassportStripIfMadeIt(meal, hasMarkedMadeIt) {
+    const mount = document.getElementById('passportRecipeMount');
+    if (!mount || !meal) return;
+    if (!hasMarkedMadeIt) {
+        mount.innerHTML = '';
+        return;
+    }
+    const areaNorm = ((meal.strArea || '').trim());
+    const mealIdForPassport = String(meal.idMeal || meal.id || '').trim();
+    if (!areaNorm || /^unknown$/i.test(areaNorm) || !mealIdForPassport || typeof window.isRecipeInPassport !== 'function') {
+        mount.innerHTML = '';
+        return;
+    }
+    const thisRecipeInPassport = window.isRecipeInPassport(areaNorm, meal.idMeal);
+    mount.innerHTML =
+        `<div class="passport-recipe-strip">` +
+        `<button type="button" class="passport-stamp-recipe-btn" id="passportRecipeBtn" ${thisRecipeInPassport ? 'disabled' : ''} onclick="stampPassportFromCurrentRecipe(this)">` +
+        (thisRecipeInPassport
+            ? `This recipe is in your ${escapeHtml(areaNorm)} passport ✓`
+            : '📍 Add this recipe to your ' + escapeHtml(areaNorm) + ' passport') +
+        `</button></div>`;
+}
+
 async function hydrateRecipeFeedback(meal) {
     const wrap = document.getElementById('recipeFeedbackCard');
     if (!wrap) return;
     const mealId = String(meal?.idMeal ?? meal?.id ?? '').trim();
     if (!mealId) {
+        mountPassportStripIfMadeIt(meal, false);
         wrap.innerHTML = '';
         wrap.style.display = 'none';
         return;
@@ -1571,6 +1788,8 @@ async function hydrateRecipeFeedback(meal) {
                     const nowMade = await toggleMadeRecipe(mealId, u.uid);
                     madeBtn.classList.toggle('has-made', nowMade);
                     madeBtn.textContent = nowMade ? 'Marked as cooked' : 'Made It!';
+                    if (nowMade) celebrateMadeItAchievement(madeBtn);
+                    mountPassportStripIfMadeIt(meal, nowMade);
                     const refreshed = await getRecipeEngagement(mealId);
                     const stats = wrap.querySelector('.recipe-feedback-stats span');
                     if (stats) {
@@ -1590,8 +1809,11 @@ async function hydrateRecipeFeedback(meal) {
                 }
             });
         }
+
+        mountPassportStripIfMadeIt(meal, made);
     } catch (e) {
         console.error('Recipe feedback:', e);
+        mountPassportStripIfMadeIt(meal, false);
         wrap.innerHTML =
             `<div class="recipe-feedback-loading">Could not load this section (${e && e.code ? e.code : 'error'}). Check your connection, then refresh.</div>`;
     }
@@ -1639,21 +1861,6 @@ function renderMealDB(meal) {
         ? `<div class="recipe-tag-row"><span class="recipe-by-tag">${escapeHtml(formatRecipeByAuthorLine(meal))}</span></div>`
         : '';
 
-    const areaNorm = ((meal.strArea || '').trim());
-    const mealIdForPassport = String(meal.idMeal || meal.id || '').trim();
-    let passportHtml = '';
-    if (areaNorm && !/^unknown$/i.test(areaNorm) && mealIdForPassport && typeof window.isRecipeInPassport === 'function') {
-        const thisRecipeInPassport = window.isRecipeInPassport(areaNorm, meal.idMeal);
-        passportHtml =
-            `<div class="passport-recipe-strip">` +
-            `<button type="button" class="passport-stamp-recipe-btn" id="passportRecipeBtn" ${thisRecipeInPassport ? 'disabled' : ''} onclick="stampPassportFromCurrentRecipe(this)">` +
-            (thisRecipeInPassport
-                ? `This recipe is in your ${escapeHtml(areaNorm)} passport ✓`
-                : '📍 Add this recipe to your ' + escapeHtml(areaNorm) + ' passport')
-            +
-            `</button></div>`;
-    }
-
     document.getElementById('recipeBody').innerHTML = buildLayout({
         title: meal.strMeal,
         image: meal.strMealThumb,
@@ -1662,7 +1869,6 @@ function renderMealDB(meal) {
         ingredientRows,
         stepRows,
         costComparisonCard,
-        passportStripHtml: passportHtml,
         cookAlongLaunchHtml
     });
     if (currentUser) applyLikeState(meal.idMeal);

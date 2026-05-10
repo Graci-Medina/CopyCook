@@ -334,7 +334,7 @@
         .logout-popup {
             display: none; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%; background: rgba(0,0,0,0.5);
-            z-index: 1000; align-items: center; justify-content: center;
+            z-index: 10001; align-items: center; justify-content: center;
         }
         .logout-popup.active { display: flex; }
         .logout-content {
@@ -643,7 +643,7 @@
 <div class="container">
     <aside class="sidebar">
         <div class="logo">
-            <img src="logo.png" alt="CopyCook Logo" onclick="window.location.href='home.html'">
+            <img src="logo.png" alt="CopyCook Logo" onclick="ccBrandLogoNavigate('home.html','../index.html')">
         </div>
         <nav class="nav-icons">
             <a href="home.html" class="nav-icon active">
@@ -690,7 +690,7 @@
                     <line x1="9" y1="20" x2="15" y2="20" stroke="#D4A5A5" stroke-width="2"/>
                 </svg>
             </div>
-            <div class="profile-pic" id="profileAvatar">
+            <div class="profile-pic" id="profileAvatar" role="button" tabindex="0" aria-label="Account settings" onclick="window.location.href='../Saved page/profile.html'" onkeydown="var k=event.key;if(k==='Enter'||k===' '){event.preventDefault();window.location.href='../Saved page/profile.html';}">
                 <img src="drakepfp.png" alt="Profile">
             </div>
         </div>
@@ -824,6 +824,8 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<script src="../ui-feedback.js"></script>
+<script src="../auth-session.js"></script>
 <script type="module">
 import { db, auth } from '../firebase-config.js';
 import '../account-delete.js';
@@ -864,14 +866,28 @@ let cookAlongIndex = 0;
 function showToast(msg, type = 'success') {
     const t = document.getElementById('toast');
     t.textContent = msg; t.className = 'toast ' + type; t.classList.add('show');
+    try {
+        if (window.UIFeedback) {
+            if (type === 'error') {
+                window.UIFeedback.error();
+                window.UIFeedback.hapticMedium();
+            } else {
+                window.UIFeedback.success();
+                window.UIFeedback.hapticMedium();
+            }
+        }
+    } catch (_) {}
     setTimeout(() => t.classList.remove('show'), 3000);
 }
 window.showToast = showToast;
 
 // ── Logout ────────────────────────────────────────────────────────────────────
-window.toggleLogoutPopup = (e) => { e.preventDefault(); document.getElementById('logoutPopup').classList.toggle('active'); };
+window.toggleLogoutPopup = (e) => { if (e && typeof e.preventDefault === 'function') e.preventDefault(); document.getElementById('logoutPopup').classList.toggle('active'); };
 window.closeLogoutPopup  = ()  => { document.getElementById('logoutPopup').classList.remove('active'); };
-window.handleLogout      = ()  => { localStorage.clear(); sessionStorage.clear(); window.location.href = '../login.html'; };
+window.handleLogout      = ()  => {
+    if (typeof logoutClearSessionKeepPassport === 'function') logoutClearSessionKeepPassport('../login.html');
+    else { localStorage.clear(); sessionStorage.clear(); window.location.href = '../login.html'; }
+};
 
 // ── Like ──────────────────────────────────────────────────────────────────────
 function likeRef(userId, recipeId) {
@@ -1016,8 +1032,15 @@ window.confirmCreateFolder = async () => {
         await createFolder(uid, name, savePrivacy);
         document.getElementById('newFolderNameInput').value = '';
         await renderSaveFolders();
+        try {
+            if (window.UIFeedback) {
+                window.UIFeedback.toggle();
+                window.UIFeedback.hapticMedium();
+            }
+        } catch (_) {}
     } catch (err) {
         console.error('Create folder error:', err);
+        try { if (window.UIFeedback) window.UIFeedback.error(); } catch (_) {}
     }
 };
 

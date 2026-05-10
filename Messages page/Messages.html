@@ -39,11 +39,46 @@
             flex-shrink: 0;
         }
 
+        .messages-header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
         .messages-header h2 {
             font-size: 26px;
             font-weight: 700;
             color: #2A2A2A;
-            margin-bottom: 16px;
+            margin: 0;
+        }
+
+        .messages-header .profile-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #E8B4B4;
+            cursor: pointer;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .messages-header .profile-avatar:hover {
+            transform: scale(1.05);
+        }
+
+        .messages-header .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         /* New Message button */
@@ -507,7 +542,7 @@
             display: none;
             position: fixed; inset: 0;
             background: rgba(0,0,0,0.5);
-            z-index: 200;
+            z-index: 10001;
             align-items: center; justify-content: center;
         }
         .logout-popup.active { display: flex; }
@@ -765,7 +800,7 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
         <div class="logo">
-            <img src="logo.png" alt="CopyCook Logo">
+            <img src="logo.png" alt="CopyCook Logo" onclick="ccBrandLogoNavigate('../Home page/home.html','../index.html')">
         </div>
         <nav class="nav-icons">
             <a href="../Home page/home.html" class="nav-icon">
@@ -799,7 +834,12 @@
     <!-- Messages List Panel -->
     <div class="messages-panel">
         <div class="messages-header">
-            <h2>Messages</h2>
+            <div class="messages-header-top">
+                <h2>Messages</h2>
+                <div class="profile-avatar" id="profileAvatar" role="button" tabindex="0" aria-label="Account settings" onclick="window.location.href='../Saved page/profile.html'" onkeydown="var k=event.key;if(k==='Enter'||k===' '){event.preventDefault();window.location.href='../Saved page/profile.html';}">
+                    <img src="../Home page/drakepfp.png" alt="">
+                </div>
+            </div>
             <div class="new-message-btn" onclick="openNewMessageModal()">
                 <div class="new-msg-icon">
                     <svg viewBox="0 0 24 24" fill="none">
@@ -863,7 +903,7 @@
                             <rect x="1" y="5" width="15" height="14" rx="2" ry="2" stroke="#D4A5A5" stroke-width="2" fill="none"/>
                         </svg>
                     </button>
-                    <button class="icon-btn" title="Info" onclick="showToast('Profile info coming soon!')">
+                    <button class="icon-btn" title="Info" onclick="openOtherProfile()" aria-label="View profile info">
                         <svg viewBox="0 0 24 24" fill="none">
                             <circle cx="12" cy="12" r="10" stroke="#A5B4D4" stroke-width="2" fill="none"/>
                             <line x1="12" y1="8" x2="12" y2="8" stroke="#A5B4D4" stroke-width="2" stroke-linecap="round"/>
@@ -948,6 +988,8 @@
     pointer-events:none; white-space:nowrap;
 "></div>
 
+<script src="../ui-feedback.js"></script>
+<script src="../auth-session.js"></script>
 <script type="module">
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import '../account-delete.js';
@@ -1004,6 +1046,18 @@ function colorFor(str) {
 
 function makeInitial(name) {
     return (name || '?').charAt(0).toUpperCase();
+}
+
+function paintMessagesTopAvatar(initialKey, bgColorKey, titleText) {
+    const chip = document.getElementById('profileAvatar');
+    if (!chip) return;
+    const initial = initialKey || '?';
+    const bg = bgColorKey || '#D4A5A5';
+    chip.textContent = initial;
+    chip.style.backgroundColor = bg;
+    chip.title = titleText || '';
+    const img = chip.querySelector('img');
+    if (img) chip.removeChild(img);
 }
 
 function avatarStyle(name, size = 48) {
@@ -1074,6 +1128,8 @@ onAuthStateChanged(auth, async user => {
     localStorage.setItem('userAvatarColor', avatarColor);
     localStorage.setItem('userName',        displayName);
     localStorage.setItem('userUID',         user.uid);
+    localStorage.setItem('userDisplayName', displayName);
+    paintMessagesTopAvatar(initial, avatarColor, displayName);
 
     // Bust the users cache so search picks up freshly written docs
     _usersCache = null;
@@ -1526,8 +1582,15 @@ async function sendMessage(recipePayload = null) {
             input.value = '';
             input.style.height = 'auto';
         }
+        try {
+            if (window.UIFeedback) {
+                window.UIFeedback.success();
+                window.UIFeedback.hapticMedium();
+            }
+        } catch (_) {}
     } catch (e) {
         console.error('Send error:', e);
+        try { if (window.UIFeedback) window.UIFeedback.error(); } catch (_) {}
         showToast('Failed to send message.');
     }
 }
@@ -1739,7 +1802,7 @@ window.closeRecipePicker = function() {
 // ══════════════════════════════════════════════
 
 window.toggleLogoutPopup = function(e) {
-    e.preventDefault();
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
     document.getElementById('logoutPopup').classList.toggle('active');
 };
 
@@ -1748,9 +1811,12 @@ window.closeLogoutPopup = function() {
 };
 
 window.handleLogout = function() {
+    var uid = null;
+    try { uid = localStorage.getItem('userUID'); } catch (_) {}
+    if (typeof preparePassportStorageForLogout === 'function') preparePassportStorageForLogout(uid);
+    if (typeof clearAuthLocalStoragePreservePassport === 'function') clearAuthLocalStoragePreservePassport();
+    else { localStorage.clear(); sessionStorage.clear(); }
     auth.signOut().then(() => {
-        localStorage.clear();
-        sessionStorage.clear();
         window.location.href = '../login.html';
     });
 };

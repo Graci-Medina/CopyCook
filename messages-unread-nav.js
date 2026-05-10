@@ -165,6 +165,17 @@ function escapeHtml(s) {
         .replace(/'/g, '&#039;');
 }
 
+/** MealDB / copycat recipes use recipe.html; community posts use community-recipe.html (idMeal is `post-{postId}`). */
+function recipeHrefFromLikeId(mealId) {
+    if (!mealId) return '';
+    const rawId = String(mealId);
+    if (rawId.startsWith('post-')) {
+        const postId = rawId.replace(/^post-/, '');
+        return `../Home page/community-recipe.html?id=${encodeURIComponent(postId)}`;
+    }
+    return `../Home page/recipe.html?id=${encodeURIComponent(rawId)}`;
+}
+
 async function loadUserNames(uids) {
     const m = new Map();
     const unique = [...new Set((uids || []).filter(Boolean))];
@@ -235,9 +246,10 @@ async function fetchSocialNotifications(followingUids, nameMap) {
                 const data = d.data();
                 const mealId = data.idMeal || d.id;
                 const t = tsToMs(data.likedAt);
+                const href = mealId ? recipeHrefFromLikeId(mealId) : '#';
                 out.push({
                     timeMs: t,
-                    href: mealId ? `../Home page/recipe.html?id=${encodeURIComponent(String(mealId))}` : '#',
+                    href,
                     title: `${nameMap.get(fid) || 'Someone'} liked ${data.strMeal || 'a recipe'}`,
                     meta: formatRelativeTime(t),
                 });

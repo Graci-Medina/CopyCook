@@ -12,7 +12,7 @@
 <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="logo">
-                <img src="logo.png" alt="CopyCook Logo">
+                <img src="logo.png" alt="CopyCook Logo" onclick="ccBrandLogoNavigate('home.html','../index.html')">
             </div>
             <nav class="nav-icons">
                 <a href="home.html" class="nav-icon active">
@@ -59,7 +59,7 @@
                         <line x1="9" y1="20" x2="15" y2="20" stroke="#D4A5A5" stroke-width="2"/>
                     </svg>
                 </div>
-                <div class="profile-pic" id="profileAvatar">
+                <div class="profile-pic" id="profileAvatar" role="button" tabindex="0" aria-label="Account settings" onclick="window.location.href='../Saved page/profile.html'" onkeydown="var k=event.key;if(k==='Enter'||k===' '){event.preventDefault();window.location.href='../Saved page/profile.html';}">
                     <img src="drakepfp.png" alt="Profile">
                 </div>
             </div>
@@ -146,6 +146,8 @@
 
     <script type="module" src="home-firebase.js"></script>
     <script type="module" src="../messages-unread-nav.js"></script>
+    <script src="../ui-feedback.js"></script>
+    <script src="../auth-session.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

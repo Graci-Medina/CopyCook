@@ -1,16 +1,34 @@
 /**
  * Cuisine Passport — client-only progress by TheMealDB strArea (list.php?a=list).
- * Storage: localStorage cc_cuisine_passport_v1 →
+ * Storage: localStorage cc_cuisine_passport_v1:<firebaseUID> (and legacy cc_cuisine_passport_v1 until migrated) →
  * { stamps: { [strArea]: isoDate }, recipesByArea: { [strArea]: [{ idMeal, strMeal, strMealThumb, savedAt }] } }
  */
 (function (global) {
     'use strict';
 
-    var STORAGE_KEY = 'cc_cuisine_passport_v1';
+    var STORAGE_KEY_BASE = 'cc_cuisine_passport_v1';
+
+    function currentStorageKey() {
+        try {
+            var uid = localStorage.getItem('userUID');
+            if (uid) return STORAGE_KEY_BASE + ':' + uid;
+        } catch (_) {}
+        return STORAGE_KEY_BASE;
+    }
 
     function readRaw() {
         try {
-            var raw = localStorage.getItem(STORAGE_KEY);
+            var key = currentStorageKey();
+            var raw = localStorage.getItem(key);
+            if (!raw && key !== STORAGE_KEY_BASE) {
+                raw = localStorage.getItem(STORAGE_KEY_BASE);
+                if (raw) {
+                    try {
+                        localStorage.setItem(key, raw);
+                        localStorage.removeItem(STORAGE_KEY_BASE);
+                    } catch (_) { /* quota */ }
+                }
+            }
             var o = raw ? JSON.parse(raw) : {};
             var stamps = o.stamps;
             if (typeof stamps !== 'object' || stamps === null) stamps = {};
@@ -24,7 +42,8 @@
 
     function writeRaw(data) {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            var key = currentStorageKey();
+            localStorage.setItem(key, JSON.stringify({
                 stamps: data.stamps,
                 recipesByArea: data.recipesByArea || {},
                 updatedAt: Date.now()
