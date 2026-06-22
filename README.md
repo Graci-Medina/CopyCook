@@ -109,7 +109,7 @@ Ever crave your favourite restaurant dish but wince at the price tag? CopyCook w
 ## Aubrey Morra
 <img src="https://github.com/aubsickle.png" width="200">  
 
-<img src="https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/github.png" width="20">  [Github](https://github.com/aubsickle)  —  <img src="https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/linkedin.png" width="20"> [LinkedIn](https://www.linkedin.com/in/aubrey-morra)
+<img src="https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/github.png" width="20">  [Github](https://github.com/aubsickle)  —  <img src="https://github.com/Graci-Medina/CopyCook/blob/main/screenshots/linkedin.png" width="20"> [LinkedIn](https://www.linkedin.com/in/aubrey-mor)
 
 ## Lochana Subedi
 <img src="https://github.com/subedi21.png" width="200">  
